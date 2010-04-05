@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Premain-Class: gb.instrument.agent.Agent
-Agent-Class: gb.instrument.agent.Agent
-Can-Redefine-Classes: true
-
