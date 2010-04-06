@@ -1,0 +1,25 @@
+<project name="TraceAgent" basedir="." default="help">
+	<target name="help">
+		<java classname="org.apache.tools.ant.Main">
+			<arg value="-projecthelp" />
+		</java>
+	</target>
+
+	<target name="build" depends="buildClasses, createJar" />
+
+	<target name="buildClasses" description="Comile classes">
+		<delete dir="./bin" includes="**/*" />
+		<mkdir dir="./bin" />
+
+		<javac srcdir="./src" destdir="./bin" debug="true" source="1.6" target="1.6" nowarn="true">
+		</javac>
+	</target>
+
+	<target name="createJar" description="Create the Agent Jar">		
+		<mkdir dir="./built/" />
+		<jar destfile="./built/testagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+			<fileset dir="./bin" includes="**/*.class" />			
+		</jar>		
+	</target>
+	
+</project>
