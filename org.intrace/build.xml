@@ -19,6 +19,7 @@
 	</target>
 
 	<target name="createJar" description="Create the Agent Jar">
+		
 		<delete dir="./lib/libclasses" includes="**/*" />
 		<mkdir dir="./lib/libclasses" />
 		<unzip src="./lib/asm-2.2.3.jar" dest="./lib/libclasses">
@@ -35,16 +36,37 @@
 		</unzip>
 
 		<mkdir dir="./built/" />
+		
+		<!-- Trace Agent -->
 		<jar destfile="./built/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
 			<fileset dir="./bin" includes="**/agent/**/*.class" />
 			<fileset dir="./bin" includes="**/output/**/*.class" />
 			<fileset dir="./lib/libclasses" includes="**/*.class" />
 		</jar>
-		<jar destfile="./built/cuitraceclient.jar" compress="false">
+		
+		<!-- CUI Agent Loader -->
+		<jar destfile="./built/cuiagentloader.jar" compress="false">
+			<manifest>
+				<attribute name="Main-Class" value="gb.instrument.client.cui.AgentLoader" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
 			<fileset dir="./bin" includes="**/output/trace/TraceConfigConstants.class" />
 			<fileset dir="./bin" includes="**/agent/AgentConfigConstants.class" />
-			<fileset dir="./bin" includes="**/client/cui/**/*.class" />
+			<fileset dir="./bin" includes="**/client/cui/AgentLoader.class" />
 		</jar>
+		
+		<!-- CUI Trace Client -->
+		<jar destfile="./built/cuitraceclient.jar" compress="false">
+			<manifest>
+				<attribute name="Main-Class" value="gb.instrument.client.cui.TraceClient" />
+				<attribute name="Class-Path" value="." />
+			</manifest>
+			<fileset dir="./bin" includes="**/output/trace/TraceConfigConstants.class" />
+			<fileset dir="./bin" includes="**/agent/AgentConfigConstants.class" />
+			<fileset dir="./bin" includes="**/client/cui/TraceClient.class" />
+		</jar>
+		
+		<!-- GUI Trace Client -->
 		<jar destfile="./built/guitraceclient.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<attribute name="Main-Class" value="gb.instrument.client.gui.TraceClient" />
@@ -55,6 +77,7 @@
 			<fileset dir="./bin" includes="**/client/gui/**/*.class" />
 			<zipfileset excludes="META-INF/*.SF" src="lib/org.eclipse.swt.win32.win32.x86_3.5.2.v3557f.jar" />
 		</jar>
+		
 		<delete dir="./lib/libclasses" includes="**/*" />
 	</target>
 
