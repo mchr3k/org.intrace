@@ -18,6 +18,6 @@ client/gui/            : GUI remote Agent config tool/network trace viewer
 Note to self - Git Commands:
 
   git init
-  git remote add origin git@github.com:mchr3k/gb.instrument.git
+  git remote add origin git@github.com:mchr3k/org.intrace.git
   git push origin master
       
