@@ -1,9 +1,12 @@
 package org.intrace.agent.server;
 
 
+import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.intrace.agent.ClassTransformer;
 
@@ -13,6 +16,8 @@ import org.intrace.agent.ClassTransformer;
 public class AgentServer implements Runnable
 {
   private final ClassTransformer transformer;
+  
+  private final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
 
   /**
    * cTor
@@ -23,6 +28,34 @@ public class AgentServer implements Runnable
     transformer= xiT;
   }
 
+  public void removeClientConnection(AgentClientConnection connection)
+  {
+    clientConnections.remove(connection);
+  }
+  
+  public void broadcastMessage(AgentClientConnection requestingConn, Object message) throws IOException
+  {
+    IOException ex = null;
+    for (AgentClientConnection clientConn : clientConnections.keySet())
+    {
+      try
+      {
+        clientConn.sendMessage(message);
+      }
+      catch (IOException ioex)
+      {
+        if (requestingConn == clientConn)
+        {
+          ex = ioex;
+        }        
+      }
+    }
+    if (ex != null)
+    {
+      throw ex;
+    }
+  }
+  
   @Override
   public void run()
   {
@@ -38,11 +71,13 @@ public class AgentServer implements Runnable
         while (true)
         {
           Socket connectedClient = serversock.accept();
-          Thread clientThread = new Thread(new AgentServerConnection(connectedClient, transformer));
+          AgentClientConnection clientConnection = new AgentClientConnection(this, connectedClient, transformer);
+          clientConnections.put(clientConnection, new Object());
+          Thread clientThread = new Thread(clientConnection);
           clientThread.setDaemon(true);
           clientThread.setName("AgentServer-Client" + clientNum);
           clientThread.start();
-          clientNum++;
+          clientNum++;          
         }
       }
       catch (BindException e)

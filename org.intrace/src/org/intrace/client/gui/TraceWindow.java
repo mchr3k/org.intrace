@@ -2,7 +2,6 @@ package org.intrace.client.gui;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -10,20 +9,22 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.layout.FillLayout;
 
 public class TraceWindow
 {
@@ -65,6 +66,7 @@ public class TraceWindow
   
   private boolean networkTraceEnabled = false;
   private NetworkTraceThread networkThread;
+  private final ReceiveThread receiveThread;
   
   private Shell sShell = null;
   private Button toggleEntryExitButton = null;
@@ -92,6 +94,8 @@ public class TraceWindow
   {
     this.instanceRef = instanceRef;
     this.socket = socket;
+    receiveThread = new ReceiveThread(socket);
+    receiveThread.start();       
   }
 
   /**
@@ -303,7 +307,14 @@ public class TraceWindow
     createSShell();
     sShell.open();
     statusTextArea.append("Connected!\n");
-    getSettings();
+    try
+    {
+      sendMessage("getsettings");
+    }
+    catch (IOException e)
+    {
+      sShell.close();
+    }
   }
  
   private void toggleNetworkTrace()
@@ -324,7 +335,7 @@ public class TraceWindow
               if (!networkTraceEnabled)
               {
                 sendMessage("[trace-network");
-                String networkTracePortStr = (String)receiveMessage();
+                String networkTracePortStr = receiveThread.getMessage();
                 int networkTracePort = Integer.parseInt(networkTracePortStr);
                 networkThread = new NetworkTraceThread(networkTracePort);
                 networkThread.start();
@@ -369,16 +380,8 @@ public class TraceWindow
           {
             try
             {
-              sendMessage("[regex-" + regex);              
-              receiveMessage(); // Throw away result message
-              sShell.getDisplay().asyncExec(new Runnable()
-              {            
-                @Override
-                public void run()
-                {
-                  getSettings();
-                }
-              });                        
+              sendMessage("[regex-" + regex);                                   
+              sendMessage("getsettings");
             }
             catch (IOException e)
             {
@@ -388,49 +391,7 @@ public class TraceWindow
         });
       }
     });
-  }
-  
-  private void getSettings()
-  {
-    sShell.getDisplay().asyncExec(new Runnable()
-    {      
-      @Override
-      public void run()
-      {
-        statusTextArea.append("Fetching Settings...\n");
-      }
-    });    
-    asyncExecutor.execute(new Runnable()
-    {      
-      @SuppressWarnings("unchecked")
-      @Override
-      public void run()
-      {
-        try
-        {
-          sendMessage("getsettings");
-          Object receivedMsg = receiveMessage();
-          if (receivedMsg instanceof Map)
-          {
-            Map<String,String> settingsMap = (Map<String,String>)receivedMsg;
-            settingsData = new ParsedSettingsData(settingsMap);
-            sShell.getDisplay().asyncExec(new Runnable()
-            {              
-              @Override
-              public void run()
-              {
-                updateButtonText();
-              }
-            });
-          }
-        }
-        catch (IOException e)
-        {
-          sShell.close();
-        }
-      }
-    });
-  }
+  }  
   
   private void toggleSetting(final boolean settingValue, final String enableCommand, final String disableCommand)
   {
@@ -455,15 +416,7 @@ public class TraceWindow
               {
                 sendMessage(enableCommand);
               }
-              receiveMessage(); // Throw away result message
-              sShell.getDisplay().asyncExec(new Runnable()
-              {            
-                @Override
-                public void run()
-                {
-                  getSettings();
-                }
-              });                        
+              sendMessage("getsettings");
             }
             catch (IOException e)
             {
@@ -522,33 +475,15 @@ public class TraceWindow
   
   private void disconnect()
   {
-    if (socket.isConnected())
-    {
-      try
-      {
-        socket.close();
-      }
-      catch (IOException e)
-      {
-        // Throw away
-      }
-      instanceRef.show();
-    }
-  }
-  
-  private Object receiveMessage() throws IOException
-  {
-    InputStream in = socket.getInputStream();
-    ObjectInputStream objIn = new ObjectInputStream(in);
     try
     {
-      return (Object)objIn.readObject();
+      socket.close();
     }
-    catch (ClassNotFoundException e)
+    catch (IOException e)
     {
-      e.printStackTrace();
+      // Throw away
     }
-    return null;
+    instanceRef.show();
   }
 
   private void sendMessage(String xiString) throws IOException
@@ -557,6 +492,92 @@ public class TraceWindow
     ObjectOutputStream objOut = new ObjectOutputStream(out);
     objOut.writeObject(xiString);
     objOut.flush();
+  }
+  
+  private class ReceiveThread implements Runnable
+  {
+    private final Socket receiveSocket;
+    private final BlockingQueue<String> queuedMessages = new LinkedBlockingQueue<String>();
+    public ReceiveThread(Socket socket)
+    {
+      receiveSocket = socket;
+    }
+
+    public void start()
+    {
+      Thread t = new Thread(this);
+      t.setDaemon(true);
+      t.setName("Network Receive Thread");
+      t.start();
+    }
+    
+    public String getMessage()
+    {
+      try
+      {
+        return queuedMessages.take();
+      }
+      catch (InterruptedException e)
+      {
+        return null;
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void run()
+    {
+      try
+      {                
+        while (true)
+        {
+          ObjectInputStream objIn = new ObjectInputStream(receiveSocket.getInputStream());
+          Object receivedMessage = (Object)objIn.readObject();
+          if (receivedMessage instanceof Map<?,?>)
+          {
+            Map<String,String> settingsMap = (Map<String,String>)receivedMessage;
+            handleConfig(settingsMap);
+          }
+          else
+          {
+            String strMessage = (String)receivedMessage;
+            if (!"OK".equals(strMessage))
+            {
+              queuedMessages.put(strMessage);
+            }
+          }
+        }
+      }
+      catch (Exception e)
+      {
+        e.printStackTrace();
+        sShell.getDisplay().asyncExec(new Runnable()
+        {          
+          @Override
+          public void run()
+          {
+            if (!sShell.isDisposed())
+            {
+              sShell.close();
+            }
+          }
+        });        
+      }
+    }
+    
+    private void handleConfig(final Map<String, String> settingsMap)
+    {
+      sShell.getDisplay().asyncExec(new Runnable()
+      {      
+        @Override
+        public void run()
+        {
+          statusTextArea.append("Fetching Settings...\n");
+          settingsData = new ParsedSettingsData(settingsMap);
+          updateButtonText();           
+        }
+      });    
+    }    
   }
   
   private class NetworkTraceThread implements Runnable
@@ -609,7 +630,7 @@ public class TraceWindow
       }
       catch (Exception e)
       {
-        // Throw away
+        sShell.close();
       }
     }
     

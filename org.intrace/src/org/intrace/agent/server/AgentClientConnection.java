@@ -16,20 +16,24 @@ import org.intrace.agent.ClassTransformer;
 /**
  * Server thread handling a single connected client.
  */
-public class AgentServerConnection implements Runnable
+public class AgentClientConnection implements Runnable
 {
   private final Socket connectedClient;
   private final ClassTransformer transformer;
+  private final AgentServer serverRef;
 
   /**
    * cTor
+   * @param agentServer 
    * @param xiConnectedClient
    * @param xiTransformer
    */
-  public AgentServerConnection(Socket xiConnectedClient,
+  public AgentClientConnection(AgentServer agentServer, 
+                               Socket xiConnectedClient,
                                ClassTransformer xiTransformer)
   {
     super();
+    serverRef = agentServer;
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
     System.out.println("Connected to: " + xiConnectedClient.getPort());
@@ -45,24 +49,24 @@ public class AgentServerConnection implements Runnable
         {
           try
           {
-            String message = receiveMessage(connectedClient);
+            String message = receiveMessage();
             if (message.equals("getsettings"))
             {
               Map<String,String> settingsMap = new HashMap<String, String>();
               settingsMap.putAll(transformer.getSettings());
               settingsMap.putAll(AgentHelper.getActiveOutputHandler().getSettingsMap());
-              sendMessage(connectedClient, settingsMap);
+              serverRef.broadcastMessage(this, settingsMap);
             }
             else
             {
               String response = transformer.getResponse(message);
               if (response != null)
               {
-                sendMessage(connectedClient, response);
+                sendMessage(response);
               }
               else
               {
-                sendMessage(connectedClient, "OK");
+                sendMessage("OK");
               }
             }
           }
@@ -78,11 +82,15 @@ public class AgentServerConnection implements Runnable
       {
         e1.printStackTrace();
       }
+      finally
+      {
+        serverRef.removeClientConnection(this);
+      }
   }
 
-  private static String receiveMessage(Socket xiConnectedClient) throws IOException
+  private String receiveMessage() throws IOException
   {
-    InputStream in = xiConnectedClient.getInputStream();
+    InputStream in = connectedClient.getInputStream();
     ObjectInputStream objIn = new ObjectInputStream(in);
     try
     {
@@ -95,9 +103,9 @@ public class AgentServerConnection implements Runnable
     return null;
   }
 
-  private static void sendMessage(Socket xiConnectedClient, Object xiObject) throws IOException
+  public void sendMessage(Object xiObject) throws IOException
   {
-    OutputStream out = xiConnectedClient.getOutputStream();
+    OutputStream out = connectedClient.getOutputStream();
     ObjectOutputStream objOut = new ObjectOutputStream(out);
     objOut.writeObject(xiObject);
     objOut.flush();
