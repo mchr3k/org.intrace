@@ -4,26 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.intrace.shared.AgentConfigConstants;
+
 /**
  * Args Format:
  *   "[arg1[arg2[arg3"
- *   
+ * 
  * where argx is of the form
  *   value-parameter
  */
 public class AgentSettings
 {
-  private Pattern classRegex = Pattern.compile("");
+  private Pattern classRegex = Pattern.compile(".*");
   private boolean tracingEnabled = false;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
   private boolean allowJarsToBeTraced = false;
-    
+
   public AgentSettings(String args)
   {
     parseArg(args);
   }
-  
+
   public AgentSettings(AgentSettings oldInstance)
   {
     classRegex = oldInstance.getClassRegex();
@@ -38,41 +40,41 @@ public class AgentSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg(seperateArgs[ii].toLowerCase());
+      parseArg(seperateArgs[ii]);
     }
   }
-  
+
   private void parseArg(String arg)
   {
-    if (arg.equals("verbose-true"))
+    if (arg.toLowerCase().equals("verbose-true"))
     {
       verboseMode = true;
     }
-    else if (arg.equals("verbose-false"))
+    else if (arg.toLowerCase().equals("verbose-false"))
     {
       verboseMode = false;
     }
-    else if (arg.equals("instru-true"))
+    else if (arg.toLowerCase().equals("instru-true"))
     {
       tracingEnabled = true;
     }
-    else if (arg.equals("instru-false"))
+    else if (arg.toLowerCase().equals("instru-false"))
     {
       tracingEnabled = false;
     }
-    else if (arg.equals("saveinstru-true"))
+    else if (arg.toLowerCase().equals("saveinstru-true"))
     {
       saveTracedClassfiles = true;
     }
-    else if (arg.equals("saveinstru-false"))
+    else if (arg.toLowerCase().equals("saveinstru-false"))
     {
       saveTracedClassfiles = false;
     }
-    else if (arg.equals("instrujars-true"))
+    else if (arg.toLowerCase().equals("instrujars-true"))
     {
       allowJarsToBeTraced = true;
     }
-    else if (arg.equals("instrujars-false"))
+    else if (arg.toLowerCase().equals("instrujars-false"))
     {
       allowJarsToBeTraced = false;
     }
@@ -107,7 +109,7 @@ public class AgentSettings
   {
     return allowJarsToBeTraced;
   }
-  
+
   @Override
   public String toString()
   {
@@ -118,10 +120,11 @@ public class AgentSettings
     currentSettings += "Trace Classes in JAR Files : " + allowJarsToBeTraced + "\n";
     return currentSettings;
   }
-  
+
   public Map<String,String> getSettingsMap()
   {
     Map<String,String> settingsMap = new HashMap<String, String>();
+    settingsMap.put(AgentConfigConstants.MAP_ID, AgentConfigConstants.MAP_ID);
     settingsMap.put(AgentConfigConstants.TRACING_ENABLED, Boolean.toString(tracingEnabled));
     settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
     settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, Boolean.toString(allowJarsToBeTraced));

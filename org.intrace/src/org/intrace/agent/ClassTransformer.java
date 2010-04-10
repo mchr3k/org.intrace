@@ -9,10 +9,12 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.intrace.output.AgentHelper;
 import org.objectweb.asm.ClassReader;
 
 /**
@@ -24,9 +26,9 @@ public class ClassTransformer implements ClassFileTransformer
    * Map of modified class names to their original bytes
    */
   private final Set<String> modifiedClasses =
-                                     new ConcurrentSkipListSet<String>();
+    new ConcurrentSkipListSet<String>();
   private final Instrumentation inst;
-  private final AgentSettings args;  
+  private final AgentSettings args;
 
   /**
    * cTor
@@ -40,7 +42,7 @@ public class ClassTransformer implements ClassFileTransformer
   public ClassTransformer(Instrumentation xiInst, AgentSettings xiArgs)
   {
     inst = xiInst;
-    args = xiArgs;    
+    args = xiArgs;
     if (args.isVerboseMode())
     {
       System.out.println(args.toString());
@@ -94,7 +96,7 @@ public class ClassTransformer implements ClassFileTransformer
         }
       }
       else if (args.isTracingEnabled() &&
-               isToBeConsideredForCoverage(loadedClass.getName(), loadedClass.getProtectionDomain()))
+          isToBeConsideredForCoverage(loadedClass.getName(), loadedClass.getProtectionDomain()))
       {
         try
         {
@@ -145,7 +147,7 @@ public class ClassTransformer implements ClassFileTransformer
       }
       return false;
     }
-    
+
     // Don't modify a class which is already modified
     if (modifiedClasses.contains(className))
     {
@@ -181,9 +183,9 @@ public class ClassTransformer implements ClassFileTransformer
 
     // Don't modify a class from a JAR file unless this is allowed
     CodeSource codeSource = protectionDomain.getCodeSource();
-    if (!args.allowJarsToBeTraced() && 
-        (codeSource != null) && 
-         codeSource.getLocation().getPath().endsWith(".jar"))
+    if (!args.allowJarsToBeTraced() &&
+        (codeSource != null) &&
+        codeSource.getLocation().getPath().endsWith(".jar"))
     {
       if (args.isVerboseMode())
       {
@@ -191,7 +193,7 @@ public class ClassTransformer implements ClassFileTransformer
       }
       return false;
     }
-    return true;           
+    return true;
   }
 
   @Override
@@ -200,12 +202,12 @@ public class ClassTransformer implements ClassFileTransformer
                           Class<?> classBeingRedefined,
                           ProtectionDomain protectionDomain,
                           byte[] originalClassfile)
-                          throws IllegalClassFormatException
+  throws IllegalClassFormatException
   {
     String className = internalClassName.replace('/', '.');
     if (args.isTracingEnabled() &&
         isToBeConsideredForCoverage(className, protectionDomain))
-    {      
+    {
       if (args.isVerboseMode())
       {
         System.out.println("!! Instrumenting class: " + className);
@@ -233,7 +235,7 @@ public class ClassTransformer implements ClassFileTransformer
           else
           {
             System.out.println("Can't create directory " + parentDir +
-                               " for saving traced classfiles.");
+            " for saving traced classfiles.");
           }
         }
         catch (Exception e)
@@ -241,7 +243,7 @@ public class ClassTransformer implements ClassFileTransformer
           e.printStackTrace();
         }
       }
-      
+
       modifiedClasses.add(className);
       return newBytes;
     }
@@ -255,21 +257,21 @@ public class ClassTransformer implements ClassFileTransformer
   private byte[] readAndModifyClassForTracing(String xiClassName,
                                               byte[] classfileBuffer)
   {
-     ClassReader cr = new ClassReader(classfileBuffer);
-     ClassBranchLineAnalysis analysis = new ClassBranchLineAnalysis();
-     cr.accept(analysis, false);
-     InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
-                                                    cr,
-                                             analysis.getMethodBranchLabels());
-     cr.accept(writer, false);
-     return writer.toByteArray();
+    ClassReader cr = new ClassReader(classfileBuffer);
+    ClassBranchLineAnalysis analysis = new ClassBranchLineAnalysis();
+    cr.accept(analysis, false);
+    InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
+                                                                 cr,
+                                                                 analysis.getMethodBranchLabels());
+    cr.accept(writer, false);
+    return writer.toByteArray();
   }
 
-  public String getResponse(String message)
+  public List<String> getResponse(String message)
   {
     AgentSettings oldSettings = new AgentSettings(args);
     args.parseArgs(message);
-    
+
     if (args.isVerboseMode() &&
         (oldSettings.isVerboseMode() != args.isVerboseMode()))
     {
@@ -298,8 +300,8 @@ public class ClassTransformer implements ClassFileTransformer
       recheckModifiedClasses();
       traceLoadedClasses();
     }
-    
-    return AgentHelper.getActiveOutputHandler().getResponse(message);    
+
+    return AgentHelper.getResponses(message);
   }
 
   public Map<String, String> getSettings()

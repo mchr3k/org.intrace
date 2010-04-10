@@ -1,16 +1,10 @@
 package org.intrace.output.trace;
 
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.intrace.output.AgentHelper;
 import org.intrace.output.IOutput;
 
 /**
@@ -22,15 +16,7 @@ public class TraceOutput implements IOutput
   private boolean branchTrace = false;
   private boolean argTrace = false;
 
-  private boolean stdoutTrace = true;
-  private boolean fileoutTrace = false;
-  private boolean file1Active = true;
-  private int writtenChars = 0;
-  private final int MAX_CHARS_PER_FILE = 100 * 1000; // 100kb
-
   final TraceSettings traceSettings = new TraceSettings("");
-  
-  private Map<NetworkTraceSenderThread,Object> traceThreads = new ConcurrentHashMap<NetworkTraceSenderThread,Object>();
   
   public String getResponse(String args)
   {
@@ -39,9 +25,7 @@ public class TraceOutput implements IOutput
     
     if ((oldSettings.isEntryExitTraceEnabled() != traceSettings.isEntryExitTraceEnabled()) ||
         (oldSettings.isBranchTraceEnabled() != traceSettings.isBranchTraceEnabled()) ||
-        (oldSettings.isArgTraceEnabled() != traceSettings.isArgTraceEnabled()) ||
-        (oldSettings.isStdoutTraceOutputEnabled() != traceSettings.isStdoutTraceOutputEnabled()) ||
-        (oldSettings.isFileTraceOutputEnabled() != traceSettings.isFileTraceOutputEnabled()))
+        (oldSettings.isArgTraceEnabled() != traceSettings.isArgTraceEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -49,102 +33,21 @@ public class TraceOutput implements IOutput
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
-    stdoutTrace = traceSettings.isStdoutTraceOutputEnabled();
-    fileoutTrace = traceSettings.isFileTraceOutputEnabled();
     
-    if (traceSettings.networkTraceOutputRequested)
-    {
-      System.out.println("## Network Trace Requested");
-      ServerSocket networkSocket;
-      try
-      {
-        networkSocket = new ServerSocket(0);
-        NetworkTraceSenderThread traceThread = new NetworkTraceSenderThread(networkSocket);
-        
-        traceThreads.put(traceThread, new Object());
-        
-        traceThread.start(traceThreads.keySet());
-        traceSettings.networkTraceOutputRequested = false;
-        return Integer.toString(networkSocket.getLocalPort());
-      }
-      catch (IOException e)
-      {
-        // Do nothing
-        return null;
-      }      
-    }
-    else
-    {
-      return null;
-    }
+    return null;
   }
   
   public Map<String,String> getSettingsMap()
   {
     return traceSettings.getSettingsMap();
   }
-  
-  /**
-   * Write trace output
-   * 
-   * @param xiTrace
-   */
-  private void writeTrace(String xiTrace)
-  {
-    SimpleDateFormat dateFormat = new SimpleDateFormat();
-    long threadID = Thread.currentThread().getId();
-    String traceString = "[" + dateFormat.format(new Date()) + "]:[" + 
-                         threadID + "]:" + xiTrace;
-    if (stdoutTrace)
-    {
-      System.out.println(traceString);
-    }
     
-    if (fileoutTrace)
-    {
-      writeFileTrace(traceString);
-    }
-    
-    Set<NetworkTraceSenderThread> networkThreads = traceThreads.keySet();
-    if (networkThreads.size() > 0)
-    {
-      for (NetworkTraceSenderThread thread : networkThreads)
-      {
-        thread.queueTrace(traceString);
-      }
-    }
-  }
-
-  private synchronized void writeFileTrace(String traceString)
-  {
-    PrintWriter outputWriter;
-    if (file1Active)
-    {
-      outputWriter = traceSettings.getFile1TraceWriter();
-    }
-    else
-    {
-      outputWriter = traceSettings.getFile2TraceWriter();
-    }
-    outputWriter.println(traceString);
-    outputWriter.flush();
-    
-    // Switch trace files if necessary
-    writtenChars += traceString.length();
-    if (writtenChars > MAX_CHARS_PER_FILE)
-    {
-      writtenChars = 0;
-      traceSettings.resetTraceFiles(file1Active, !file1Active);
-      file1Active = !file1Active;
-    }
-  }
-
   @Override
   public void arg(String className, String methodName, byte byteArg)
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + byteArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + byteArg);
     }
   }
 
@@ -152,7 +55,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(byteArrayArg));
     }
   }
@@ -162,7 +65,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + shortArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + shortArg);
     }
   }
 
@@ -170,7 +73,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(shortArrayArg));
     }
   }
@@ -180,7 +83,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + intArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + intArg);
     }
   }
 
@@ -189,7 +92,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(intArrayArg));
     }
   }
@@ -199,7 +102,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + longArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + longArg);
     }
   }
 
@@ -208,7 +111,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(longArrayArg));
     }
   }
@@ -218,7 +121,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + floatArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + floatArg);
     }
   }
 
@@ -227,7 +130,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(floatArrayArg));
     }
   }
@@ -237,7 +140,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + doubleArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + doubleArg);
     }
   }
 
@@ -246,7 +149,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(doubleArrayArg));
     }
   }
@@ -256,7 +159,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + boolArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + boolArg);
     }
   }
 
@@ -265,7 +168,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(boolArrayArg));
     }
   }
@@ -275,7 +178,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + charArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + charArg);
     }
   }
 
@@ -284,7 +187,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(charArrayArg));
     }
   }
@@ -294,7 +197,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: " + objArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + objArg);
     }
   }
 
@@ -302,7 +205,7 @@ public class TraceOutput implements IOutput
   {
     if (argTrace)
     {
-      writeTrace(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
           + Arrays.toString(objArrayArg));
     }
   }
@@ -312,7 +215,7 @@ public class TraceOutput implements IOutput
   {
     if (branchTrace)
     {
-      writeTrace(className + ":" + methodName + ": /:" + lineNo);
+      AgentHelper.writeOutput(className + ":" + methodName + ": /:" + lineNo);
     }
   }
 
@@ -321,7 +224,7 @@ public class TraceOutput implements IOutput
   {
     if (entryExitTrace)
     {
-      writeTrace(className + ":" + methodName + ": {");
+      AgentHelper.writeOutput(className + ":" + methodName + ": {");
     }
   }
 
@@ -330,7 +233,7 @@ public class TraceOutput implements IOutput
   {
     if (entryExitTrace)
     {
-      writeTrace(className + ":" + methodName + ": }:" + lineNo);
+      AgentHelper.writeOutput(className + ":" + methodName + ": }:" + lineNo);
     }
   }
 }

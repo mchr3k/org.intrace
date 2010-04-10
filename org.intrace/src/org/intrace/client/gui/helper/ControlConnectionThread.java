@@ -19,7 +19,7 @@ public class ControlConnectionThread implements Runnable
   private final BlockingQueue<String> outgoingMessages = new LinkedBlockingQueue<String>();
   private final ControlConnectionSenderThread senderThread = new ControlConnectionSenderThread();
   private Thread sendThread;
-  
+
   public ControlConnectionThread(Socket socket, TraceWindow window)
   {
     this.window = window;
@@ -32,13 +32,13 @@ public class ControlConnectionThread implements Runnable
     receiveThread.setDaemon(true);
     receiveThread.setName("Control Receive Thread");
     receiveThread.start();
-    
+
     sendThread = new Thread(senderThread);
     sendThread.setDaemon(true);
     sendThread.setName("Control Sender Thread");
     sendThread.start();
   }
-  
+
   public String getMessage()
   {
     try
@@ -56,11 +56,11 @@ public class ControlConnectionThread implements Runnable
   public void run()
   {
     try
-    {                
+    {
       while (true)
       {
         ObjectInputStream objIn = new ObjectInputStream(socket.getInputStream());
-        Object receivedMessage = (Object)objIn.readObject();
+        Object receivedMessage = objIn.readObject();
         if (receivedMessage instanceof Map<?,?>)
         {
           Map<String,String> settingsMap = (Map<String,String>)receivedMessage;
@@ -78,10 +78,10 @@ public class ControlConnectionThread implements Runnable
     }
     catch (Exception e)
     {
-      window.disconnect();               
+      window.disconnect();
     }
   }
-    
+
   public void disconnect()
   {
     if (sendThread != null)
@@ -107,11 +107,11 @@ public class ControlConnectionThread implements Runnable
     catch (InterruptedException e1)
     {
       // Throw away
-    }    
+    }
   }
-  
+
   private class ControlConnectionSenderThread implements Runnable
-  {    
+  {
     @Override
     public void run()
     {

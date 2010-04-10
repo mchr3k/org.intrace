@@ -3,8 +3,10 @@ package org.intrace.client.gui.helper;
 
 import java.util.Map;
 
-import org.intrace.agent.AgentConfigConstants;
-import org.intrace.output.trace.TraceConfigConstants;
+import org.intrace.shared.AgentConfigConstants;
+import org.intrace.shared.CallersConfigConstants;
+import org.intrace.shared.OutputConfigConstants;
+import org.intrace.shared.TraceConfigConstants;
 
 public class ParsedSettingsData
 {
@@ -13,16 +15,19 @@ public class ParsedSettingsData
   public final boolean saveTracedClassfiles;
   public final boolean verboseMode;
   public final boolean allowJarsToBeTraced;
-  
+
+  public final boolean callersCaptureInProgress;
+
   public final boolean entryExitEnabled;
   public final boolean branchEnabled;
   public final boolean argsEnabled;
   public final boolean stdOutEnabled;
   public final boolean fileOutEnabled;
+  public final String callersRegex;
   public ParsedSettingsData(Map<String, String> settingsMap)
   {
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
-    
+
     if ("true".equals(settingsMap.get(AgentConfigConstants.TRACING_ENABLED)))
     {
       instrEnabled = true;
@@ -31,7 +36,7 @@ public class ParsedSettingsData
     {
       instrEnabled = false;
     }
-    
+
     if ("true".equals(settingsMap.get(AgentConfigConstants.SAVE_TRACED_CLASSFILES)))
     {
       saveTracedClassfiles = true;
@@ -40,7 +45,7 @@ public class ParsedSettingsData
     {
       saveTracedClassfiles = false;
     }
-    
+
     if ("true".equals(settingsMap.get(AgentConfigConstants.VERBOSE_MODE)))
     {
       verboseMode = true;
@@ -49,7 +54,7 @@ public class ParsedSettingsData
     {
       verboseMode = false;
     }
-    
+
     if ("true".equals(settingsMap.get(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED)))
     {
       allowJarsToBeTraced = true;
@@ -58,7 +63,18 @@ public class ParsedSettingsData
     {
       allowJarsToBeTraced = false;
     }
-    
+
+    callersRegex = settingsMap.get(CallersConfigConstants.PATTERN);
+
+    if ("true".equals(settingsMap.get(CallersConfigConstants.CALLERS_ENABLED)))
+    {
+      callersCaptureInProgress = true;
+    }
+    else
+    {
+      callersCaptureInProgress = false;
+    }
+
     if ("true".equals(settingsMap.get(TraceConfigConstants.ENTRY_EXIT)))
     {
       entryExitEnabled = true;
@@ -67,7 +83,7 @@ public class ParsedSettingsData
     {
       entryExitEnabled = false;
     }
-    
+
     if ("true".equals(settingsMap.get(TraceConfigConstants.BRANCH)))
     {
       branchEnabled = true;
@@ -76,7 +92,7 @@ public class ParsedSettingsData
     {
       branchEnabled = false;
     }
-    
+
     if ("true".equals(settingsMap.get(TraceConfigConstants.ARG)))
     {
       argsEnabled = true;
@@ -85,8 +101,8 @@ public class ParsedSettingsData
     {
       argsEnabled = false;
     }
-    
-    if ("true".equals(settingsMap.get(TraceConfigConstants.STD_OUT)))
+
+    if ("true".equals(settingsMap.get(OutputConfigConstants.STD_OUT)))
     {
       stdOutEnabled = true;
     }
@@ -94,8 +110,8 @@ public class ParsedSettingsData
     {
       stdOutEnabled = false;
     }
-    
-    if ("true".equals(settingsMap.get(TraceConfigConstants.FILE_OUT)))
+
+    if ("true".equals(settingsMap.get(OutputConfigConstants.FILE_OUT)))
     {
       fileOutEnabled = true;
     }

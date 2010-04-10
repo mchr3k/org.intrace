@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 
 import org.intrace.agent.server.AgentServer;
+import org.intrace.output.AgentHelper;
+import org.intrace.output.callers.CallersOutput;
+import org.intrace.output.trace.TraceOutput;
 
 /**
  * Trace Agent: Installs a Class Transformer to add trace lines.
@@ -43,8 +46,13 @@ public class Agent
   {
     System.out.println("Loaded Tracing Agent.");
 
+    if (agentArgs == null) agentArgs = "";
+
+    AgentHelper.outputHandlers.put(new TraceOutput(), new Object());
+    AgentHelper.outputHandlers.put(new CallersOutput(), new Object());
+
     AgentSettings args = new AgentSettings(agentArgs);
-    AgentHelper.getActiveOutputHandler().getResponse(agentArgs);
+    AgentHelper.getResponses(agentArgs);
 
     ClassTransformer t = new ClassTransformer(inst, args);
     inst.addTransformer(t, true);

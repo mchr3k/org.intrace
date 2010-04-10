@@ -11,16 +11,21 @@ public class ClientStrings
   public static final String DISABLE_SAVECLASSES = "Don't Save Classes";
   public static final String ENABLE_VERBOSEMODE = "Enable Verbose Mode";
   public static final String DISABLE_VERBOSEMODE = "Disable Verbose Mode";
+
   public static final String ENABLE_EE_TRACE = "Enable Entry/Exit Trace";
   public static final String DISABLE_EE_TRACE = "Disable Entry/Exit Trace";
   public static final String ENABLE_BRANCH_TRACE = "Enable Branch Trace";
   public static final String DISABLE_BRANCH_TRACE = "Disable Branch Trace";
   public static final String ENABLE_ARGS_TRACE = "Enable Args Trace";
   public static final String DISABLE_ARGS_TRACE = "Disable Args Trace";
-  public static final String ENABLE_STDOUT_TRACE = "Enable StdOut Trace";
-  public static final String DISABLE_STDOUT_TRACE = "Disable StdOut Trace";
-  public static final String ENABLE_FILE_TRACE = "Enable File Trace";
-  public static final String DISABLE_FILE_TRACE = "Disable File Trace";
-  public static final String ENABLE_NETWORK_TRACE = "Enable Network Trace";
-  public static final String DISABLE_NETWORK_TRACE = "Disable Network Trace";
+
+  public static final String BEGIN_CAPTURE_CALLERS = "Begin Callers Capture";
+  public static final String END_CAPTURE_CALLERS = "End Callers Capture";
+
+  public static final String ENABLE_STDOUT_OUTPUT = "Enable StdOut Output";
+  public static final String DISABLE_STDOUT_OUTPUT = "Disable StdOut Output";
+  public static final String ENABLE_FILE_OUTPUT = "Enable File Output";
+  public static final String DISABLE_FILE_OUTPUT = "Disable File Output";
+  public static final String ENABLE_NETWORK_OUTPUT = "Enable Network Output";
+  public static final String DISABLE_NETWORK_OUTPUT = "Disable Network Output";
 }
