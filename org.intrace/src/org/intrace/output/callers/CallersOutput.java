@@ -1,5 +1,6 @@
 package org.intrace.output.callers;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,6 +12,7 @@ public class CallersOutput extends IOutputAdapter
 {
   private final CallersSettings callersSettings = new CallersSettings("");
   private final Map<String, Object> recordedData = new ConcurrentHashMap<String, Object>();
+  private CaptureInProgress inProgress;
 
   @Override
   public synchronized String getResponse(String args)
@@ -25,15 +27,27 @@ public class CallersOutput extends IOutputAdapter
         System.out.println("## Callers Analysis Started");
         recordedData.clear();
         recordedData.put(CallersConfigConstants.MAP_ID, CallersConfigConstants.MAP_ID);
+        inProgress = new CaptureInProgress(this);
+        inProgress.start();
       }
       else
       {
         System.out.println("## Callers Analysis Ended");
-        AgentHelper.writeDataOutput(new ConcurrentHashMap<String, Object>(recordedData));
+        writeData(true);
+        inProgress.running = false;
+        inProgress.thread.interrupt();
       }
     }
 
     return null;
+  }
+
+  void writeData(boolean finalWrite)
+  {
+    Map<String, Object> dataToSend = new HashMap<String, Object>(recordedData);
+    dataToSend.put(CallersConfigConstants.FINAL, Boolean.toString(finalWrite));
+    dataToSend.put(CallersConfigConstants.PATTERN, callersSettings.getMethodRegex().pattern());
+    AgentHelper.writeDataOutput(dataToSend);
   }
 
   @Override
@@ -77,5 +91,42 @@ public class CallersOutput extends IOutputAdapter
         treeElement = (Map<String, Object>)treeElementObj;
       }
     }
+  }
+
+  private static class CaptureInProgress implements Runnable
+  {
+    private boolean running = true;
+    private Thread thread;
+    private final CallersOutput callersRef;
+    public CaptureInProgress(CallersOutput callersOutput)
+    {
+      callersRef = callersOutput;
+    }
+
+    public void start()
+    {
+      thread = new Thread(this);
+      thread.setDaemon(true);
+      thread.setName("CaptureInProgress");
+      thread.start();
+    }
+
+    @Override
+    public void run()
+    {
+      while (running)
+      {
+        try
+        {
+          callersRef.writeData(false);
+          Thread.sleep(5000);
+        }
+        catch (InterruptedException e)
+        {
+          // Throw away
+        }
+      }
+    }
+
   }
 }

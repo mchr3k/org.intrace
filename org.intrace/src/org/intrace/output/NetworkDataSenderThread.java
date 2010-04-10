@@ -7,10 +7,12 @@ import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class NetworkDataSenderThread implements Runnable
 {
   private final ServerSocket networkSocket;
+  private Socket traceSendingSocket = null;
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(100);
   private Set<NetworkDataSenderThread> set;
 
@@ -34,6 +36,10 @@ public class NetworkDataSenderThread implements Runnable
     try
     {
       networkSocket.close();
+      if (traceSendingSocket != null)
+      {
+        traceSendingSocket.close();
+      }
     }
     catch (IOException e)
     {
@@ -58,26 +64,25 @@ public class NetworkDataSenderThread implements Runnable
   @Override
   public void run()
   {
-    Socket traceSendingSocket;
     try
     {
       traceSendingSocket = networkSocket.accept();
-      try
+      traceSendingSocket.setKeepAlive(true);
+      ObjectOutputStream traceWriter = new ObjectOutputStream(traceSendingSocket.getOutputStream());
+      while (true)
       {
-        ObjectOutputStream traceWriter = new ObjectOutputStream(traceSendingSocket.getOutputStream());
-        while (true)
+        Object traceLine = outgoingData.poll(5, TimeUnit.SECONDS);
+        if (traceLine != null)
         {
-          Object traceLine = outgoingData.take();
           traceWriter.writeObject(traceLine);
         }
-      }
-      catch (Exception e)
-      {
-        traceSendingSocket.close();
-        throw e;
+        else
+        {
+          traceWriter.writeObject("NOOP");
+        }
       }
     }
-    catch (Exception e1)
+    catch (Exception ex)
     {
       stop();
     }

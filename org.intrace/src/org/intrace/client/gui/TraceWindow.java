@@ -72,6 +72,7 @@ public class TraceWindow
   private TabItem textOutputTabItem = null;
   private TabItem callersOutputTabItem = null;
   private Tree callersTree = null;
+  private TreeItem callersTreeRoot = null;
   private Label callersLabel = null;
   private Button callersStateButton = null;
 
@@ -392,14 +393,17 @@ public class TraceWindow
       networkTraceThread.disconnect();
     }
     connected = false;
-    sShell.getDisplay().asyncExec(new Runnable()
+    if (!sShell.isDisposed())
     {
-      @Override
-      public void run()
+      sShell.getDisplay().asyncExec(new Runnable()
       {
-        updateButtonText();
-      }
-    });
+        @Override
+        public void run()
+        {
+          updateButtonText();
+        }
+      });
+    }
   }
 
   private void toggleNetworkTrace()
@@ -602,6 +606,8 @@ public class TraceWindow
     statusTextArea.setBackground(Display.getCurrent()
                                  .getSystemColor(SWT.COLOR_WHITE));
     callersTree = new Tree(outputTabFolder, SWT.BORDER);
+    callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
+    callersTreeRoot.setText("Callers");
 
     textOutputTabItem = new TabItem(outputTabFolder, SWT.NONE);
     textOutputTabItem.setControl(statusTextArea);
@@ -614,53 +620,82 @@ public class TraceWindow
   public void setCallers(final Map<String, Object> callersMap)
   {
     callersMap.remove(CallersConfigConstants.MAP_ID);
+    final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
+    final Object callersRegex = callersMap.remove(CallersConfigConstants.PATTERN);
     sShell.getDisplay().asyncExec(new Runnable()
     {
       @Override
       public void run()
       {
-        callersTree.removeAll();
-        addCallersData(callersTree, callersMap);
-        outputTabFolder.setSelection(callersOutputTabItem);
+        String newRootText = "Callers: " + callersRegex;
+        String currentRootText = callersTreeRoot.getText();
+        if (!currentRootText.equals(newRootText))
+        {
+          callersTreeRoot.removeAll();
+          callersTreeRoot.setText(newRootText);
+        }
+        setCallersData(callersTreeRoot, callersMap);
+        if ("true".equals(finalFlag))
+        {
+          outputTabFolder.setSelection(callersOutputTabItem);
+        }
       }
     });
   }
 
   @SuppressWarnings("unchecked")
-  private void addCallersData(Object parentItem, Map<String, Object> callersMap)
+  private void setCallersData(TreeItem parentItem, Map<String, Object> callersMap)
   {
     for (Entry<String, Object> mapEntry : callersMap.entrySet())
     {
       String entryName = mapEntry.getKey();
-      TreeItem item;
-      if (parentItem instanceof Tree)
+
+      TreeItem item = null;
+      // Look for existing item
+      for (TreeItem iter_item : parentItem.getItems())
       {
-        item = new TreeItem((Tree) parentItem, SWT.NULL);
+        if (iter_item.getText().equals(entryName))
+        {
+          item = iter_item;
+          break;
+        }
       }
-      else
+
+      // Create new item
+      if (item == null)
       {
-        item = new TreeItem((TreeItem) parentItem, SWT.NULL);
+        item = new TreeItem(parentItem, SWT.NULL);
+        item.setText(entryName);
       }
-      item.setText(entryName);
+
+      // Process children
       Object entryValue = mapEntry.getValue();
       if (entryValue instanceof Map<?, ?>)
       {
         Map<String, Object> entryMap = (Map<String, Object>) entryValue;
         if (entryMap.size() > 0)
         {
-          addCallersData(item, entryMap);
+          setCallersData(item, entryMap);
         }
       }
     }
   }
 
-  public void setCallersRegex(String regex)
+  public void setCallersRegex(final String regex)
   {
     if (!settingsData.callersCaptureInProgress)
     {
       controlThread.sendMessage("[callers-regex-" + regex);
       toggleSetting(settingsData.callersCaptureInProgress,
                     "[callers-enabled-true", "[callers-enabled-false");
+      sShell.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          callersTreeRoot.removeAll();
+        }
+      });
     }
   }
 
@@ -668,12 +703,11 @@ public class TraceWindow
     Rectangle parentSize = parent.getBounds();
     Rectangle mySize = shell.getBounds();
 
-
     int locationX, locationY;
     locationX = (parentSize.width - mySize.width)/2+parentSize.x;
     locationY = (parentSize.height - mySize.height)/2+parentSize.y;
 
-
     shell.setLocation(new Point(locationX, locationY));
+    shell.open();
   }
 }

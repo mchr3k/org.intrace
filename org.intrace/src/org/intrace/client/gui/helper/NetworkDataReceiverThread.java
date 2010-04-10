@@ -41,7 +41,10 @@ public class NetworkDataReceiverThread implements Runnable
         if (data instanceof String)
         {
           String traceLine = (String)data;
-          window.addMessage(traceLine);
+          if (!"NOOP".equals(traceLine))
+          {
+            window.addMessage(traceLine);
+          }
         }
         else if (data instanceof Map<?,?>)
         {

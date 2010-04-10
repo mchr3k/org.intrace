@@ -28,7 +28,6 @@ public class NewConnectionWindow
   {
     this.mainWindowRef = mainWindowRef;
     createSShell();
-    sShell.open();
   }
 
   /**

@@ -76,7 +76,6 @@ public class CallersRegexInputWindow
   public void open(TraceWindow instanceWindowRef, String initText)
   {
     createSShell();
-    sShell.open();
     regexInput.setText(initText);
     mainWindowRef = instanceWindowRef;
   }
