@@ -173,11 +173,11 @@ public class AgentHelper
    * STATIC IMPLEMENTATION OF IOutput
    */
 
-  public static void enter(String className, String methodName)
+  public static void enter(String className, String methodName, int lineNo)
   {
     for (IOutput outputHandler : outputHandlers.keySet())
     {
-      outputHandler.enter(className, methodName);
+      outputHandler.enter(className, methodName, lineNo);
     }
   }
 

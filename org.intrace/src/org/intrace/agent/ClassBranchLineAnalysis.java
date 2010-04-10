@@ -16,23 +16,31 @@ import org.objectweb.asm.commons.EmptyVisitor;
  */
 public class ClassBranchLineAnalysis extends EmptyVisitor
 {
-  private Map<String, Set<Integer>> methodBranchTraceLines = new HashMap<String, Set<Integer>>();
+  public final Map<String, Set<Integer>> methodBranchTraceLines = new HashMap<String, Set<Integer>>();
+  public final Map<String, Integer> methodEntryLine = new HashMap<String, Integer>();
   private Set<Integer> branchTraceLines = new HashSet<Integer>();
-  private Map<Label,Integer> methodLabelLineNos = new HashMap<Label,Integer>();
+  private final Map<Label,Integer> methodLabelLineNos = new HashMap<Label,Integer>();
   private String methodSig;
   private boolean traceThisLine = false;
+  private boolean recordedMethodEntryLine = false;
 
   @Override
   public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions)
   {
     methodLabelLineNos.clear();
     methodSig = name + desc;
+    recordedMethodEntryLine = false;
     return this;
   }
 
   @Override
   public void visitLineNumber(int xiLineNo, Label xiLabel)
   {
+    if (!recordedMethodEntryLine)
+    {
+      methodEntryLine.put(methodSig, xiLineNo);
+      recordedMethodEntryLine = true;
+    }
     methodLabelLineNos.put(xiLabel, xiLineNo);
     if (traceThisLine)
     {
@@ -67,13 +75,5 @@ public class ClassBranchLineAnalysis extends EmptyVisitor
       methodSig = null;
       branchTraceLines = new HashSet<Integer>();
     }
-  }
-
-  /**
-   * @return Analysis data.
-   */
-  public Map<String, Set<Integer>> getMethodBranchLabels()
-  {
-    return methodBranchTraceLines;
   }
 }

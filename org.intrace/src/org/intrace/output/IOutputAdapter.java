@@ -121,7 +121,7 @@ public class IOutputAdapter implements IOutput
   }
 
   @Override
-  public void enter(String className, String methodName)
+  public void enter(String className, String methodName, int lineNo)
   {
     // Do nothing
   }

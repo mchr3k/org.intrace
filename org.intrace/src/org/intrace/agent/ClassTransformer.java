@@ -102,7 +102,7 @@ public class ClassTransformer implements ClassFileTransformer
         {
           inst.retransformClasses(loadedClass);
         }
-        catch (UnmodifiableClassException e)
+        catch (Exception e)
         {
           // Write exception to stdout
           e.printStackTrace();
@@ -139,7 +139,7 @@ public class ClassTransformer implements ClassFileTransformer
                                               ProtectionDomain protectionDomain)
   {
     // Don't modify self
-    if (className.startsWith("gb.instrument"))
+    if (className.startsWith("org.intrace"))
     {
       if (args.isVerboseMode())
       {
@@ -262,7 +262,7 @@ public class ClassTransformer implements ClassFileTransformer
     cr.accept(analysis, false);
     InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
                                                                  cr,
-                                                                 analysis.getMethodBranchLabels());
+                                                                 analysis);
     cr.accept(writer, false);
     return writer.toByteArray();
   }

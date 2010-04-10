@@ -23,7 +23,7 @@ public class AgentSettings
 
   public AgentSettings(String args)
   {
-    parseArg(args);
+    parseArgs(args);
   }
 
   public AgentSettings(AgentSettings oldInstance)

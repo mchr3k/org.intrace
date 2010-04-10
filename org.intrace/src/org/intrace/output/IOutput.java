@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public interface IOutput
 {
-  public void enter(String className, String methodName);
+  public void enter(String className, String methodName, int lineNo);
 
   public void arg(String className, String methodName, byte byteArg);
   public void arg(String className, String methodName, byte[] byteArrayArg);

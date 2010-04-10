@@ -23,6 +23,7 @@ public class InstrumentedMethodWriter extends MethodAdapter
   private int lineNumber = -1;
 
   private final Set<Integer> branchTraceLines;
+  private final Integer entryLine;
 
   private boolean writeTraceLine = false;
 
@@ -31,47 +32,50 @@ public class InstrumentedMethodWriter extends MethodAdapter
    * @param xiMethodVisitor
    * @param xiClassName
    * @param xiMethodName
-   * @param xiDesc 
+   * @param xiDesc
    * @param xiBranchTraceLines
+   * @param entryLine
    */
   public InstrumentedMethodWriter(MethodVisitor xiMethodVisitor,
-                           String xiClassName,
-                           String xiMethodName,
-                           String xiDesc, 
-                           Set<Integer> xiBranchTraceLines)
+                                  String xiClassName,
+                                  String xiMethodName,
+                                  String xiDesc,
+                                  Set<Integer> xiBranchTraceLines,
+                                  Integer xiEntryLine)
   {
     super(xiMethodVisitor);
     className = xiClassName;
     methodName = xiMethodName;
     methodDescriptor = xiDesc;
     branchTraceLines = xiBranchTraceLines;
+    entryLine = xiEntryLine;
   }
 
   @Override
   public void visitCode()
   {
-    generateCallToWriteBranchTrace(TraceType.BEGIN,-1);
+    generateCallToWriteBranchTrace(TraceType.BEGIN,((entryLine != null ? entryLine : -1)));
     traceArgs();
     super.visitCode();
   }
-  
+
   private void traceArgs()
   {
     Type[] argTypes = Type.getArgumentTypes(methodDescriptor);
     for (int ii = 0; ii < argTypes.length; ii++)
     {
-      String typeDescriptor = argTypes[ii].getDescriptor();     
-      
+      String typeDescriptor = argTypes[ii].getDescriptor();
+
       if (argTypes[ii].getSort() == Type.OBJECT)
       {
         typeDescriptor = "Ljava/lang/Object;";
       }
       else if ((argTypes[ii].getSort() == Type.ARRAY) &&
-               (argTypes[ii].getDescriptor().startsWith("[L")))
+          (argTypes[ii].getDescriptor().startsWith("[L")))
       {
         typeDescriptor = "[Ljava/lang/Object;";
       }
-              
+
       mv.visitLdcInsn(className);
       mv.visitLdcInsn(methodName);
       mv.visitVarInsn(Opcodes.ALOAD, ii);
@@ -79,12 +83,12 @@ public class InstrumentedMethodWriter extends MethodAdapter
                          HELPER_CLASS,
                          "arg",
                          "(Ljava/lang/String;Ljava/lang/String;" + typeDescriptor + ")V");
-    } 
+    }
   }
 
   @Override
   public void visitLineNumber(int xiLineNumber, Label label)
-  {    
+  {
     lineNumber = xiLineNumber;
     if (writeTraceLine ||
         branchTraceLines.contains(xiLineNumber))
@@ -120,41 +124,42 @@ public class InstrumentedMethodWriter extends MethodAdapter
   {
     switch (traceType)
     {
-      case BEGIN:
-      {
-        mv.visitLdcInsn(className);
-        mv.visitLdcInsn(methodName);        
-        mv.visitMethodInsn(INVOKESTATIC,
-                           HELPER_CLASS,
-                           "enter",
-                           "(Ljava/lang/String;Ljava/lang/String;)V");
-      }
-      break;
-      
-      case BRANCH:
-      {
-        mv.visitLdcInsn(className);
-        mv.visitLdcInsn(methodName);
-        mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
-        mv.visitMethodInsn(INVOKESTATIC,
-                           HELPER_CLASS,
-                           "branch",
-                           "(Ljava/lang/String;Ljava/lang/String;I)V");
-      }
-      break;
-      
-      case END:
-      {
-        mv.visitLdcInsn(className);
-        mv.visitLdcInsn(methodName);
-        mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
-        mv.visitMethodInsn(INVOKESTATIC,
-                           HELPER_CLASS,
-                           "exit",
-                           "(Ljava/lang/String;Ljava/lang/String;I)V");
-      }
-      break;
-    }    
+    case BEGIN:
+    {
+      mv.visitLdcInsn(className);
+      mv.visitLdcInsn(methodName);
+      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
+      mv.visitMethodInsn(INVOKESTATIC,
+                         HELPER_CLASS,
+                         "enter",
+      "(Ljava/lang/String;Ljava/lang/String;I)V");
+    }
+    break;
+
+    case BRANCH:
+    {
+      mv.visitLdcInsn(className);
+      mv.visitLdcInsn(methodName);
+      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
+      mv.visitMethodInsn(INVOKESTATIC,
+                         HELPER_CLASS,
+                         "branch",
+      "(Ljava/lang/String;Ljava/lang/String;I)V");
+    }
+    break;
+
+    case END:
+    {
+      mv.visitLdcInsn(className);
+      mv.visitLdcInsn(methodName);
+      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
+      mv.visitMethodInsn(INVOKESTATIC,
+                         HELPER_CLASS,
+                         "exit",
+      "(Ljava/lang/String;Ljava/lang/String;I)V");
+    }
+    break;
+    }
   }
 
   private enum TraceType

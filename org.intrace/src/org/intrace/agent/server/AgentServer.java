@@ -16,7 +16,7 @@ import org.intrace.agent.ClassTransformer;
 public class AgentServer implements Runnable
 {
   private final ClassTransformer transformer;
-  
+
   private final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
 
   /**
@@ -32,7 +32,7 @@ public class AgentServer implements Runnable
   {
     clientConnections.remove(connection);
   }
-  
+
   public void broadcastMessage(AgentClientConnection requestingConn, Object message) throws IOException
   {
     IOException ex = null;
@@ -47,7 +47,7 @@ public class AgentServer implements Runnable
         if (requestingConn == clientConn)
         {
           ex = ioex;
-        }        
+        }
       }
     }
     if (ex != null)
@@ -55,7 +55,7 @@ public class AgentServer implements Runnable
       throw ex;
     }
   }
-  
+
   @Override
   public void run()
   {
@@ -67,7 +67,7 @@ public class AgentServer implements Runnable
       try
       {
         ServerSocket serversock = new ServerSocket(tracePort);
-        System.out.println("Listening on port " + serversock.getLocalPort());
+        System.out.println("## Listening on port " + serversock.getLocalPort());
         while (true)
         {
           Socket connectedClient = serversock.accept();
@@ -77,13 +77,13 @@ public class AgentServer implements Runnable
           clientThread.setDaemon(true);
           clientThread.setName("AgentServer-Client" + clientNum);
           clientThread.start();
-          clientNum++;          
+          clientNum++;
         }
       }
       catch (BindException e)
       {
         numAllowedExcept--;
-        System.out.println("Unable to listen on port: " + tracePort);
+        System.out.println("## Unable to listen on port: " + tracePort);
         tracePort++;
       }
       catch (Throwable t)
@@ -100,6 +100,6 @@ public class AgentServer implements Runnable
         }
       }
     }
-    System.out.println("Too many exceptions - server thread quitting.");
+    System.out.println("## Too many exceptions - server thread quitting.");
   }
 }

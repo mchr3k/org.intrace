@@ -513,6 +513,7 @@ public class TraceWindow
       {
         callersTree.removeAll();
         addCallersData(callersTree, callersMap);
+        outputTabFolder.setSelection(callersOutputTabItem);
       }
     });
   }

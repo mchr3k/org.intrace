@@ -1,7 +1,6 @@
 package org.intrace.agent;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.objectweb.asm.ClassReader;
@@ -14,35 +13,36 @@ import org.objectweb.asm.MethodVisitor;
 public class InstrumentedClassWriter extends ClassWriter
 {
   private final String mClassName;
-  private final Map<String, Set<Integer>> methodBranchTraceLines;
+  private final ClassBranchLineAnalysis analysis;
 
   /**
    * cTor
    * 
    * @param xiClassName
    * @param xiReader
-   * @param xiMap
+   * @param analysis
    */
   public InstrumentedClassWriter(String xiClassName, ClassReader xiReader,
-      Map<String, Set<Integer>> xiMap)
+                                 ClassBranchLineAnalysis xiAnalysis)
   {
     super(xiReader, true);
     mClassName = xiClassName;
-    methodBranchTraceLines = xiMap;
+    analysis = xiAnalysis;
   }
 
   @Override
   public MethodVisitor visitMethod(int access, String name, String desc,
-      String signature, String[] exceptions)
+                                   String signature, String[] exceptions)
   {
     MethodVisitor mv = super.visitMethod(access, name, desc, signature,
-        exceptions);
-    Set<Integer> branchTraceLines = methodBranchTraceLines.get(name + desc);
+                                         exceptions);
+    Set<Integer> branchTraceLines = analysis.methodBranchTraceLines.get(name + desc);
+    Integer entryLine = analysis.methodEntryLine.get(name + desc);
     if (branchTraceLines == null)
     {
       branchTraceLines = new HashSet<Integer>();
     }
-    return new InstrumentedMethodWriter(mv, mClassName, name, desc, branchTraceLines);
+    return new InstrumentedMethodWriter(mv, mClassName, name, desc, branchTraceLines, entryLine);
   }
 
 }

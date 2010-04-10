@@ -43,17 +43,17 @@ public class CallersOutput extends IOutputAdapter
   }
 
   @Override
-  public void enter(String className, String methodName)
+  public void enter(String className, String methodName, int lineNo)
   {
     if (callersSettings.isCallersEnabled()
         && callersSettings.getMethodRegex().matcher(methodName).matches())
     {
-      recordCall();
+      recordCall(lineNo);
     }
   }
 
   @SuppressWarnings("unchecked")
-  private synchronized void recordCall()
+  private synchronized void recordCall(int lineNo)
   {
     StackTraceElement[] stackTrace = new Exception().getStackTrace();
     if ((stackTrace != null) && (stackTrace.length > 3))
@@ -64,7 +64,9 @@ public class CallersOutput extends IOutputAdapter
         StackTraceElement element = stackTrace[ii];
         String stackLine = element.getClassName() + "#"
         + element.getMethodName() + ":"
-        + ((element.getLineNumber() > -1) ? element.getLineNumber() : "unknown") ;
+        + ((element.getLineNumber() > -1) ?
+                                           element.getLineNumber() :
+                                             ((lineNo > -1) ? lineNo : "unknown"));
 
         Object treeElementObj = treeElement.get(stackLine);
         if (treeElementObj == null)

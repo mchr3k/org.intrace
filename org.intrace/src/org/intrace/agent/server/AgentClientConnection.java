@@ -37,7 +37,7 @@ public class AgentClientConnection implements Runnable
     serverRef = agentServer;
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
-    System.out.println("Connected to: " + xiConnectedClient.getPort());
+    System.out.println("## Connected to: " + xiConnectedClient.getPort());
   }
 
   @Override
@@ -79,7 +79,7 @@ public class AgentClientConnection implements Runnable
           quit = true;
         }
       }
-      System.out.println("Disconnected from: " + connectedClient.getPort());
+      System.out.println("## Disconnected from: " + connectedClient.getPort());
       connectedClient.close();
     }
     catch (IOException e1)

@@ -17,31 +17,31 @@ public class TraceOutput implements IOutput
   private boolean argTrace = false;
 
   final TraceSettings traceSettings = new TraceSettings("");
-  
+
   public String getResponse(String args)
   {
     TraceSettings oldSettings = new TraceSettings(traceSettings);
     traceSettings.parseArgs(args);
-    
+
     if ((oldSettings.isEntryExitTraceEnabled() != traceSettings.isEntryExitTraceEnabled()) ||
         (oldSettings.isBranchTraceEnabled() != traceSettings.isBranchTraceEnabled()) ||
         (oldSettings.isArgTraceEnabled() != traceSettings.isArgTraceEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
-    
+
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
-    
+
     return null;
   }
-  
+
   public Map<String,String> getSettingsMap()
   {
     return traceSettings.getSettingsMap();
   }
-    
+
   @Override
   public void arg(String className, String methodName, byte byteArg)
   {
@@ -56,7 +56,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(byteArrayArg));
+                              + Arrays.toString(byteArrayArg));
     }
   }
 
@@ -74,7 +74,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(shortArrayArg));
+                              + Arrays.toString(shortArrayArg));
     }
   }
 
@@ -93,7 +93,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(intArrayArg));
+                              + Arrays.toString(intArrayArg));
     }
   }
 
@@ -112,7 +112,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(longArrayArg));
+                              + Arrays.toString(longArrayArg));
     }
   }
 
@@ -131,7 +131,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(floatArrayArg));
+                              + Arrays.toString(floatArrayArg));
     }
   }
 
@@ -150,7 +150,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(doubleArrayArg));
+                              + Arrays.toString(doubleArrayArg));
     }
   }
 
@@ -169,7 +169,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(boolArrayArg));
+                              + Arrays.toString(boolArrayArg));
     }
   }
 
@@ -188,7 +188,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(charArrayArg));
+                              + Arrays.toString(charArrayArg));
     }
   }
 
@@ -206,7 +206,7 @@ public class TraceOutput implements IOutput
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-          + Arrays.toString(objArrayArg));
+                              + Arrays.toString(objArrayArg));
     }
   }
 
@@ -220,11 +220,11 @@ public class TraceOutput implements IOutput
   }
 
   @Override
-  public void enter(String className, String methodName)
+  public void enter(String className, String methodName, int lineNo)
   {
     if (entryExitTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": {");
+      AgentHelper.writeOutput(className + ":" + methodName + ": {:" + lineNo);
     }
   }
 
