@@ -102,9 +102,10 @@ public class ClassTransformer implements ClassFileTransformer
         {
           inst.retransformClasses(loadedClass);
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
           // Write exception to stdout
+          System.out.println(loadedClass.getName());
           e.printStackTrace();
         }
       }
@@ -139,7 +140,8 @@ public class ClassTransformer implements ClassFileTransformer
                                               ProtectionDomain protectionDomain)
   {
     // Don't modify self
-    if (className.startsWith("org.intrace"))
+    if (className.startsWith("org.intrace") ||
+        className.startsWith("org.objectweb.asm"))
     {
       if (args.isVerboseMode())
       {

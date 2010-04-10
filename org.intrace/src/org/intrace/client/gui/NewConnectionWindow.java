@@ -8,45 +8,27 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 public class NewConnectionWindow
 {
-  private Shell sShell = null; // @jve:decl-index=0:visual-constraint="10,10"
+  Shell sShell = null; // @jve:decl-index=0:visual-constraint="10,10"
   private Text addressText = null;
   private Text portText = null;
   private Label addressLabel = null;
   private Label portLabel = null;
   private Button connectButton = null;
   private Label statusLabel = null;
-  
-  private NewConnectionWindow instanceRef = this;  //  @jve:decl-index=0:
 
-  public void open()
+  private TraceWindow mainWindowRef;
+
+  public void open(TraceWindow mainWindowRef)
   {
+    this.mainWindowRef = mainWindowRef;
     createSShell();
     sShell.open();
-    Display display = Display.getDefault();
-    while (!sShell.isDisposed())
-    {
-      if (!display.readAndDispatch())
-        display.sleep();
-    }
-    display.dispose();
-  }
-  
-  public void show()
-  {
-    sShell.setVisible(true);
-    sShell.setFocus();
-  }
-  
-  public void hide()
-  {
-    sShell.setVisible(false);
   }
 
   /**
@@ -67,12 +49,13 @@ public class NewConnectionWindow
     gridData.horizontalAlignment = org.eclipse.swt.layout.GridData.CENTER;
     GridLayout gridLayout = new GridLayout();
     gridLayout.numColumns = 2;
-    sShell = new Shell(SWT.CLOSE | SWT.TITLE | SWT.MIN);
+    sShell = new Shell(SWT.CLOSE | SWT.TITLE | SWT.MIN | SWT.APPLICATION_MODAL);
     sShell.setText("Trace Client");
     sShell.setLayout(gridLayout);
     sShell.setSize(new Point(475, 126));
     sShell.addShellListener(new org.eclipse.swt.events.ShellAdapter()
     {
+      @Override
       public void shellClosed(org.eclipse.swt.events.ShellEvent e)
       {
         sShell.dispose();
@@ -100,6 +83,7 @@ public class NewConnectionWindow
     statusLabel.setLayoutData(gridData11);
     connectButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
+      @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
         String host = addressText.getText();
@@ -114,7 +98,7 @@ public class NewConnectionWindow
     if (host.length() == 0)
     {
       sShell.getDisplay().asyncExec(new Runnable()
-      {          
+      {
         @Override
         public void run()
         {
@@ -125,7 +109,7 @@ public class NewConnectionWindow
     else if (port.length() == 0)
     {
       sShell.getDisplay().asyncExec(new Runnable()
-      {          
+      {
         @Override
         public void run()
         {
@@ -136,13 +120,13 @@ public class NewConnectionWindow
     else
     {
       sShell.getDisplay().asyncExec(new Runnable()
-      {          
+      {
         @Override
         public void run()
         {
           statusLabel.setText("Connecting...");
           new Thread(new Runnable()
-          {     
+          {
             @Override
             public void run()
             {
@@ -153,15 +137,14 @@ public class NewConnectionWindow
                 socket.connect(new InetSocketAddress(host, Integer.valueOf(port)));
                 statusMessage = "Connected";
                 sShell.getDisplay().asyncExec(new Runnable()
-                {          
+                {
                   @Override
                   public void run()
                   {
-                    hide();
-                    TraceWindow traceWindow = new TraceWindow(instanceRef, socket);
-                    traceWindow.open();
+                    mainWindowRef.setConnection(socket);
+                    sShell.close();
                   }
-                });            
+                });
               }
               catch (Exception e)
               {
@@ -169,11 +152,14 @@ public class NewConnectionWindow
               }
               final String statusMessageRef = statusMessage;
               sShell.getDisplay().asyncExec(new Runnable()
-              {          
+              {
                 @Override
                 public void run()
                 {
-                  statusLabel.setText(statusMessageRef);
+                  if (!sShell.isDisposed())
+                  {
+                    statusLabel.setText(statusMessageRef);
+                  }
                 }
               });
             }

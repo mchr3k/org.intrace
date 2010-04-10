@@ -28,4 +28,7 @@ public class ClientStrings
   public static final String DISABLE_FILE_OUTPUT = "Disable File Output";
   public static final String ENABLE_NETWORK_OUTPUT = "Enable Network Output";
   public static final String DISABLE_NETWORK_OUTPUT = "Disable Network Output";
+
+  public static final String CONNECT = "Connect...";
+  public static final String DISCONNECT = "Disconnect";
 }

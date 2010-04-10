@@ -1,6 +1,5 @@
 package org.intrace.client.gui;
 
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -10,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -30,20 +30,23 @@ import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow
 {
-  // Window refs
+  // Window ref
   private final TraceWindow traceDialogRef = this;
-  private final NewConnectionWindow newConnectionDialogRef;
+
+  // State
+  private boolean connected = false;
 
   // Network details
-  private final InetAddress remoteAddress;
-  private boolean networkTraceEnabled = false;
+  private InetAddress remoteAddress;
+  private boolean networkDataEnabled = false;
 
   // Threads
   private NetworkDataReceiverThread networkTraceThread;
-  private final ControlConnectionThread controlThread;
+  private ControlConnectionThread controlThread;
 
   // Settings
-  private ParsedSettingsData settingsData = new ParsedSettingsData(new HashMap<String, String>());  //  @jve:decl-index=0:
+  private ParsedSettingsData settingsData = new ParsedSettingsData(
+                                                                   new HashMap<String, String>());
 
   // UI Elements
   private Shell sShell = null;
@@ -72,12 +75,21 @@ public class TraceWindow
   private Label callersLabel = null;
   private Button callersStateButton = null;
 
-  public TraceWindow(NewConnectionWindow instanceRef, Socket socket)
+  public void setConnection(Socket socket)
   {
-    this.newConnectionDialogRef = instanceRef;
     this.remoteAddress = socket.getInetAddress();
     controlThread = new ControlConnectionThread(socket, this);
     controlThread.start();
+    controlThread.sendMessage("getsettings");
+    connected = true;
+    sShell.getDisplay().asyncExec(new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        updateButtonText();
+      }
+    });
   }
 
   /**
@@ -128,54 +140,69 @@ public class TraceWindow
     .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.instrEnabled, "[instru-true", "[instru-false");
+        toggleSetting(settingsData.instrEnabled,
+                      "[instru-true", "[instru-false");
       }
     });
     setClassRegexButton = new Button(sShell, SWT.LEFT);
     setClassRegexButton.setText(ClientStrings.SET_CLASSREGEX);
     setClassRegexButton.setLayoutData(gridData41);
-    setClassRegexButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    setClassRegexButton
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
         InstruRegexInputWindow regexInput = new InstruRegexInputWindow();
-        regexInput.open(traceDialogRef, settingsData.classRegex);
+        regexInput.open(traceDialogRef,
+                        settingsData.classRegex);
+        placeDialogInCenter(sShell, regexInput.sShell);
       }
     });
     toggleAllowJarInstru = new Button(sShell, SWT.LEFT);
     toggleAllowJarInstru.setText(ClientStrings.ENABLE_ALLOWJARS);
     toggleAllowJarInstru.setLayoutData(gridData5);
-    toggleAllowJarInstru.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    toggleAllowJarInstru
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.allowJarsToBeTraced, "[instrujars-true", "[instrujars-false");
+        toggleSetting(settingsData.allowJarsToBeTraced,
+                      "[instrujars-true",
+        "[instrujars-false");
       }
     });
     toggleSaveClassFiles = new Button(sShell, SWT.LEFT);
     toggleSaveClassFiles.setText(ClientStrings.ENABLE_SAVECLASSES);
     toggleSaveClassFiles.setLayoutData(gridData6);
-    toggleSaveClassFiles.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    toggleSaveClassFiles
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.saveTracedClassfiles, "[saveinstru-true", "[saveinstru-false");
+        toggleSetting(settingsData.saveTracedClassfiles,
+                      "[saveinstru-true",
+        "[saveinstru-false");
       }
     });
     toggleVerboseMode = new Button(sShell, SWT.LEFT);
     toggleVerboseMode.setText(ClientStrings.ENABLE_VERBOSEMODE);
     toggleVerboseMode.setLayoutData(gridData7);
-    toggleVerboseMode.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    toggleVerboseMode
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.verboseMode, "[verbose-true", "[verbose-false");
+        toggleSetting(settingsData.verboseMode,
+                      "[verbose-true", "[verbose-false");
       }
     });
     sShell.setMinimumSize(new Point(700, 500));
@@ -187,7 +214,6 @@ public class TraceWindow
       public void shellClosed(org.eclipse.swt.events.ShellEvent e)
       {
         disconnect();
-        newConnectionDialogRef.show();
         sShell.dispose();
       }
     });
@@ -198,20 +224,25 @@ public class TraceWindow
     .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.entryExitEnabled, "[trace-ee-true", "[trace-ee-false");
+        toggleSetting(settingsData.entryExitEnabled,
+                      "[trace-ee-true", "[trace-ee-false");
       }
     });
     toggleBranchButton = new Button(sShell, SWT.LEFT);
     toggleBranchButton.setText(ClientStrings.ENABLE_BRANCH_TRACE);
     toggleBranchButton.setLayoutData(gridData1);
-    toggleBranchButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    toggleBranchButton
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.branchEnabled, "[trace-branch-true", "[trace-branch-false");
+        toggleSetting(settingsData.branchEnabled,
+                      "[trace-branch-true",
+        "[trace-branch-false");
       }
     });
     toggleArgsButton = new Button(sShell, SWT.LEFT);
@@ -222,7 +253,8 @@ public class TraceWindow
     callersStateButton = new Button(sShell, SWT.NONE);
     callersStateButton.setLayoutData(gridData12);
     callersStateButton.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
-    callersStateButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    callersStateButton
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
@@ -230,11 +262,16 @@ public class TraceWindow
         if (!settingsData.callersCaptureInProgress)
         {
           CallersRegexInputWindow regexInput = new CallersRegexInputWindow();
-          regexInput.open(traceDialogRef, settingsData.callersRegex);
+          regexInput.open(traceDialogRef,
+                          settingsData.callersRegex);
+          placeDialogInCenter(sShell, regexInput.sShell);
         }
         else
         {
-          toggleSetting(settingsData.callersCaptureInProgress, "[callers-enabled-true", "[callers-enabled-false");
+          toggleSetting(
+                        settingsData.callersCaptureInProgress,
+                        "[callers-enabled-true",
+          "[callers-enabled-false");
         }
       }
     });
@@ -245,7 +282,8 @@ public class TraceWindow
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.argsEnabled, "[trace-args-true", "[trace-args-false");
+        toggleSetting(settingsData.argsEnabled, "[trace-args-true",
+        "[trace-args-false");
       }
     });
     toggleStdOutButton = new Button(sShell, SWT.LEFT);
@@ -261,7 +299,8 @@ public class TraceWindow
     .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
         toggleNetworkTrace();
       }
@@ -270,37 +309,51 @@ public class TraceWindow
     .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      public void mouseUp(
+                          org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.fileOutEnabled, "[out-file-true", "[out-file-false");
+        toggleSetting(settingsData.fileOutEnabled,
+                      "[out-file-true", "[out-file-false");
       }
     });
     spacerLabel = new Label(sShell, SWT.NONE);
     spacerLabel.setText("");
-    toggleStdOutButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    toggleStdOutButton
+    .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
-        toggleSetting(settingsData.stdOutEnabled, "[out-stdout-true", "[out-stdout-false");
+        toggleSetting(settingsData.stdOutEnabled,
+                      "[out-stdout-true", "[out-stdout-false");
       }
     });
     disconnectButton = new Button(sShell, SWT.LEFT);
-    disconnectButton.setText("Disconnect");
+    disconnectButton.setText(ClientStrings.CONNECT);
     disconnectButton.setLayoutData(gridData);
     disconnectButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       @Override
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
-        sShell.close();
+        if (!connected)
+        {
+          NewConnectionWindow connWindow = new NewConnectionWindow();
+          connWindow.open(traceDialogRef);
+          placeDialogInCenter(sShell, connWindow.sShell);
+        }
+        else
+        {
+          disconnect();
+        }
       }
     });
+    updateButtonText();
   }
 
   /**
    * This method initializes composite
-   *
+   * 
    */
   private void createComposite()
   {
@@ -322,8 +375,13 @@ public class TraceWindow
   {
     createSShell();
     sShell.open();
-    addMessage("*** Connected!");
-    controlThread.sendMessage("getsettings");
+    Display display = Display.getDefault();
+    while (!sShell.isDisposed())
+    {
+      if (!display.readAndDispatch())
+        display.sleep();
+    }
+    display.dispose();
   }
 
   public void disconnect()
@@ -333,6 +391,15 @@ public class TraceWindow
     {
       networkTraceThread.disconnect();
     }
+    connected = false;
+    sShell.getDisplay().asyncExec(new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        updateButtonText();
+      }
+    });
   }
 
   private void toggleNetworkTrace()
@@ -343,16 +410,19 @@ public class TraceWindow
       public void run()
       {
         disableButtons();
-        if (!networkTraceEnabled)
+        if (!networkDataEnabled)
         {
           controlThread.sendMessage("[out-network");
           String networkTracePortStr = controlThread.getMessage();
           int networkTracePort = Integer.parseInt(networkTracePortStr);
           try
           {
-            networkTraceThread = new NetworkDataReceiverThread(remoteAddress, networkTracePort, traceDialogRef);
+            networkTraceThread = new NetworkDataReceiverThread(
+                                                               remoteAddress,
+                                                               networkTracePort,
+                                                               traceDialogRef);
             networkTraceThread.start();
-            networkTraceEnabled = true;
+            networkDataEnabled = true;
           }
           catch (IOException ex)
           {
@@ -362,7 +432,7 @@ public class TraceWindow
         else
         {
           networkTraceThread.disconnect();
-          networkTraceEnabled = false;
+          networkDataEnabled = false;
         }
         updateButtonText();
       }
@@ -383,7 +453,9 @@ public class TraceWindow
     });
   }
 
-  private void toggleSetting(final boolean settingValue, final String enableCommand, final String disableCommand)
+  private void toggleSetting(final boolean settingValue,
+                             final String enableCommand,
+                             final String disableCommand)
   {
     sShell.getDisplay().asyncExec(new Runnable()
     {
@@ -423,7 +495,8 @@ public class TraceWindow
     toggleNetworkTraceButton.setEnabled(false);
   }
 
-  private void chooseText(Button control, boolean option, String enabledText, String disabledText)
+  private void chooseText(Button control, boolean option, String enabledText,
+                          String disabledText)
   {
     if (option)
     {
@@ -438,23 +511,53 @@ public class TraceWindow
 
   private void updateButtonText()
   {
-    addMessage("*** Latest Settings Received");
+    if (!sShell.isDisposed())
+    {
+      if (connected)
+      {
+        chooseText(toggleInstrumentEnabled, settingsData.instrEnabled,
+                   ClientStrings.ENABLE_INSTR, ClientStrings.DISABLE_INSTR);
+        chooseText(toggleAllowJarInstru, settingsData.allowJarsToBeTraced,
+                   ClientStrings.ENABLE_ALLOWJARS, ClientStrings.DISABLE_ALLOWJARS);
+        chooseText(toggleSaveClassFiles, settingsData.saveTracedClassfiles,
+                   ClientStrings.ENABLE_SAVECLASSES,
+                   ClientStrings.DISABLE_SAVECLASSES);
+        chooseText(toggleVerboseMode, settingsData.verboseMode,
+                   ClientStrings.ENABLE_VERBOSEMODE,
+                   ClientStrings.DISABLE_VERBOSEMODE);
 
-    chooseText(toggleInstrumentEnabled, settingsData.instrEnabled, ClientStrings.ENABLE_INSTR, ClientStrings.DISABLE_INSTR);
-    chooseText(toggleAllowJarInstru, settingsData.allowJarsToBeTraced, ClientStrings.ENABLE_ALLOWJARS, ClientStrings.DISABLE_ALLOWJARS);
-    chooseText(toggleSaveClassFiles, settingsData.saveTracedClassfiles, ClientStrings.ENABLE_SAVECLASSES, ClientStrings.DISABLE_SAVECLASSES);
-    chooseText(toggleVerboseMode, settingsData.verboseMode, ClientStrings.ENABLE_VERBOSEMODE, ClientStrings.DISABLE_VERBOSEMODE);
+        chooseText(toggleEntryExitButton, settingsData.entryExitEnabled,
+                   ClientStrings.ENABLE_EE_TRACE, ClientStrings.DISABLE_EE_TRACE);
+        chooseText(toggleBranchButton, settingsData.branchEnabled,
+                   ClientStrings.ENABLE_BRANCH_TRACE,
+                   ClientStrings.DISABLE_BRANCH_TRACE);
+        chooseText(toggleArgsButton, settingsData.argsEnabled,
+                   ClientStrings.ENABLE_ARGS_TRACE,
+                   ClientStrings.DISABLE_ARGS_TRACE);
 
-    chooseText(toggleEntryExitButton, settingsData.entryExitEnabled, ClientStrings.ENABLE_EE_TRACE, ClientStrings.DISABLE_EE_TRACE);
-    chooseText(toggleBranchButton, settingsData.branchEnabled, ClientStrings.ENABLE_BRANCH_TRACE, ClientStrings.DISABLE_BRANCH_TRACE);
-    chooseText(toggleArgsButton, settingsData.argsEnabled, ClientStrings.ENABLE_ARGS_TRACE, ClientStrings.DISABLE_ARGS_TRACE);
+        chooseText(callersStateButton, settingsData.callersCaptureInProgress,
+                   ClientStrings.BEGIN_CAPTURE_CALLERS,
+                   ClientStrings.END_CAPTURE_CALLERS);
+        callersStateButton.setEnabled(networkDataEnabled);
 
-    chooseText(callersStateButton, settingsData.callersCaptureInProgress, ClientStrings.BEGIN_CAPTURE_CALLERS, ClientStrings.END_CAPTURE_CALLERS);
-
-    chooseText(toggleStdOutButton, settingsData.stdOutEnabled, ClientStrings.ENABLE_STDOUT_OUTPUT, ClientStrings.DISABLE_STDOUT_OUTPUT);
-    chooseText(toggleFileOutputButton, settingsData.fileOutEnabled, ClientStrings.ENABLE_FILE_OUTPUT, ClientStrings.DISABLE_FILE_OUTPUT);
-    chooseText(toggleNetworkTraceButton, networkTraceEnabled, ClientStrings.ENABLE_NETWORK_OUTPUT, ClientStrings.DISABLE_NETWORK_OUTPUT);
-    setClassRegexButton.setEnabled(true);
+        chooseText(toggleStdOutButton, settingsData.stdOutEnabled,
+                   ClientStrings.ENABLE_STDOUT_OUTPUT,
+                   ClientStrings.DISABLE_STDOUT_OUTPUT);
+        chooseText(toggleFileOutputButton, settingsData.fileOutEnabled,
+                   ClientStrings.ENABLE_FILE_OUTPUT,
+                   ClientStrings.DISABLE_FILE_OUTPUT);
+        chooseText(toggleNetworkTraceButton, networkDataEnabled,
+                   ClientStrings.ENABLE_NETWORK_OUTPUT,
+                   ClientStrings.DISABLE_NETWORK_OUTPUT);
+        setClassRegexButton.setEnabled(true);
+      }
+      else
+      {
+        disableButtons();
+      }
+      chooseText(disconnectButton, connected, ClientStrings.CONNECT,
+                 ClientStrings.DISCONNECT);
+    }
   }
 
   public void setConfig(final Map<String, String> settingsMap)
@@ -464,7 +567,7 @@ public class TraceWindow
       @Override
       public void run()
       {
-        addMessage("*** Fetch Settings");
+        addMessage("*** Latest Settings Received");
         settingsData = new ParsedSettingsData(settingsMap);
         updateButtonText();
       }
@@ -473,26 +576,31 @@ public class TraceWindow
 
   public void addMessage(final String message)
   {
-    sShell.getDisplay().asyncExec(new Runnable()
+    if (!sShell.isDisposed())
     {
-      @Override
-      public void run()
+      sShell.getDisplay().asyncExec(new Runnable()
       {
-        statusTextArea.append(message + "\n");
-      }
-    });
+        @Override
+        public void run()
+        {
+          statusTextArea.append(message + "\n");
+        }
+      });
+    }
   }
 
   /**
    * This method initializes outputTabFolder
-   *
+   * 
    */
   private void createOutputTabFolder()
   {
     outputTabFolder = new TabFolder(composite, SWT.NONE);
-    statusTextArea = new Text(outputTabFolder, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL | SWT.BORDER);
+    statusTextArea = new Text(outputTabFolder, SWT.MULTI | SWT.WRAP
+                              | SWT.V_SCROLL | SWT.BORDER);
     statusTextArea.setEditable(false);
-    statusTextArea.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WHITE));
+    statusTextArea.setBackground(Display.getCurrent()
+                                 .getSystemColor(SWT.COLOR_WHITE));
     callersTree = new Tree(outputTabFolder, SWT.BORDER);
 
     textOutputTabItem = new TabItem(outputTabFolder, SWT.NONE);
@@ -527,17 +635,17 @@ public class TraceWindow
       TreeItem item;
       if (parentItem instanceof Tree)
       {
-        item = new TreeItem((Tree)parentItem, SWT.NULL);
+        item = new TreeItem((Tree) parentItem, SWT.NULL);
       }
       else
       {
-        item = new TreeItem((TreeItem)parentItem, SWT.NULL);
+        item = new TreeItem((TreeItem) parentItem, SWT.NULL);
       }
       item.setText(entryName);
       Object entryValue = mapEntry.getValue();
-      if (entryValue instanceof Map<?,?>)
+      if (entryValue instanceof Map<?, ?>)
       {
-        Map<String, Object> entryMap = (Map<String, Object>)entryValue;
+        Map<String, Object> entryMap = (Map<String, Object>) entryValue;
         if (entryMap.size() > 0)
         {
           addCallersData(item, entryMap);
@@ -551,7 +659,21 @@ public class TraceWindow
     if (!settingsData.callersCaptureInProgress)
     {
       controlThread.sendMessage("[callers-regex-" + regex);
-      toggleSetting(settingsData.callersCaptureInProgress, "[callers-enabled-true", "[callers-enabled-false");
+      toggleSetting(settingsData.callersCaptureInProgress,
+                    "[callers-enabled-true", "[callers-enabled-false");
     }
+  }
+
+  private static void placeDialogInCenter(Shell parent, Shell shell){
+    Rectangle parentSize = parent.getBounds();
+    Rectangle mySize = shell.getBounds();
+
+
+    int locationX, locationY;
+    locationX = (parentSize.width - mySize.width)/2+parentSize.x;
+    locationY = (parentSize.height - mySize.height)/2+parentSize.y;
+
+
+    shell.setLocation(new Point(locationX, locationY));
   }
 }

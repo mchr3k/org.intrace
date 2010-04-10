@@ -10,7 +10,7 @@ import org.eclipse.swt.widgets.Text;
 
 public class CallersRegexInputWindow
 {
-  private Shell sShell = null;  //  @jve:decl-index=0:visual-constraint="10,10"
+  Shell sShell = null;  //  @jve:decl-index=0:visual-constraint="10,10"
   private Text regexInput = null;
   private Button setRegexButton = null;
   private Button cancelButton = null;
