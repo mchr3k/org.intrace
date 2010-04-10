@@ -7,7 +7,7 @@ public class TraceClient
    */
   public static void main(String[] args)
   {
-    ConnectionDetails enterConnectionDetails = new ConnectionDetails();
+    NewConnectionWindow enterConnectionDetails = new NewConnectionWindow();
     enterConnectionDetails.open();    
   }
 

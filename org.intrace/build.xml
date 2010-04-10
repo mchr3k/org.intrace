@@ -44,21 +44,10 @@
 			<fileset dir="./lib/libclasses" includes="**/*.class" />
 		</jar>
 		
-		<!-- CUI Agent Loader -->
-		<jar destfile="./built/cuiagentloader.jar" compress="false">
-			<manifest>
-				<attribute name="Main-Class" value="gb.instrument.client.cui.AgentLoader" />
-				<attribute name="Class-Path" value="." />
-			</manifest>
-			<fileset dir="./bin" includes="**/output/trace/TraceConfigConstants.class" />
-			<fileset dir="./bin" includes="**/agent/AgentConfigConstants.class" />
-			<fileset dir="./bin" includes="**/client/cui/AgentLoader.class" />
-		</jar>
-		
 		<!-- CUI Trace Client -->
 		<jar destfile="./built/cuitraceclient.jar" compress="false">
 			<manifest>
-				<attribute name="Main-Class" value="gb.instrument.client.cui.TraceClient" />
+				<attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="./bin" includes="**/output/trace/TraceConfigConstants.class" />
@@ -69,7 +58,7 @@
 		<!-- GUI Trace Client -->
 		<jar destfile="./built/guitraceclient.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
-				<attribute name="Main-Class" value="gb.instrument.client.gui.TraceClient" />
+				<attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
 				<attribute name="Class-Path" value="." />
 			</manifest>
 			<fileset dir="./bin" includes="**/output/trace/TraceSettingsConstants.class" />

@@ -30,7 +30,7 @@ public class TraceOutput implements IOutput
 
   final TraceSettings traceSettings = new TraceSettings("");
   
-  private Map<NetworkTraceThread,Object> traceThreads = new ConcurrentHashMap<NetworkTraceThread,Object>();
+  private Map<NetworkTraceSenderThread,Object> traceThreads = new ConcurrentHashMap<NetworkTraceSenderThread,Object>();
   
   public String getResponse(String args)
   {
@@ -59,7 +59,7 @@ public class TraceOutput implements IOutput
       try
       {
         networkSocket = new ServerSocket(0);
-        NetworkTraceThread traceThread = new NetworkTraceThread(networkSocket);
+        NetworkTraceSenderThread traceThread = new NetworkTraceSenderThread(networkSocket);
         
         traceThreads.put(traceThread, new Object());
         
@@ -105,10 +105,10 @@ public class TraceOutput implements IOutput
       writeFileTrace(traceString);
     }
     
-    Set<NetworkTraceThread> networkThreads = traceThreads.keySet();
+    Set<NetworkTraceSenderThread> networkThreads = traceThreads.keySet();
     if (networkThreads.size() > 0)
     {
-      for (NetworkTraceThread thread : networkThreads)
+      for (NetworkTraceSenderThread thread : networkThreads)
       {
         thread.queueTrace(traceString);
       }

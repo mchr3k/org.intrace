@@ -16,7 +16,7 @@ import org.objectweb.asm.Type;
  */
 public class InstrumentedMethodWriter extends MethodAdapter
 {
-  private static final String HELPER_CLASS = "gb/instrument/agent/AgentHelper";
+  private static final String HELPER_CLASS = "org/intrace/agent/AgentHelper";
   private final String className;
   private final String methodName;
   private final String methodDescriptor;

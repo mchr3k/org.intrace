@@ -2,17 +2,10 @@ package org.intrace.client.gui;
 
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -25,56 +18,32 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.intrace.client.gui.helper.ControlConnectionThread;
+import org.intrace.client.gui.helper.NetworkTraceReceiverThread;
+import org.intrace.client.gui.helper.ParsedSettingsData;
 
 public class TraceWindow
-{
-  private final String ENABLE_INSTR = "Enable Instrumentation";
-  private final String DISABLE_INSTR = "Disable Instrumentation";
+{  
+  // Window refs
+  private TraceWindow traceDialogRef = this;  
+  private NewConnectionWindow newConnectionDialogRef;
   
-  private final String SET_CLASSREGEX = "Set Class Regex...";
-  
-  private final String ENABLE_ALLOWJARS = "Enable JAR Instrumentation";
-  private final String DISABLE_ALLOWJARS = "Disable JAR Instrumentation";
-  
-  private final String ENABLE_SAVECLASSES = "Save Instrumented Classes";
-  private final String DISABLE_SAVECLASSES = "Don't Save Classes";
-  
-  private final String ENABLE_VERBOSEMODE = "Enable Verbose Mode";
-  private final String DISABLE_VERBOSEMODE = "Disable Verbose Mode";
-  
-  private final String ENABLE_EE_TRACE = "Enable Entry/Exit Trace";
-  private final String DISABLE_EE_TRACE = "Disable Entry/Exit Trace";
-  
-  private final String ENABLE_BRANCH_TRACE = "Enable Branch Trace";
-  private final String DISABLE_BRANCH_TRACE = "Disable Branch Trace";
-  
-  private final String ENABLE_ARGS_TRACE = "Enable Args Trace";
-  private final String DISABLE_ARGS_TRACE = "Disable Args Trace";
-  
-  private final String ENABLE_STDOUT_TRACE = "Enable StdOut Trace";
-  private final String DISABLE_STDOUT_TRACE = "Disable StdOut Trace";
-  
-  private final String ENABLE_FILE_TRACE = "Enable File Trace";
-  private final String DISABLE_FILE_TRACE = "Disable File Trace";
-  
-  private final String ENABLE_NETWORK_TRACE = "Enable Network Trace";
-  private final String DISABLE_NETWORK_TRACE = "Disable Network Trace";
-  
-  private ParsedSettingsData settingsData = new ParsedSettingsData(new HashMap<String, String>());  //  @jve:decl-index=0:
-  private final ExecutorService asyncExecutor = Executors.newSingleThreadExecutor();  //  @jve:decl-index=0:
-  private TraceWindow instanceWindowRef = this;
-  
+  // Network details
+  private InetAddress remoteAddress;
   private boolean networkTraceEnabled = false;
-  private NetworkTraceThread networkThread;
-  private final ReceiveThread receiveThread;
   
+  // Threads
+  private NetworkTraceReceiverThread networkTraceThread;
+  private final ControlConnectionThread controlThread; 
+  
+  // Settings
+  private ParsedSettingsData settingsData = new ParsedSettingsData(new HashMap<String, String>());  //  @jve:decl-index=0:
+  
+  // UI Elements
   private Shell sShell = null;
   private Button toggleEntryExitButton = null;
-  private Button Disconnect = null;
-  private Text statusTextArea = null;
-  
-  private ConnectionDetails instanceRef;
-  private Socket socket;
+  private Button disconnectButton = null;
+  private Text statusTextArea = null;  
   private Button toggleStdOutButton = null;
   private Button toggleBranchButton = null;
   private Button toggleArgsButton = null;
@@ -90,12 +59,13 @@ public class TraceWindow
   private Button toggleVerboseMode = null;
   private Button toggleFileOutputButton = null;
   private Button toggleNetworkTraceButton = null;
-  public TraceWindow(ConnectionDetails instanceRef, Socket socket)
+  
+  public TraceWindow(NewConnectionWindow instanceRef, Socket socket)
   {
-    this.instanceRef = instanceRef;
-    this.socket = socket;
-    receiveThread = new ReceiveThread(socket);
-    receiveThread.start();       
+    this.newConnectionDialogRef = instanceRef;
+    this.remoteAddress = socket.getInetAddress();
+    controlThread = new ControlConnectionThread(socket, this);
+    controlThread.start();       
   }
 
   /**
@@ -133,12 +103,12 @@ public class TraceWindow
     sShell = new Shell();
     sShell.setText("Trace Window");
     sShell.setLayout(gridLayout);
-    sShell.setSize(new Point(500, 500));
+    sShell.setSize(new Point(700, 500));
     instrumentSettingsLabel = new Label(sShell, SWT.NONE);
     instrumentSettingsLabel.setText("Instrumentation Settings:");
     createComposite();
     toggleInstrumentEnabled = new Button(sShell, SWT.LEFT);
-    toggleInstrumentEnabled.setText(ENABLE_INSTR);
+    toggleInstrumentEnabled.setText(ClientStrings.ENABLE_INSTR);
     toggleInstrumentEnabled.setLayoutData(gridData31);
     toggleInstrumentEnabled
         .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
@@ -149,18 +119,18 @@ public class TraceWindow
           }
         });
     setClassRegexButton = new Button(sShell, SWT.LEFT);
-    setClassRegexButton.setText(SET_CLASSREGEX);
+    setClassRegexButton.setText(ClientStrings.SET_CLASSREGEX);
     setClassRegexButton.setLayoutData(gridData41);
     setClassRegexButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
         RegexInput regexInput = new RegexInput();
-        regexInput.open(instanceWindowRef, settingsData.classRegex);
+        regexInput.open(traceDialogRef, settingsData.classRegex);
       }
     });
     toggleAllowJarInstru = new Button(sShell, SWT.LEFT);
-    toggleAllowJarInstru.setText(ENABLE_ALLOWJARS);
+    toggleAllowJarInstru.setText(ClientStrings.ENABLE_ALLOWJARS);
     toggleAllowJarInstru.setLayoutData(gridData5);
     toggleAllowJarInstru.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
@@ -170,7 +140,7 @@ public class TraceWindow
       }
     });
     toggleSaveClassFiles = new Button(sShell, SWT.LEFT);
-    toggleSaveClassFiles.setText(ENABLE_SAVECLASSES);
+    toggleSaveClassFiles.setText(ClientStrings.ENABLE_SAVECLASSES);
     toggleSaveClassFiles.setLayoutData(gridData6);
     toggleSaveClassFiles.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
@@ -180,7 +150,7 @@ public class TraceWindow
       }
     });
     toggleVerboseMode = new Button(sShell, SWT.LEFT);
-    toggleVerboseMode.setText(ENABLE_VERBOSEMODE);
+    toggleVerboseMode.setText(ClientStrings.ENABLE_VERBOSEMODE);
     toggleVerboseMode.setLayoutData(gridData7);
     toggleVerboseMode.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
@@ -189,7 +159,7 @@ public class TraceWindow
         toggleSetting(settingsData.verboseMode, "[verbose-true", "[verbose-false");
       }
     });
-    sShell.setMinimumSize(new Point(500, 500));
+    sShell.setMinimumSize(new Point(700, 500));
     traceSettingsLabel = new Label(sShell, SWT.NONE);
     traceSettingsLabel.setText("Trace Settings:");
     sShell.addShellListener(new org.eclipse.swt.events.ShellAdapter()
@@ -197,12 +167,12 @@ public class TraceWindow
       public void shellClosed(org.eclipse.swt.events.ShellEvent e)
       {
         disconnect();
+        newConnectionDialogRef.show();
         sShell.dispose();
-        asyncExecutor.shutdownNow();
       }
     });
     toggleEntryExitButton = new Button(sShell, SWT.LEFT);
-    toggleEntryExitButton.setText(ENABLE_EE_TRACE);
+    toggleEntryExitButton.setText(ClientStrings.ENABLE_EE_TRACE);
     toggleEntryExitButton.setLayoutData(gridData2);
     toggleEntryExitButton
         .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
@@ -213,7 +183,7 @@ public class TraceWindow
           }
         });
     toggleBranchButton = new Button(sShell, SWT.LEFT);
-    toggleBranchButton.setText(ENABLE_BRANCH_TRACE);
+    toggleBranchButton.setText(ClientStrings.ENABLE_BRANCH_TRACE);
     toggleBranchButton.setLayoutData(gridData1);
     toggleBranchButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
@@ -223,7 +193,7 @@ public class TraceWindow
       }
     });
     toggleArgsButton = new Button(sShell, SWT.LEFT);
-    toggleArgsButton.setText(ENABLE_ARGS_TRACE);
+    toggleArgsButton.setText(ClientStrings.ENABLE_ARGS_TRACE);
     toggleArgsButton.setLayoutData(gridData21);
     outputSettingsLabel = new Label(sShell, SWT.NONE);
     outputSettingsLabel.setText("Output Modes:");
@@ -235,13 +205,13 @@ public class TraceWindow
       }
     });
     toggleStdOutButton = new Button(sShell, SWT.LEFT);
-    toggleStdOutButton.setText(ENABLE_STDOUT_TRACE);
+    toggleStdOutButton.setText(ClientStrings.ENABLE_STDOUT_TRACE);
     toggleStdOutButton.setLayoutData(gridData4);
     toggleFileOutputButton = new Button(sShell, SWT.LEFT);
-    toggleFileOutputButton.setText(ENABLE_FILE_TRACE);
+    toggleFileOutputButton.setText(ClientStrings.ENABLE_FILE_TRACE);
     toggleFileOutputButton.setLayoutData(gridData11);
     toggleNetworkTraceButton = new Button(sShell, SWT.LEFT);
-    toggleNetworkTraceButton.setText(ENABLE_NETWORK_TRACE);
+    toggleNetworkTraceButton.setText(ClientStrings.ENABLE_NETWORK_TRACE);
     toggleNetworkTraceButton.setLayoutData(gridData22);
     toggleNetworkTraceButton
         .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
@@ -268,10 +238,10 @@ public class TraceWindow
         toggleSetting(settingsData.stdOutEnabled, "[trace-stdout-true", "[trace-stdout-false");
       }
     });
-    Disconnect = new Button(sShell, SWT.LEFT);
-    Disconnect.setText("Disconnect");
-    Disconnect.setLayoutData(gridData);
-    Disconnect.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    disconnectButton = new Button(sShell, SWT.LEFT);
+    disconnectButton.setText("Disconnect");
+    disconnectButton.setLayoutData(gridData);
+    disconnectButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
       public void mouseUp(org.eclipse.swt.events.MouseEvent e)
       {
@@ -306,17 +276,19 @@ public class TraceWindow
   {
     createSShell();
     sShell.open();
-    statusTextArea.append("Connected!\n");
-    try
-    {
-      sendMessage("getsettings");
-    }
-    catch (IOException e)
-    {
-      sShell.close();
-    }
+    addMessage("*** Connected!");
+    controlThread.sendMessage("getsettings");    
   }
  
+  public void disconnect()
+  {
+    controlThread.disconnect();
+    if (networkTraceThread != null)
+    {
+      networkTraceThread.disconnect();
+    }
+  }
+  
   private void toggleNetworkTrace()
   {
     sShell.getDisplay().asyncExec(new Runnable()
@@ -325,42 +297,28 @@ public class TraceWindow
       public void run()
       {
         disableButtons();
-        asyncExecutor.execute(new Runnable()
-        {      
-          @Override
-          public void run()
-          {
-            try
-            {
-              if (!networkTraceEnabled)
-              {
-                sendMessage("[trace-network");
-                String networkTracePortStr = receiveThread.getMessage();
-                int networkTracePort = Integer.parseInt(networkTracePortStr);
-                networkThread = new NetworkTraceThread(networkTracePort);
-                networkThread.start();
-                networkTraceEnabled = true;
-              }
-              else
-              {
-                networkThread.stop();
-                networkTraceEnabled = false;
-              }
-              sShell.getDisplay().asyncExec(new Runnable()
-              {              
-                @Override
-                public void run()
-                {
-                  updateButtonText();
-                }
-              });                        
-            }
-            catch (IOException e)
-            {
-              sShell.close();
-            }        
+        if (!networkTraceEnabled)
+        {
+          controlThread.sendMessage("[trace-network");
+          String networkTracePortStr = controlThread.getMessage();
+          int networkTracePort = Integer.parseInt(networkTracePortStr);
+          try
+          {            
+            networkTraceThread = new NetworkTraceReceiverThread(remoteAddress, networkTracePort, traceDialogRef);
+            networkTraceThread.start();
+            networkTraceEnabled = true;
           }
-        });
+          catch (IOException ex)
+          {
+            addMessage("*** Failed to setup network trace: " + ex.toString());
+          }          
+        }
+        else
+        {
+          networkTraceThread.disconnect();
+          networkTraceEnabled = false;
+        }          
+        updateButtonText();                                
       }
     });
   }
@@ -372,23 +330,9 @@ public class TraceWindow
       @Override
       public void run()
       {
-        disableButtons();
-        asyncExecutor.execute(new Runnable()
-        {      
-          @Override
-          public void run()
-          {
-            try
-            {
-              sendMessage("[regex-" + regex);                                   
-              sendMessage("getsettings");
-            }
-            catch (IOException e)
-            {
-              sShell.close();
-            }        
-          }
-        });
+        disableButtons();        
+        controlThread.sendMessage("[regex-" + regex);                                   
+        controlThread.sendMessage("getsettings");      
       }
     });
   }  
@@ -400,30 +344,16 @@ public class TraceWindow
       @Override
       public void run()
       {
-        disableButtons();
-        asyncExecutor.execute(new Runnable()
-        {      
-          @Override
-          public void run()
-          {
-            try
-            {
-              if (settingValue)
-              {
-                sendMessage(disableCommand);
-              }
-              else
-              {
-                sendMessage(enableCommand);
-              }
-              sendMessage("getsettings");
-            }
-            catch (IOException e)
-            {
-              sShell.close();
-            }        
-          }
-        });
+        disableButtons();        
+        if (settingValue)
+        {
+          controlThread.sendMessage(disableCommand);
+        }
+        else
+        {
+          controlThread.sendMessage(enableCommand);
+        }
+        controlThread.sendMessage("getsettings");        
       }
     }); 
   }
@@ -458,181 +388,44 @@ public class TraceWindow
   
   private void updateButtonText()
   {
-    statusTextArea.append("Got Settings...\n");
+    addMessage("*** Latest Settings Received");
     
-    chooseText(toggleInstrumentEnabled, settingsData.instrEnabled, ENABLE_INSTR, DISABLE_INSTR);
-    chooseText(toggleAllowJarInstru, settingsData.allowJarsToBeTraced, ENABLE_ALLOWJARS, DISABLE_ALLOWJARS);
-    chooseText(toggleSaveClassFiles, settingsData.saveTracedClassfiles, ENABLE_SAVECLASSES, DISABLE_SAVECLASSES);
-    chooseText(toggleVerboseMode, settingsData.verboseMode, ENABLE_VERBOSEMODE, DISABLE_VERBOSEMODE);
-    chooseText(toggleEntryExitButton, settingsData.entryExitEnabled, ENABLE_EE_TRACE, DISABLE_EE_TRACE);
-    chooseText(toggleBranchButton, settingsData.branchEnabled, ENABLE_BRANCH_TRACE, DISABLE_BRANCH_TRACE);
-    chooseText(toggleArgsButton, settingsData.argsEnabled, ENABLE_ARGS_TRACE, DISABLE_ARGS_TRACE);
-    chooseText(toggleStdOutButton, settingsData.stdOutEnabled, ENABLE_STDOUT_TRACE, DISABLE_STDOUT_TRACE);
-    chooseText(toggleFileOutputButton, settingsData.fileOutEnabled, ENABLE_FILE_TRACE, DISABLE_FILE_TRACE);
-    chooseText(toggleNetworkTraceButton, networkTraceEnabled, ENABLE_NETWORK_TRACE, DISABLE_NETWORK_TRACE);
+    chooseText(toggleInstrumentEnabled, settingsData.instrEnabled, ClientStrings.ENABLE_INSTR, ClientStrings.DISABLE_INSTR);
+    chooseText(toggleAllowJarInstru, settingsData.allowJarsToBeTraced, ClientStrings.ENABLE_ALLOWJARS, ClientStrings.DISABLE_ALLOWJARS);
+    chooseText(toggleSaveClassFiles, settingsData.saveTracedClassfiles, ClientStrings.ENABLE_SAVECLASSES, ClientStrings.DISABLE_SAVECLASSES);
+    chooseText(toggleVerboseMode, settingsData.verboseMode, ClientStrings.ENABLE_VERBOSEMODE, ClientStrings.DISABLE_VERBOSEMODE);
+    chooseText(toggleEntryExitButton, settingsData.entryExitEnabled, ClientStrings.ENABLE_EE_TRACE, ClientStrings.DISABLE_EE_TRACE);
+    chooseText(toggleBranchButton, settingsData.branchEnabled, ClientStrings.ENABLE_BRANCH_TRACE, ClientStrings.DISABLE_BRANCH_TRACE);
+    chooseText(toggleArgsButton, settingsData.argsEnabled, ClientStrings.ENABLE_ARGS_TRACE, ClientStrings.DISABLE_ARGS_TRACE);
+    chooseText(toggleStdOutButton, settingsData.stdOutEnabled, ClientStrings.ENABLE_STDOUT_TRACE, ClientStrings.DISABLE_STDOUT_TRACE);
+    chooseText(toggleFileOutputButton, settingsData.fileOutEnabled, ClientStrings.ENABLE_FILE_TRACE, ClientStrings.DISABLE_FILE_TRACE);
+    chooseText(toggleNetworkTraceButton, networkTraceEnabled, ClientStrings.ENABLE_NETWORK_TRACE, ClientStrings.DISABLE_NETWORK_TRACE);
     setClassRegexButton.setEnabled(true);
+  }  
+  
+  public void setConfig(final Map<String, String> settingsMap)
+  {
+    sShell.getDisplay().asyncExec(new Runnable()
+    {      
+      @Override
+      public void run()
+      {
+        addMessage("*** Fetch Settings");
+        settingsData = new ParsedSettingsData(settingsMap);
+        updateButtonText();           
+      }
+    });    
   }
   
-  private void disconnect()
+  public void addMessage(final String message)
   {
-    try
-    {
-      socket.close();
-    }
-    catch (IOException e)
-    {
-      // Throw away
-    }
-    instanceRef.show();
-  }
-
-  private void sendMessage(String xiString) throws IOException
-  {
-    OutputStream out = socket.getOutputStream();
-    ObjectOutputStream objOut = new ObjectOutputStream(out);
-    objOut.writeObject(xiString);
-    objOut.flush();
-  }
-  
-  private class ReceiveThread implements Runnable
-  {
-    private final Socket receiveSocket;
-    private final BlockingQueue<String> queuedMessages = new LinkedBlockingQueue<String>();
-    public ReceiveThread(Socket socket)
-    {
-      receiveSocket = socket;
-    }
-
-    public void start()
-    {
-      Thread t = new Thread(this);
-      t.setDaemon(true);
-      t.setName("Network Receive Thread");
-      t.start();
-    }
-    
-    public String getMessage()
-    {
-      try
+    sShell.getDisplay().asyncExec(new Runnable()
+    {           
+      @Override
+      public void run()
       {
-        return queuedMessages.take();
+        statusTextArea.append(message + "\n");              
       }
-      catch (InterruptedException e)
-      {
-        return null;
-      }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void run()
-    {
-      try
-      {                
-        while (true)
-        {
-          ObjectInputStream objIn = new ObjectInputStream(receiveSocket.getInputStream());
-          Object receivedMessage = (Object)objIn.readObject();
-          if (receivedMessage instanceof Map<?,?>)
-          {
-            Map<String,String> settingsMap = (Map<String,String>)receivedMessage;
-            handleConfig(settingsMap);
-          }
-          else
-          {
-            String strMessage = (String)receivedMessage;
-            if (!"OK".equals(strMessage))
-            {
-              queuedMessages.put(strMessage);
-            }
-          }
-        }
-      }
-      catch (Exception e)
-      {
-        e.printStackTrace();
-        sShell.getDisplay().asyncExec(new Runnable()
-        {          
-          @Override
-          public void run()
-          {
-            if (!sShell.isDisposed())
-            {
-              sShell.close();
-            }
-          }
-        });        
-      }
-    }
-    
-    private void handleConfig(final Map<String, String> settingsMap)
-    {
-      sShell.getDisplay().asyncExec(new Runnable()
-      {      
-        @Override
-        public void run()
-        {
-          statusTextArea.append("Fetching Settings...\n");
-          settingsData = new ParsedSettingsData(settingsMap);
-          updateButtonText();           
-        }
-      });    
-    }    
-  }
-  
-  private class NetworkTraceThread implements Runnable
-  {
-    private final Socket traceSocket;
-    public NetworkTraceThread(int networkTracePort) throws IOException
-    {
-      traceSocket = new Socket();
-      traceSocket.connect(new InetSocketAddress(socket.getInetAddress(), networkTracePort));
-    }
-
-    public void start()
-    {
-      Thread t = new Thread(this);
-      t.setDaemon(true);
-      t.setName("Network Trace");
-      t.start();
-    }
-    
-    public void stop()
-    {
-      try
-      {
-        traceSocket.close();
-      }
-      catch (IOException e)
-      {
-        // Throw away
-      }
-    }
-
-    @Override
-    public void run()
-    {
-      try
-      {        
-        ObjectInputStream objIn = new ObjectInputStream(traceSocket.getInputStream());
-        while (true)
-        {
-          final String traceLine = (String)objIn.readObject();
-          sShell.getDisplay().asyncExec(new Runnable()
-          {           
-            @Override
-            public void run()
-            {
-              statusTextArea.append(traceLine + "\n");              
-            }
-          });
-        }
-      }
-      catch (Exception e)
-      {
-        sShell.close();
-      }
-    }
-    
+    });    
   }
 }
