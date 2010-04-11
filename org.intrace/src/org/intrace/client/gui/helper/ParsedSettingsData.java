@@ -2,6 +2,7 @@ package org.intrace.client.gui.helper;
 
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.intrace.shared.AgentConfigConstants;
 import org.intrace.shared.CallersConfigConstants;
@@ -24,8 +25,13 @@ public class ParsedSettingsData
   public final boolean stdOutEnabled;
   public final boolean fileOutEnabled;
   public final String callersRegex;
+
+  private final Map<String, String> settingsMap;
+
   public ParsedSettingsData(Map<String, String> settingsMap)
   {
+    this.settingsMap = settingsMap;
+
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
 
     if ("true".equals(settingsMap.get(AgentConfigConstants.TRACING_ENABLED)))
@@ -119,6 +125,20 @@ public class ParsedSettingsData
     {
       fileOutEnabled = false;
     }
+  }
+
+  public String dumpSettings()
+  {
+    StringBuffer settingsString = new StringBuffer();
+    for (Entry<String,String> entry : settingsMap.entrySet())
+    {
+      if (entry.getKey().startsWith("["))
+      {
+        settingsString.append(entry.getKey());
+        settingsString.append(entry.getValue());
+      }
+    }
+    return settingsString.toString();
   }
 
 }

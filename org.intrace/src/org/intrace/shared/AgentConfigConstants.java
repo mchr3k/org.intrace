@@ -1,11 +1,22 @@
 package org.intrace.shared;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class AgentConfigConstants
 {
-  public static final String MAP_ID                  = "SETTINGS";
-  public static final String CLASS_REGEX             = "AGENT_CLASS_REGEX";
-  public static final String TRACING_ENABLED         = "AGENT_TRACING_ENABLED";
-  public static final String SAVE_TRACED_CLASSFILES  = "AGENT_SAVE_TRACED_CLASSFILES";
-  public static final String VERBOSE_MODE            = "AGENT_VERBOSE_MODE";
-  public static final String ALLOW_JARS_TO_BE_TRACED = "AGENT_LLOW_JARS_TO_BE_TRACED";
+  public static final String CLASS_REGEX             = "[regex-";
+  public static final String TRACING_ENABLED         = "[instru-";
+  public static final String SAVE_TRACED_CLASSFILES  = "[saveinstru-";
+  public static final String VERBOSE_MODE            = "[verbose-";
+  public static final String ALLOW_JARS_TO_BE_TRACED = "[instrujars-";
+  public static final Set<String> COMMANDS = new HashSet<String>();
+  static
+  {
+    COMMANDS.add(CLASS_REGEX + "<regex>");
+    COMMANDS.add(TRACING_ENABLED + "<true/false>");
+    COMMANDS.add(SAVE_TRACED_CLASSFILES + "<true/false>");
+    COMMANDS.add(VERBOSE_MODE + "<true/false>");
+    COMMANDS.add(ALLOW_JARS_TO_BE_TRACED + "<true/false>");
+  }
 }

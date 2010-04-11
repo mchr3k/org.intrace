@@ -42,11 +42,11 @@ public class TraceWindow
 
   // Threads
   private NetworkDataReceiverThread networkTraceThread;
-  private ControlConnectionThread controlThread;
+  private ControlConnectionThread controlThread;  //  @jve:decl-index=0:
 
   // Settings
   private ParsedSettingsData settingsData = new ParsedSettingsData(
-                                                                   new HashMap<String, String>());
+                                                                   new HashMap<String, String>());  //  @jve:decl-index=0:
 
   // UI Elements
   private Shell sShell = null;
@@ -76,6 +76,10 @@ public class TraceWindow
   private Label callersLabel = null;
   private Button callersStateButton = null;
 
+  private Label generalLabel = null;
+
+  private Button dumpSettingsButton = null;
+
   public void setConnection(Socket socket)
   {
     this.remoteAddress = socket.getInetAddress();
@@ -98,6 +102,8 @@ public class TraceWindow
    */
   private void createSShell()
   {
+    GridData gridData23 = new GridData();
+    gridData23.widthHint = 150;
     GridData gridData12 = new GridData();
     gridData12.widthHint = 150;
     GridData gridData22 = new GridData();
@@ -130,7 +136,8 @@ public class TraceWindow
     sShell = new Shell();
     sShell.setText("Trace Window");
     sShell.setLayout(gridLayout);
-    sShell.setSize(new Point(700, 500));
+    sShell.setSize(new Point(700, 600));
+    sShell.setMinimumSize(new Point(700, 600));
     instrumentSettingsLabel = new Label(sShell, SWT.NONE);
     instrumentSettingsLabel.setText("Instrumentation Settings:");
     createComposite();
@@ -206,7 +213,6 @@ public class TraceWindow
                       "[verbose-true", "[verbose-false");
       }
     });
-    sShell.setMinimumSize(new Point(700, 500));
     traceSettingsLabel = new Label(sShell, SWT.NONE);
     traceSettingsLabel.setText("Trace Settings:");
     sShell.addShellListener(new org.eclipse.swt.events.ShellAdapter()
@@ -296,6 +302,19 @@ public class TraceWindow
     toggleNetworkTraceButton = new Button(sShell, SWT.LEFT);
     toggleNetworkTraceButton.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
     toggleNetworkTraceButton.setLayoutData(gridData22);
+    generalLabel = new Label(sShell, SWT.NONE);
+    generalLabel.setText("General:");
+    dumpSettingsButton = new Button(sShell, SWT.LEFT);
+    dumpSettingsButton.setText("Dump Settings");
+    dumpSettingsButton.setLayoutData(gridData23);
+    dumpSettingsButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    {
+      @Override
+      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      {
+        addMessage("Settings:" + settingsData.dumpSettings());
+      }
+    });
     toggleNetworkTraceButton
     .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
     {
@@ -364,7 +383,7 @@ public class TraceWindow
     gridData3.grabExcessVerticalSpace = true;
     gridData3.heightHint = 99999;
     gridData3.widthHint = 99999;
-    gridData3.verticalSpan = 19;
+    gridData3.verticalSpan = 21;
     gridData3.grabExcessHorizontalSpace = true;
     composite = new Composite(sShell, SWT.NONE);
     composite.setLayoutData(gridData3);
@@ -387,7 +406,10 @@ public class TraceWindow
 
   public void disconnect()
   {
-    controlThread.disconnect();
+    if (controlThread != null)
+    {
+      controlThread.disconnect();
+    }
     if (networkTraceThread != null)
     {
       networkTraceThread.disconnect();
@@ -497,6 +519,8 @@ public class TraceWindow
     toggleStdOutButton.setEnabled(false);
     toggleFileOutputButton.setEnabled(false);
     toggleNetworkTraceButton.setEnabled(false);
+
+    dumpSettingsButton.setEnabled(false);
   }
 
   private void chooseText(Button control, boolean option, String enabledText,
@@ -554,6 +578,8 @@ public class TraceWindow
                    ClientStrings.ENABLE_NETWORK_OUTPUT,
                    ClientStrings.DISABLE_NETWORK_OUTPUT);
         setClassRegexButton.setEnabled(true);
+
+        dumpSettingsButton.setEnabled(true);
       }
       else
       {
@@ -619,7 +645,6 @@ public class TraceWindow
 
   public void setCallers(final Map<String, Object> callersMap)
   {
-    callersMap.remove(CallersConfigConstants.MAP_ID);
     final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
     final Object callersRegex = callersMap.remove(CallersConfigConstants.PATTERN);
     sShell.getDisplay().asyncExec(new Runnable()

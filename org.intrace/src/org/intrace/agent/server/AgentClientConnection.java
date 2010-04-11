@@ -8,11 +8,16 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.intrace.agent.ClassTransformer;
 import org.intrace.output.AgentHelper;
+import org.intrace.shared.AgentConfigConstants;
+import org.intrace.shared.OutputConfigConstants;
+import org.intrace.shared.TraceConfigConstants;
 
 /**
  * Server thread handling a single connected client.
@@ -57,6 +62,14 @@ public class AgentClientConnection implements Runnable
             settingsMap.putAll(transformer.getSettings());
             settingsMap.putAll(AgentHelper.getSettings());
             serverRef.broadcastMessage(this, settingsMap);
+          }
+          else if (message.equals("help"))
+          {
+            Set<String> commandSet = new HashSet<String>();
+            commandSet.addAll(AgentConfigConstants.COMMANDS);
+            commandSet.addAll(OutputConfigConstants.COMMANDS);
+            commandSet.addAll(TraceConfigConstants.COMMANDS);
+            sendMessage(commandSet);
           }
           else
           {

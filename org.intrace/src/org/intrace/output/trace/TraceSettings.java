@@ -35,33 +35,33 @@ public class TraceSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg(seperateArgs[ii].toLowerCase());
+      parseArg("[" + seperateArgs[ii].toLowerCase());
     }
   }
 
   private void parseArg(String arg)
   {
-    if (arg.equals("trace-ee-false"))
+    if (arg.equals(TraceConfigConstants.ENTRY_EXIT + "false"))
     {
       entryExitTraceEnabled = false;
     }
-    else if (arg.equals("trace-ee-true"))
+    else if (arg.equals(TraceConfigConstants.ENTRY_EXIT + "true"))
     {
       entryExitTraceEnabled = true;
     }
-    else if (arg.equals("trace-branch-true"))
+    else if (arg.equals(TraceConfigConstants.BRANCH + "true"))
     {
       branchTraceEnabled = true;
     }
-    else if (arg.equals("trace-branch-false"))
+    else if (arg.equals(TraceConfigConstants.BRANCH + "false"))
     {
       branchTraceEnabled = false;
     }
-    else if (arg.equals("trace-args-true"))
+    else if (arg.equals(TraceConfigConstants.ARG + "true"))
     {
       argTraceEnabled = true;
     }
-    else if (arg.equals("trace-args-false"))
+    else if (arg.equals(TraceConfigConstants.ARG + "false"))
     {
       argTraceEnabled = false;
     }
@@ -86,8 +86,8 @@ public class TraceSettings
   {
     Map<String,String> settingsMap = new HashMap<String, String>();
     settingsMap.put(TraceConfigConstants.ENTRY_EXIT, Boolean.toString(entryExitTraceEnabled));
-    settingsMap.put(TraceConfigConstants.BRANCH, Boolean.toString(branchTraceEnabled));
-    settingsMap.put(TraceConfigConstants.ARG, Boolean.toString(argTraceEnabled));
+    settingsMap.put(TraceConfigConstants.BRANCH,     Boolean.toString(branchTraceEnabled));
+    settingsMap.put(TraceConfigConstants.ARG,        Boolean.toString(argTraceEnabled));
     return settingsMap;
   }
 }

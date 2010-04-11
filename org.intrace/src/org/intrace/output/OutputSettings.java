@@ -17,15 +17,15 @@ public class OutputSettings
   private File file2;
   private PrintWriter file1TraceWriter;
   private PrintWriter file2TraceWriter;
-    
+
   public boolean networkTraceOutputRequested = false;
-  
+
   public OutputSettings(String args)
   {
     file1 = new File("trc1.txt");
     file2 = new File("trc2.txt");
-    resetTraceFiles(true, true);   
-    parseArgs(args);    
+    resetTraceFiles(true, true);
+    parseArgs(args);
   }
 
   public void parseArgs(String args)
@@ -33,46 +33,46 @@ public class OutputSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg(seperateArgs[ii].toLowerCase());
+      parseArg("[" + seperateArgs[ii].toLowerCase());
     }
   }
-  
+
   private void parseArg(String arg)
   {
-    if (arg.equals("out-stdout-true"))
+    if (arg.equals(OutputConfigConstants.STD_OUT + "true"))
     {
       stdoutTraceOutputEnabled = true;
     }
-    else if (arg.equals("out-stdout-false"))
+    else if (arg.equals(OutputConfigConstants.STD_OUT + "false"))
     {
       stdoutTraceOutputEnabled = false;
     }
-    else if (arg.equals("out-file-true"))
+    else if (arg.equals(OutputConfigConstants.FILE_OUT + "true"))
     {
       fileTraceOutputEnabled = true;
     }
-    else if (arg.equals("out-file-false"))
+    else if (arg.equals(OutputConfigConstants.FILE_OUT + "false"))
     {
       fileTraceOutputEnabled = false;
     }
-    else if (arg.startsWith("out-file1-"))
+    else if (arg.startsWith("[out-file1-"))
     {
-      String file1Name = arg.replace("out-file1-", "");      
+      String file1Name = arg.replace("[out-file1-", "");
       file1 = new File(file1Name);
-      resetTraceFiles(true, false);     
+      resetTraceFiles(true, false);
     }
-    else if (arg.startsWith("out-file2-"))
+    else if (arg.startsWith("[out-file2-"))
     {
-      String file2Name = arg.replace("out-file2-", "");
+      String file2Name = arg.replace("[out-file2-", "");
       file2 = new File(file2Name);
       resetTraceFiles(false, true);
     }
-    else if (arg.equals("out-network"))
+    else if (arg.equals("[out-network"))
     {
       networkTraceOutputRequested = true;
     }
   }
-  
+
   public void resetTraceFiles(boolean resetFile1, boolean resetFile2)
   {
     try
@@ -93,12 +93,12 @@ public class OutputSettings
       // Throw away
     }
   }
-  
+
   public boolean isStdoutTraceOutputEnabled()
   {
     return stdoutTraceOutputEnabled;
   }
-  
+
   public boolean isFileTraceOutputEnabled()
   {
     return fileTraceOutputEnabled;
@@ -113,11 +113,11 @@ public class OutputSettings
   {
     return file2TraceWriter;
   }
-  
+
   public Map<String,String> getSettingsMap()
   {
     Map<String,String> settingsMap = new HashMap<String, String>();
-    settingsMap.put(OutputConfigConstants.STD_OUT, Boolean.toString(stdoutTraceOutputEnabled));
+    settingsMap.put(OutputConfigConstants.STD_OUT,  Boolean.toString(stdoutTraceOutputEnabled));
     settingsMap.put(OutputConfigConstants.FILE_OUT, Boolean.toString(fileTraceOutputEnabled));
     return settingsMap;
   }

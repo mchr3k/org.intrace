@@ -27,23 +27,23 @@ public class CallersSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg(seperateArgs[ii]);
+      parseArg("[" + seperateArgs[ii]);
     }
   }
 
   private void parseArg(String arg)
   {
-    if (arg.toLowerCase().equals("callers-enabled-false"))
+    if (arg.toLowerCase().equals("[callers-enabled-false"))
     {
       callersEnabled = false;
     }
-    else if (arg.toLowerCase().equals("callers-enabled-true"))
+    else if (arg.toLowerCase().equals("[callers-enabled-true"))
     {
       callersEnabled = true;
     }
-    else if (arg.startsWith("callers-regex-"))
+    else if (arg.startsWith("[callers-regex-"))
     {
-      String methodsRegexStr = arg.replace("callers-regex-", "");
+      String methodsRegexStr = arg.replace("[callers-regex-", "");
       methodsPattern = Pattern.compile(methodsRegexStr);
     }
   }

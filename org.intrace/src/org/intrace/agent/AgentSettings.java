@@ -40,47 +40,47 @@ public class AgentSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg(seperateArgs[ii]);
+      parseArg("[" + seperateArgs[ii]);
     }
   }
 
   private void parseArg(String arg)
   {
-    if (arg.toLowerCase().equals("verbose-true"))
+    if (arg.toLowerCase().equals(AgentConfigConstants.VERBOSE_MODE + "true"))
     {
       verboseMode = true;
     }
-    else if (arg.toLowerCase().equals("verbose-false"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.VERBOSE_MODE + "false"))
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().equals("instru-true"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.TRACING_ENABLED + "true"))
     {
       tracingEnabled = true;
     }
-    else if (arg.toLowerCase().equals("instru-false"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.TRACING_ENABLED + "false"))
     {
       tracingEnabled = false;
     }
-    else if (arg.toLowerCase().equals("saveinstru-true"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "true"))
     {
       saveTracedClassfiles = true;
     }
-    else if (arg.toLowerCase().equals("saveinstru-false"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "false"))
     {
       saveTracedClassfiles = false;
     }
-    else if (arg.toLowerCase().equals("instrujars-true"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "true"))
     {
       allowJarsToBeTraced = true;
     }
-    else if (arg.toLowerCase().equals("instrujars-false"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "false"))
     {
       allowJarsToBeTraced = false;
     }
-    else if (arg.startsWith("regex-"))
+    else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
-      String classRegexStr = arg.replace("regex-", "");
+      String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
       classRegex = Pattern.compile(classRegexStr);
     }
   }
@@ -124,12 +124,11 @@ public class AgentSettings
   public Map<String,String> getSettingsMap()
   {
     Map<String,String> settingsMap = new HashMap<String, String>();
-    settingsMap.put(AgentConfigConstants.MAP_ID, AgentConfigConstants.MAP_ID);
-    settingsMap.put(AgentConfigConstants.TRACING_ENABLED, Boolean.toString(tracingEnabled));
-    settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
+    settingsMap.put(AgentConfigConstants.TRACING_ENABLED,         Boolean.toString(tracingEnabled));
+    settingsMap.put(AgentConfigConstants.CLASS_REGEX,             classRegex.pattern());
     settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, Boolean.toString(allowJarsToBeTraced));
-    settingsMap.put(AgentConfigConstants.VERBOSE_MODE, Boolean.toString(verboseMode));
-    settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES, Boolean.toString(saveTracedClassfiles));
+    settingsMap.put(AgentConfigConstants.VERBOSE_MODE,            Boolean.toString(verboseMode));
+    settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,  Boolean.toString(saveTracedClassfiles));
     return settingsMap;
   }
 }

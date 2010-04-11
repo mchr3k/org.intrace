@@ -41,6 +41,7 @@
 		<jar destfile="./built/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
 			<fileset dir="./bin" includes="**/agent/**/*.class" />
 			<fileset dir="./bin" includes="**/output/**/*.class" />
+			<fileset dir="./bin" includes="**/shared/*.class" />
 			<fileset dir="./lib/libclasses" includes="**/*.class" />
 		</jar>
 		

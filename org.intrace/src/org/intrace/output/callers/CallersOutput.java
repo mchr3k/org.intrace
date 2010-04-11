@@ -26,7 +26,6 @@ public class CallersOutput extends IOutputAdapter
       {
         System.out.println("## Callers Analysis Started");
         recordedData.clear();
-        recordedData.put(CallersConfigConstants.MAP_ID, CallersConfigConstants.MAP_ID);
         inProgress = new CaptureInProgress(this);
         inProgress.start();
       }
