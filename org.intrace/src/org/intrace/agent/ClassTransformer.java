@@ -18,20 +18,28 @@ import org.intrace.output.AgentHelper;
 import org.objectweb.asm.ClassReader;
 
 /**
- * Uses ASM2 to transform class files to add Trace output.
+ * Uses ASM2 to transform class files to add Trace instrumentation.
  */
 public class ClassTransformer implements ClassFileTransformer
 {
   /**
    * Map of modified class names to their original bytes
    */
-  private final Set<String> modifiedClasses =
-    new ConcurrentSkipListSet<String>();
+  private final Set<String> modifiedClasses = new ConcurrentSkipListSet<String>();
+
+  /**
+   * Instrumentation interface.
+   */
   private final Instrumentation inst;
-  private final AgentSettings args;
+
+  /**
+   * Settings for this Transformer
+   */
+  private final AgentSettings settings;
 
   /**
    * cTor
+   * 
    * @param xiInst
    * @param xiEnableTracing
    * @param xiClassRegex
@@ -42,81 +50,41 @@ public class ClassTransformer implements ClassFileTransformer
   public ClassTransformer(Instrumentation xiInst, AgentSettings xiArgs)
   {
     inst = xiInst;
-    args = xiArgs;
-    if (args.isVerboseMode())
+    settings = xiArgs;
+    if (settings.isVerboseMode())
     {
-      System.out.println(args.toString());
+      System.out.println(settings.toString());
     }
   }
 
   /**
-   * Toggle whether tracing is enabled
-   * @param xiTracingEnabled
+   * Generate and return instrumented class bytes.
+   * 
+   * @param xiClassName
+   * @param classfileBuffer
+   * @return Instrumented class bytes
    */
-  public void setTracingEnabled(boolean xiOldTracingEnabled)
+  private byte[] getInstrumentedClassBytes(String xiClassName,
+                                           byte[] classfileBuffer)
   {
-    if (args.isTracingEnabled() && !xiOldTracingEnabled)
-    {
-      traceLoadedClasses();
-    }
-    else if (!args.isTracingEnabled() && xiOldTracingEnabled)
-    {
-      recheckModifiedClasses();
-    }
+    ClassReader cr = new ClassReader(classfileBuffer);
+    ClassBranchLineAnalysis analysis = new ClassBranchLineAnalysis();
+    cr.accept(analysis, false);
+    InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
+                                                                 cr, analysis);
+    cr.accept(writer, false);
+    return writer.toByteArray();
   }
 
   /**
-   * Apply Trace transformation to loaded classes.
+   * Retransform all modified classes.
+   * <p>
+   * Iterates over all loaded classes and retransforms those which we know we
+   * have modified.
+   * 
    * @param xiInst
    */
-  public void traceLoadedClasses()
-  {
-    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
-    for (Class<?> loadedClass : loadedClasses)
-    {
-      if (loadedClass.isAnnotation())
-      {
-        if (args.isVerboseMode())
-        {
-          System.out.println("Ignoring annotation class: " + loadedClass.getCanonicalName());
-        }
-      }
-      else if (loadedClass.isSynthetic())
-      {
-        if (args.isVerboseMode())
-        {
-          System.out.println("Ignoring synthetic class: " + loadedClass.getCanonicalName());
-        }
-      }
-      else if (!inst.isModifiableClass(loadedClass))
-      {
-        if (args.isVerboseMode())
-        {
-          System.out.println("Ignoring unmodifiable class: " + loadedClass.getCanonicalName());
-        }
-      }
-      else if (args.isTracingEnabled() &&
-          isToBeConsideredForCoverage(loadedClass.getName(), loadedClass.getProtectionDomain()))
-      {
-        try
-        {
-          inst.retransformClasses(loadedClass);
-        }
-        catch (Throwable e)
-        {
-          // Write exception to stdout
-          System.out.println(loadedClass.getName());
-          e.printStackTrace();
-        }
-      }
-    }
-  }
-
-  /**
-   * Restore original class bytes
-   * @param xiInst
-   */
-  private void recheckModifiedClasses()
+  private void retransformModifiedClasses()
   {
     Class<?>[] loadedClasses = inst.getAllLoadedClasses();
     for (Class<?> loadedClass : loadedClasses)
@@ -136,16 +104,40 @@ public class ClassTransformer implements ClassFileTransformer
     }
   }
 
-  private boolean isToBeConsideredForCoverage(String className,
-                                              ProtectionDomain protectionDomain)
+  /**
+   * Determine whether a given className is eligible for modification. Any of
+   * the following conditions will make a class ineligible for instrumentation.
+   * <ul>
+   * <li>Class name which begins with "org.intrace"
+   * <li>Class name which begins with "org.objectweb.asm"
+   * <li>The class has already been modified
+   * <li>Class name ends with "Test"
+   * <li>Class name doesn't match the regex
+   * <li>Class is in a JAR and JAR instrumention is disabled
+   * </ul>
+   * 
+   * @param className
+   * @param protectionDomain
+   * @return True if the Class with name className should be instrumented.
+   */
+  private boolean isToBeConsideredForInstrumentation(
+                                                     String className,
+                                                     ProtectionDomain protectionDomain)
   {
-    // Don't modify self
-    if (className.startsWith("org.intrace") ||
-        className.startsWith("org.objectweb.asm"))
+    // Don't modify anything if tracing is disabled
+    if (!settings.isInstrumentationEnabled())
     {
-      if (args.isVerboseMode())
+      return false;
+    }
+
+    // Don't modify self
+    if (className.startsWith("org.intrace")
+        || className.startsWith("org.objectweb.asm"))
+    {
+      if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class in gb.instrument package: " + className);
+        System.out.println("Ignoring class in gb.instrument package: "
+                           + className);
       }
       return false;
     }
@@ -153,7 +145,7 @@ public class ClassTransformer implements ClassFileTransformer
     // Don't modify a class which is already modified
     if (modifiedClasses.contains(className))
     {
-      if (args.isVerboseMode())
+      if (settings.isVerboseMode())
       {
         System.out.println("Ignoring class already modified: " + className);
       }
@@ -165,7 +157,7 @@ public class ClassTransformer implements ClassFileTransformer
     if (className.endsWith("Test") || p > 0
         && className.substring(0, p).endsWith("Test"))
     {
-      if (args.isVerboseMode())
+      if (settings.isVerboseMode())
       {
         System.out.println("Ignoring class name ending in Test: " + className);
       }
@@ -173,54 +165,63 @@ public class ClassTransformer implements ClassFileTransformer
     }
 
     // Don't modify classes which fail to match the regex
-    if ((args.getClassRegex() == null) ||
-        !args.getClassRegex().matcher(className).matches())
+    if ((settings.getClassRegex() == null)
+        || !settings.getClassRegex().matcher(className).matches())
     {
-      if (args.isVerboseMode())
+      if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class not matching the active regex: " + className);
+        System.out.println("Ignoring class not matching the active regex: "
+                           + className);
       }
       return false;
     }
 
     // Don't modify a class from a JAR file unless this is allowed
     CodeSource codeSource = protectionDomain.getCodeSource();
-    if (!args.allowJarsToBeTraced() &&
-        (codeSource != null) &&
-        codeSource.getLocation().getPath().endsWith(".jar"))
+    if (!settings.allowJarsToBeTraced() && (codeSource != null)
+        && codeSource.getLocation().getPath().endsWith(".jar"))
     {
-      if (args.isVerboseMode())
+      if (settings.isVerboseMode())
       {
         System.out.println("Ignoring class in a JAR: " + className);
       }
       return false;
     }
+
+    // All checks passed - class can be instrumented
     return true;
   }
 
+  /**
+   * java.lang.instrument Entry Point
+   * <p>
+   * Optionally transform a class file to add instrumentation.
+   * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
+   * determines whether a class is eligible for instrumentation.
+   */
   @Override
-  public byte[] transform(ClassLoader loader,
-                          String internalClassName,
+  public byte[] transform(ClassLoader loader, String internalClassName,
                           Class<?> classBeingRedefined,
                           ProtectionDomain protectionDomain,
                           byte[] originalClassfile)
-  throws IllegalClassFormatException
+      throws IllegalClassFormatException
   {
     String className = internalClassName.replace('/', '.');
-    if (args.isTracingEnabled() &&
-        isToBeConsideredForCoverage(className, protectionDomain))
+    if (isToBeConsideredForInstrumentation(className, protectionDomain))
     {
-      if (args.isVerboseMode())
+      if (settings.isVerboseMode())
       {
         System.out.println("!! Instrumenting class: " + className);
       }
-      byte[] newBytes = readAndModifyClassForTracing(className, originalClassfile);
 
-      if (args.saveTracedClassfiles())
+      byte[] newBytes = getInstrumentedClassBytes(className, originalClassfile);
+
+      if (settings.saveTracedClassfiles())
       {
         try
         {
-          File classOut = new File("./genbin/" + internalClassName + "_gen.class");
+          File classOut = new File("./genbin/" + internalClassName
+                                   + "_gen.class");
           File parentDir = classOut.getParentFile();
           boolean dirExists = parentDir.exists();
           if (!dirExists)
@@ -236,8 +237,8 @@ public class ClassTransformer implements ClassFileTransformer
           }
           else
           {
-            System.out.println("Can't create directory " + parentDir +
-            " for saving traced classfiles.");
+            System.out.println("Can't create directory " + parentDir
+                               + " for saving traced classfiles.");
           }
         }
         catch (Exception e)
@@ -256,58 +257,134 @@ public class ClassTransformer implements ClassFileTransformer
     }
   }
 
-  private byte[] readAndModifyClassForTracing(String xiClassName,
-                                              byte[] classfileBuffer)
+  /**
+   * Consider loaded classes for transformation. Any of the following reasons
+   * would prevent a loaded class from being eligible for instrumentation.
+   * <ul>
+   * <li>Class is an annotation
+   * <li>Class is synthetic
+   * <li>Class is not modifiable
+   * <li>Class is rejected by
+   * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
+   * </ul>
+   */
+  public void instrumentLoadedClasses()
   {
-    ClassReader cr = new ClassReader(classfileBuffer);
-    ClassBranchLineAnalysis analysis = new ClassBranchLineAnalysis();
-    cr.accept(analysis, false);
-    InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
-                                                                 cr,
-                                                                 analysis);
-    cr.accept(writer, false);
-    return writer.toByteArray();
+    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
+    for (Class<?> loadedClass : loadedClasses)
+    {
+      if (loadedClass.isAnnotation())
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring annotation class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (loadedClass.isSynthetic())
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring synthetic class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (!inst.isModifiableClass(loadedClass))
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring unmodifiable class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (isToBeConsideredForInstrumentation(
+                                                  loadedClass.getName(),
+                                                  loadedClass
+                                                             .getProtectionDomain()))
+      {
+        try
+        {
+          inst.retransformClasses(loadedClass);
+        }
+        catch (Throwable e)
+        {
+          // Write exception to stdout
+          System.out.println(loadedClass.getName());
+          e.printStackTrace();
+        }
+      }
+    }
   }
 
+  /**
+   * Toggle whether instrumentation is enabled
+   * 
+   * @param xiTracingEnabled
+   */
+  public void setInstrumentationEnabled(boolean xiInstrumentationEnabled)
+  {
+    if (xiInstrumentationEnabled)
+    {
+      instrumentLoadedClasses();
+    }
+    else if (!xiInstrumentationEnabled)
+    {
+      retransformModifiedClasses();
+    }
+  }
+
+  /**
+   * @return The currently active settings.
+   */
+  public Map<String, String> getSettings()
+  {
+    return settings.getSettingsMap();
+  }
+
+  /**
+   * Handle a message and return a response.
+   * 
+   * @param message
+   * @return Response or null if there is no response.
+   */
   public List<String> getResponse(String message)
   {
-    AgentSettings oldSettings = new AgentSettings(args);
-    args.parseArgs(message);
+    AgentSettings oldSettings = new AgentSettings(settings);
+    settings.parseArgs(message);
 
-    if (args.isVerboseMode() &&
-        (oldSettings.isVerboseMode() != args.isVerboseMode()))
+    if (settings.isVerboseMode()
+        && (oldSettings.isVerboseMode() != settings.isVerboseMode()))
     {
-      System.out.println(args.toString());
+      System.out.println(settings.toString());
     }
-    else if (oldSettings.isTracingEnabled() != args.isTracingEnabled())
+    else if (oldSettings.isInstrumentationEnabled() != settings
+                                                               .isInstrumentationEnabled())
     {
       System.out.println("## Settings Changed");
-      setTracingEnabled(oldSettings.isTracingEnabled());
+      setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
-    else if (!oldSettings.getClassRegex().pattern().equals(args.getClassRegex().pattern()))
+    else if (!oldSettings.getClassRegex().pattern()
+                         .equals(settings.getClassRegex().pattern()))
     {
       System.out.println("## Settings Changed");
-      recheckModifiedClasses();
-      traceLoadedClasses();
+      retransformModifiedClasses();
+      instrumentLoadedClasses();
     }
-    else if (oldSettings.allowJarsToBeTraced() != args.allowJarsToBeTraced())
+    else if (oldSettings.allowJarsToBeTraced() != settings
+                                                          .allowJarsToBeTraced())
     {
       System.out.println("## Settings Changed");
-      recheckModifiedClasses();
-      traceLoadedClasses();
+      retransformModifiedClasses();
+      instrumentLoadedClasses();
     }
-    else if (oldSettings.saveTracedClassfiles() != args.saveTracedClassfiles())
+    else if (oldSettings.saveTracedClassfiles() != settings
+                                                           .saveTracedClassfiles())
     {
       System.out.println("## Settings Changed");
-      recheckModifiedClasses();
-      traceLoadedClasses();
+      retransformModifiedClasses();
+      instrumentLoadedClasses();
     }
 
     return AgentHelper.getResponses(message);
-  }
-
-  public Map<String, String> getSettings()
-  {
-    return args.getSettingsMap();
   }
 }

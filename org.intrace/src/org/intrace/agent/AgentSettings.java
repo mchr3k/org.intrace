@@ -16,7 +16,7 @@ import org.intrace.shared.AgentConfigConstants;
 public class AgentSettings
 {
   private Pattern classRegex = Pattern.compile(".*");
-  private boolean tracingEnabled = false;
+  private boolean instruEnabled = false;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
   private boolean allowJarsToBeTraced = false;
@@ -29,7 +29,7 @@ public class AgentSettings
   public AgentSettings(AgentSettings oldInstance)
   {
     classRegex = oldInstance.getClassRegex();
-    tracingEnabled = oldInstance.isTracingEnabled();
+    instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
     allowJarsToBeTraced = oldInstance.allowJarsToBeTraced();
@@ -54,13 +54,13 @@ public class AgentSettings
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.TRACING_ENABLED + "true"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.INSTRU_ENABLED + "true"))
     {
-      tracingEnabled = true;
+      instruEnabled = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.TRACING_ENABLED + "false"))
+    else if (arg.toLowerCase().equals(AgentConfigConstants.INSTRU_ENABLED + "false"))
     {
-      tracingEnabled = false;
+      instruEnabled = false;
     }
     else if (arg.toLowerCase().equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "true"))
     {
@@ -90,9 +90,9 @@ public class AgentSettings
     return classRegex;
   }
 
-  public boolean isTracingEnabled()
+  public boolean isInstrumentationEnabled()
   {
-    return tracingEnabled;
+    return instruEnabled;
   }
 
   public boolean saveTracedClassfiles()
@@ -115,7 +115,7 @@ public class AgentSettings
   {
     String currentSettings = "";
     currentSettings += "Class Regex                : " + classRegex + "\n";
-    currentSettings += "Tracing Enabled            : " + tracingEnabled + "\n";
+    currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
     currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles + "\n";
     currentSettings += "Trace Classes in JAR Files : " + allowJarsToBeTraced + "\n";
     return currentSettings;
@@ -124,7 +124,7 @@ public class AgentSettings
   public Map<String,String> getSettingsMap()
   {
     Map<String,String> settingsMap = new HashMap<String, String>();
-    settingsMap.put(AgentConfigConstants.TRACING_ENABLED,         Boolean.toString(tracingEnabled));
+    settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,         Boolean.toString(instruEnabled));
     settingsMap.put(AgentConfigConstants.CLASS_REGEX,             classRegex.pattern());
     settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, Boolean.toString(allowJarsToBeTraced));
     settingsMap.put(AgentConfigConstants.VERBOSE_MODE,            Boolean.toString(verboseMode));

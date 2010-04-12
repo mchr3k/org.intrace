@@ -36,8 +36,8 @@ public class InstrumentedClassWriter extends ClassWriter
   {
     MethodVisitor mv = super.visitMethod(access, name, desc, signature,
                                          exceptions);
-    Set<Integer> branchTraceLines = analysis.methodBranchTraceLines.get(name + desc);
-    Integer entryLine = analysis.methodEntryLine.get(name + desc);
+    Set<Integer> branchTraceLines = analysis.methodReverseGOTOLines.get(name + desc);
+    Integer entryLine = analysis.methodEntryLines.get(name + desc);
     if (branchTraceLines == null)
     {
       branchTraceLines = new HashSet<Integer>();

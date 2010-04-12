@@ -34,7 +34,7 @@ public class ParsedSettingsData
 
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
 
-    if ("true".equals(settingsMap.get(AgentConfigConstants.TRACING_ENABLED)))
+    if ("true".equals(settingsMap.get(AgentConfigConstants.INSTRU_ENABLED)))
     {
       instrEnabled = true;
     }

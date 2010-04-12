@@ -12,7 +12,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
- * ASM2 MethodVisitor used to add trace to methods.
+ * ASM2 MethodVisitor used to instrument methods.
  */
 public class InstrumentedMethodWriter extends MethodAdapter
 {
@@ -29,6 +29,7 @@ public class InstrumentedMethodWriter extends MethodAdapter
 
   /**
    * cTor
+   * 
    * @param xiMethodVisitor
    * @param xiClassName
    * @param xiMethodName
@@ -37,11 +38,8 @@ public class InstrumentedMethodWriter extends MethodAdapter
    * @param entryLine
    */
   public InstrumentedMethodWriter(MethodVisitor xiMethodVisitor,
-                                  String xiClassName,
-                                  String xiMethodName,
-                                  String xiDesc,
-                                  Set<Integer> xiBranchTraceLines,
-                                  Integer xiEntryLine)
+      String xiClassName, String xiMethodName, String xiDesc,
+      Set<Integer> xiBranchTraceLines, Integer xiEntryLine)
   {
     super(xiMethodVisitor);
     className = xiClassName;
@@ -54,12 +52,13 @@ public class InstrumentedMethodWriter extends MethodAdapter
   @Override
   public void visitCode()
   {
-    generateCallToWriteBranchTrace(TraceType.BEGIN,((entryLine != null ? entryLine : -1)));
-    traceArgs();
+    generateCallToWriteTrace(TraceType.BEGIN, ((entryLine != null ? entryLine
+                                                                 : -1)));
+    traceMethodArgs();
     super.visitCode();
   }
 
-  private void traceArgs()
+  private void traceMethodArgs()
   {
     Type[] argTypes = Type.getArgumentTypes(methodDescriptor);
     for (int ii = 0; ii < argTypes.length; ii++)
@@ -70,8 +69,8 @@ public class InstrumentedMethodWriter extends MethodAdapter
       {
         typeDescriptor = "Ljava/lang/Object;";
       }
-      else if ((argTypes[ii].getSort() == Type.ARRAY) &&
-          (argTypes[ii].getDescriptor().startsWith("[L")))
+      else if ((argTypes[ii].getSort() == Type.ARRAY)
+               && (argTypes[ii].getDescriptor().startsWith("[L")))
       {
         typeDescriptor = "[Ljava/lang/Object;";
       }
@@ -79,10 +78,9 @@ public class InstrumentedMethodWriter extends MethodAdapter
       mv.visitLdcInsn(className);
       mv.visitLdcInsn(methodName);
       mv.visitVarInsn(Opcodes.ALOAD, ii);
-      mv.visitMethodInsn(INVOKESTATIC,
-                         HELPER_CLASS,
-                         "arg",
-                         "(Ljava/lang/String;Ljava/lang/String;" + typeDescriptor + ")V");
+      mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "arg",
+                         "(Ljava/lang/String;Ljava/lang/String;"
+                             + typeDescriptor + ")V");
     }
   }
 
@@ -90,14 +88,10 @@ public class InstrumentedMethodWriter extends MethodAdapter
   public void visitLineNumber(int xiLineNumber, Label label)
   {
     lineNumber = xiLineNumber;
-    if (writeTraceLine ||
-        branchTraceLines.contains(xiLineNumber))
+    if (writeTraceLine || branchTraceLines.contains(xiLineNumber))
     {
-      generateCallToWriteBranchTrace(TraceType.BRANCH, lineNumber);
-      if (writeTraceLine)
-      {
-        writeTraceLine = false;
-      }
+      generateCallToWriteTrace(TraceType.BRANCH, lineNumber);
+      writeTraceLine = false;
     }
     super.visitLineNumber(xiLineNumber, label);
   }
@@ -107,7 +101,7 @@ public class InstrumentedMethodWriter extends MethodAdapter
   {
     if (xiOpCode == RETURN)
     {
-      generateCallToWriteBranchTrace(TraceType.END, lineNumber);
+      generateCallToWriteTrace(TraceType.END, lineNumber);
     }
     super.visitInsn(xiOpCode);
   }
@@ -119,53 +113,38 @@ public class InstrumentedMethodWriter extends MethodAdapter
     super.visitJumpInsn(xiOpCode, xiBranchLabel);
   }
 
-  private void generateCallToWriteBranchTrace(TraceType traceType,
-                                              int lineNumber)
+  private void generateCallToWriteTrace(TraceType traceType, int lineNumber)
   {
+    mv.visitLdcInsn(className);
+    mv.visitLdcInsn(methodName);
+    mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
     switch (traceType)
     {
     case BEGIN:
     {
-      mv.visitLdcInsn(className);
-      mv.visitLdcInsn(methodName);
-      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
-      mv.visitMethodInsn(INVOKESTATIC,
-                         HELPER_CLASS,
-                         "enter",
-      "(Ljava/lang/String;Ljava/lang/String;I)V");
+      mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "enter",
+                         "(Ljava/lang/String;Ljava/lang/String;I)V");
     }
-    break;
+      break;
 
     case BRANCH:
     {
-      mv.visitLdcInsn(className);
-      mv.visitLdcInsn(methodName);
-      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
-      mv.visitMethodInsn(INVOKESTATIC,
-                         HELPER_CLASS,
-                         "branch",
-      "(Ljava/lang/String;Ljava/lang/String;I)V");
+      mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "branch",
+                         "(Ljava/lang/String;Ljava/lang/String;I)V");
     }
-    break;
+      break;
 
     case END:
     {
-      mv.visitLdcInsn(className);
-      mv.visitLdcInsn(methodName);
-      mv.visitIntInsn(Opcodes.BIPUSH, lineNumber);
-      mv.visitMethodInsn(INVOKESTATIC,
-                         HELPER_CLASS,
-                         "exit",
-      "(Ljava/lang/String;Ljava/lang/String;I)V");
+      mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "exit",
+                         "(Ljava/lang/String;Ljava/lang/String;I)V");
     }
-    break;
+      break;
     }
   }
 
   private enum TraceType
   {
-    BEGIN,
-    BRANCH,
-    END
+    BEGIN, BRANCH, END
   }
 }
