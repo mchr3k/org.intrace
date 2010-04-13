@@ -68,7 +68,7 @@ public class ClassTransformer implements ClassFileTransformer
                                            byte[] classfileBuffer)
   {
     ClassReader cr = new ClassReader(classfileBuffer);
-    ClassBranchLineAnalysis analysis = new ClassBranchLineAnalysis();
+    ClassAnalysis analysis = new ClassAnalysis();
     cr.accept(analysis, false);
     InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
                                                                  cr, analysis);
