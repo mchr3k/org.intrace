@@ -1,6 +1,5 @@
 package org.intrace.agent.server;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -30,13 +29,13 @@ public class AgentClientConnection implements Runnable
 
   /**
    * cTor
+   * 
    * @param agentServer
    * @param xiConnectedClient
    * @param xiTransformer
    */
   public AgentClientConnection(AgentServer agentServer,
-                               Socket xiConnectedClient,
-                               ClassTransformer xiTransformer)
+      Socket xiConnectedClient, ClassTransformer xiTransformer)
   {
     super();
     serverRef = agentServer;
@@ -45,6 +44,17 @@ public class AgentClientConnection implements Runnable
     System.out.println("## Connected to: " + xiConnectedClient.getPort());
   }
 
+  /**
+   * Main client loop
+   * <ul>
+   * <li>Receive a message and send a response.
+   * </ul>
+   * Special Messages:
+   * <ul>
+   * <li>getsettings - Return a complete configuration Map
+   * <li>help - Return a Set of all the supported commands
+   * </ul>
+   */
   @Override
   public void run()
   {
@@ -58,7 +68,7 @@ public class AgentClientConnection implements Runnable
           String message = receiveMessage();
           if (message.equals("getsettings"))
           {
-            Map<String,String> settingsMap = new HashMap<String, String>();
+            Map<String, String> settingsMap = new HashMap<String, String>();
             settingsMap.putAll(transformer.getSettings());
             settingsMap.putAll(AgentHelper.getSettings());
             serverRef.broadcastMessage(this, settingsMap);
@@ -105,13 +115,19 @@ public class AgentClientConnection implements Runnable
     }
   }
 
+  /**
+   * Synchronously receive a String message.
+   * 
+   * @return
+   * @throws IOException
+   */
   private String receiveMessage() throws IOException
   {
     InputStream in = connectedClient.getInputStream();
     ObjectInputStream objIn = new ObjectInputStream(in);
     try
     {
-      return (String)objIn.readObject();
+      return (String) objIn.readObject();
     }
     catch (ClassNotFoundException e)
     {
@@ -120,11 +136,28 @@ public class AgentClientConnection implements Runnable
     return null;
   }
 
+  /**
+   * Synchronously send an Object message.
+   * 
+   * @param xiObject
+   * @throws IOException
+   */
   public void sendMessage(Object xiObject) throws IOException
   {
     OutputStream out = connectedClient.getOutputStream();
     ObjectOutputStream objOut = new ObjectOutputStream(out);
     objOut.writeObject(xiObject);
     objOut.flush();
+  }
+
+  /**
+   * Start the Client connection - create a new, named, daemon thread.
+   */
+  public void start(int clientNum)
+  {
+    Thread clientThread = new Thread(this);
+    clientThread.setDaemon(true);
+    clientThread.setName("AgentServer-Client" + clientNum);
+    clientThread.start();
   }
 }

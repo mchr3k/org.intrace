@@ -65,9 +65,6 @@ public class Agent
     t.instrumentLoadedClasses();
 
     // Start Server thread
-    Thread traceServer = new Thread(new AgentServer(t));
-    traceServer.setName("TraceServer");
-    traceServer.setDaemon(true);
-    traceServer.start();
+    new AgentServer(t).start();
   }
 }

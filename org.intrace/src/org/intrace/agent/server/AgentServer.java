@@ -1,6 +1,5 @@
 package org.intrace.agent.server;
 
-
 import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
@@ -11,29 +10,44 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.intrace.agent.ClassTransformer;
 
 /**
- * TCP Server used for communication with the Trace client.
+ * TCP Server used for communication with Trace clients.
  */
 public class AgentServer implements Runnable
 {
+  // CTor field
   private final ClassTransformer transformer;
 
+  // Map of client connections
   private final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
 
   /**
-   * cTor
+   * cTor s
+   * 
    * @param xiT
    */
   public AgentServer(ClassTransformer xiT)
   {
-    transformer= xiT;
+    transformer = xiT;
   }
 
+  /**
+   * @param connection
+   *          Remove this connection.
+   */
   public void removeClientConnection(AgentClientConnection connection)
   {
     clientConnections.remove(connection);
   }
 
-  public void broadcastMessage(AgentClientConnection requestingConn, Object message) throws IOException
+  /**
+   * Broadcast a message to all currently connected clients.
+   * 
+   * @param requestingConn
+   * @param message
+   * @throws IOException
+   */
+  public void broadcastMessage(AgentClientConnection requestingConn,
+                               Object message) throws IOException
   {
     IOException ex = null;
     for (AgentClientConnection clientConn : clientConnections.keySet())
@@ -44,6 +58,7 @@ public class AgentServer implements Runnable
       }
       catch (IOException ioex)
       {
+        // Only remember exceptions for the connection sending the message
         if (requestingConn == clientConn)
         {
           ex = ioex;
@@ -56,13 +71,25 @@ public class AgentServer implements Runnable
     }
   }
 
+  /**
+   * Main server loop
+   */
   @Override
   public void run()
   {
+    // Server constants
+
+    // Number used for naming client threads
     int clientNum = 1;
-    int numAllowedExcept = 10;
+
+    // Number of allowed exceptions before we give up
+    int numAllowedExceptions = 10;
+
+    // Default listen port - we increment the port if we cannot listen on this
+    // port
     int tracePort = 9123;
-    while (numAllowedExcept > 0)
+
+    while (numAllowedExceptions > 0)
     {
       try
       {
@@ -71,24 +98,24 @@ public class AgentServer implements Runnable
         while (true)
         {
           Socket connectedClient = serversock.accept();
-          AgentClientConnection clientConnection = new AgentClientConnection(this, connectedClient, transformer);
+          AgentClientConnection clientConnection = new AgentClientConnection(
+                                                                             this,
+                                                                             connectedClient,
+                                                                             transformer);
           clientConnections.put(clientConnection, new Object());
-          Thread clientThread = new Thread(clientConnection);
-          clientThread.setDaemon(true);
-          clientThread.setName("AgentServer-Client" + clientNum);
-          clientThread.start();
+          clientConnection.start(clientNum);
           clientNum++;
         }
       }
       catch (BindException e)
       {
-        numAllowedExcept--;
+        numAllowedExceptions--;
         System.out.println("## Unable to listen on port: " + tracePort);
         tracePort++;
       }
       catch (Throwable t)
       {
-        numAllowedExcept--;
+        numAllowedExceptions--;
         t.printStackTrace();
         try
         {
@@ -96,10 +123,21 @@ public class AgentServer implements Runnable
         }
         catch (InterruptedException e)
         {
-          // Throw away
+          e.printStackTrace();
         }
       }
     }
     System.out.println("## Too many exceptions - server thread quitting.");
+  }
+
+  /**
+   * Start the Server - create a new, named, daemon thread.
+   */
+  public void start()
+  {
+    Thread traceServer = new Thread(this);
+    traceServer.setName("TraceServer");
+    traceServer.setDaemon(true);
+    traceServer.start();
   }
 }
