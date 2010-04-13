@@ -4,11 +4,14 @@ import java.lang.instrument.Instrumentation;
 
 import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
-import org.intrace.output.callers.CallersOutput;
-import org.intrace.output.trace.TraceOutput;
+import org.intrace.output.IInstrumentationHandler;
+import org.intrace.output.callers.CallersHandler;
+import org.intrace.output.trace.TraceHandler;
 
 /**
- * InTrace Agent: Installs a Class Transformer to instrument class bytecode.
+ * InTrace Agent: Installs a Class Transformer to instrument class bytecode. The
+ * Instrumentation adds calls to {@link AgentHelper} which allows for
+ * {@link IInstrumentationHandler}s to generate output.
  */
 public class Agent
 {
@@ -50,8 +53,8 @@ public class Agent
     }
 
     // Setup the output handlers
-    AgentHelper.outputHandlers.put(new TraceOutput(), new Object());
-    AgentHelper.outputHandlers.put(new CallersOutput(), new Object());
+    AgentHelper.instrumentationHandlers.put(new TraceHandler(), new Object());
+    AgentHelper.instrumentationHandlers.put(new CallersHandler(), new Object());
 
     // Parse startup args
     AgentSettings args = new AgentSettings(agentArgs);

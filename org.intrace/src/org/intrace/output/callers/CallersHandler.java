@@ -5,10 +5,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.intrace.output.AgentHelper;
-import org.intrace.output.IOutputAdapter;
+import org.intrace.output.IInstrumentationHandlerAdapter;
 import org.intrace.shared.CallersConfigConstants;
 
-public class CallersOutput extends IOutputAdapter
+public class CallersHandler extends IInstrumentationHandlerAdapter
 {
   private final CallersSettings callersSettings = new CallersSettings("");
   private final Map<String, Object> recordedData = new ConcurrentHashMap<String, Object>();
@@ -96,8 +96,8 @@ public class CallersOutput extends IOutputAdapter
   {
     private boolean running = true;
     private Thread thread;
-    private final CallersOutput callersRef;
-    public CaptureInProgress(CallersOutput callersOutput)
+    private final CallersHandler callersRef;
+    public CaptureInProgress(CallersHandler callersOutput)
     {
       callersRef = callersOutput;
     }

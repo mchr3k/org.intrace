@@ -5,12 +5,12 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.intrace.output.AgentHelper;
-import org.intrace.output.IOutput;
+import org.intrace.output.IInstrumentationHandler;
 
 /**
  * Implements Standard Output Tracing
  */
-public class TraceOutput implements IOutput
+public class TraceHandler implements IInstrumentationHandler
 {
   private boolean entryExitTrace = true;
   private boolean branchTrace = false;

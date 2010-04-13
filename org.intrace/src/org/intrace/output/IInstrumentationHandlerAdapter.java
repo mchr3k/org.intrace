@@ -3,7 +3,7 @@ package org.intrace.output;
 import java.util.HashMap;
 import java.util.Map;
 
-public class IOutputAdapter implements IOutput
+public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
 {
 
   @Override
