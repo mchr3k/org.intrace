@@ -10,6 +10,8 @@ import org.intrace.shared.CallersConfigConstants;
 
 public class CallersHandler extends IInstrumentationHandlerAdapter
 {
+  private static final long INTERMEDIATE_SEND_DELAY = 5 * 1000;
+
   private final CallersSettings callersSettings = new CallersSettings("");
   private final Map<String, Object> recordedData = new ConcurrentHashMap<String, Object>();
   private CaptureInProgress inProgress;
@@ -45,7 +47,8 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
   {
     Map<String, Object> dataToSend = new HashMap<String, Object>(recordedData);
     dataToSend.put(CallersConfigConstants.FINAL, Boolean.toString(finalWrite));
-    dataToSend.put(CallersConfigConstants.PATTERN, callersSettings.getMethodRegex().pattern());
+    dataToSend.put(CallersConfigConstants.PATTERN,
+                   callersSettings.getMethodRegex().pattern());
     AgentHelper.writeDataOutput(dataToSend);
   }
 
@@ -75,11 +78,14 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
       for (int ii = 3; ii < stackTrace.length; ii++)
       {
         StackTraceElement element = stackTrace[ii];
-        String stackLine = element.getClassName() + "#"
-        + element.getMethodName() + ":"
-        + ((element.getLineNumber() > -1) ?
-                                           element.getLineNumber() :
-                                             ((lineNo > -1) ? lineNo : "unknown"));
+        String stackLine = element.getClassName()
+                           + "#"
+                           + element.getMethodName()
+                           + ":"
+                           + ((element.getLineNumber() > -1) ? element
+                                                                      .getLineNumber()
+                                                            : ((lineNo > -1) ? lineNo
+                                                                            : "unknown"));
 
         Object treeElementObj = treeElement.get(stackLine);
         if (treeElementObj == null)
@@ -87,7 +93,7 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
           treeElementObj = new ConcurrentHashMap<String, Object>();
           treeElement.put(stackLine, treeElementObj);
         }
-        treeElement = (Map<String, Object>)treeElementObj;
+        treeElement = (Map<String, Object>) treeElementObj;
       }
     }
   }
@@ -97,6 +103,7 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
     private boolean running = true;
     private Thread thread;
     private final CallersHandler callersRef;
+
     public CaptureInProgress(CallersHandler callersOutput)
     {
       callersRef = callersOutput;
@@ -118,7 +125,7 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
         try
         {
           callersRef.writeData(false);
-          Thread.sleep(5000);
+          Thread.sleep(INTERMEDIATE_SEND_DELAY);
         }
         catch (InterruptedException e)
         {
