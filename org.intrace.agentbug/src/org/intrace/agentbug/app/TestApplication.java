@@ -1,4 +1,4 @@
-package gb.test;
+package org.intrace.agentbug.app;
 
 public class TestApplication
 {

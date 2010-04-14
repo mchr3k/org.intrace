@@ -1,4 +1,4 @@
-package mchr;
+package org.intrace.sandbox;
 
 import java.util.List;
 import java.util.Map;

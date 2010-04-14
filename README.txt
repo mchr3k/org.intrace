@@ -1,23 +1,9 @@
-org.intrace description:
+== org.intrace Repository ==
 
--- Packages --
-agent        : Instrumenting Agent including IP Server
-output       : Instrumentation output handlers
-output.trace : Default (and currently only) handler
+=> org.intrace - Main InTrace Project
 
-client/cui/AgentLoader : Command line runtime Agent loading tool
-client/cui/TraceClient : Command line remote Agent config tool
-client/gui/            : GUI remote Agent config tool/network trace viewer
+=> org.intrace.agentbug - Project containing simple Agent used to illustrate bug report to Sun.
 
--- Functional Pieces --
-1. Instrumenting Agent
-2. Runtime Agent Loader
-3. CUI Remote Agent Config Tool
-4. GUI Remote Agent Config Tool/Network Trace Viewer
+=> org.intrace.agentloader - Project containing command line agent loader for loading an agent into a running process.
 
-Note to self - Git Commands:
-
-  git init
-  git remote add origin git@github.com:mchr3k/org.intrace.git
-  git push origin master
-      
+=> org.intrace.test - Dumping ground for toy classes used in manual testing.

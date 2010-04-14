@@ -1,4 +1,4 @@
-package gb.testinstru;
+package org.intrace.agentbug.agent;
 
 import java.lang.instrument.Instrumentation;
 
