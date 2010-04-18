@@ -131,9 +131,8 @@ public class AgentClientConnection implements Runnable
     }
     catch (ClassNotFoundException e)
     {
-      e.printStackTrace();
+      throw new IOException(e);
     }
-    return null;
   }
 
   /**

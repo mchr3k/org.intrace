@@ -1,6 +1,5 @@
 package org.intrace.output.trace;
 
-
 import java.util.Arrays;
 import java.util.Map;
 
@@ -23,9 +22,12 @@ public class TraceHandler implements IInstrumentationHandler
     TraceSettings oldSettings = new TraceSettings(traceSettings);
     traceSettings.parseArgs(args);
 
-    if ((oldSettings.isEntryExitTraceEnabled() != traceSettings.isEntryExitTraceEnabled()) ||
-        (oldSettings.isBranchTraceEnabled() != traceSettings.isBranchTraceEnabled()) ||
-        (oldSettings.isArgTraceEnabled() != traceSettings.isArgTraceEnabled()))
+    if ((oldSettings.isEntryExitTraceEnabled() != traceSettings
+                                                               .isEntryExitTraceEnabled())
+        || (oldSettings.isBranchTraceEnabled() != traceSettings
+                                                               .isBranchTraceEnabled())
+        || (oldSettings.isArgTraceEnabled() != traceSettings
+                                                            .isArgTraceEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -37,7 +39,7 @@ public class TraceHandler implements IInstrumentationHandler
     return null;
   }
 
-  public Map<String,String> getSettingsMap()
+  public Map<String, String> getSettingsMap()
   {
     return traceSettings.getSettingsMap();
   }
@@ -47,7 +49,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + byteArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + byteArg);
     }
   }
 
@@ -65,7 +68,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + shortArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + shortArg);
     }
   }
 
@@ -83,7 +87,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + intArg);
+      AgentHelper
+                 .writeOutput(className + ":" + methodName + ": Arg: " + intArg);
     }
   }
 
@@ -102,7 +107,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + longArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + longArg);
     }
   }
 
@@ -121,7 +127,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + floatArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + floatArg);
     }
   }
 
@@ -140,7 +147,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + doubleArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + doubleArg);
     }
   }
 
@@ -159,7 +167,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + boolArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + boolArg);
     }
   }
 
@@ -178,7 +187,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + charArg);
+      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+                              + charArg);
     }
   }
 
@@ -197,7 +207,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: " + objArg);
+      AgentHelper
+                 .writeOutput(className + ":" + methodName + ": Arg: " + objArg);
     }
   }
 
@@ -206,7 +217,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
-                              + Arrays.toString(objArrayArg));
+                              + Arrays.deepToString(objArrayArg));
     }
   }
 

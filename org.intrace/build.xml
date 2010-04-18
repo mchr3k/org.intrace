@@ -22,15 +22,21 @@
 		
 		<delete dir="./lib/libclasses" includes="**/*" />
 		<mkdir dir="./lib/libclasses" />
-		<unzip src="./lib/asm-2.2.3.jar" dest="./lib/libclasses">
+		<unzip src="./lib/asm-3.2.jar" dest="./lib/libclasses">
 			<patternset>
 				<include name="**/*.class" />
 				<exclude name="META-INF" />
 			</patternset>
 		</unzip>
-		<unzip src="./lib/asm-commons-2.2.3.jar" dest="./lib/libclasses">
+		<unzip src="./lib/asm-commons-3.2.jar" dest="./lib/libclasses">
 			<patternset>
-				<include name="**/EmptyVisitor.class" />
+				<include name="**/*.class" />
+				<exclude name="META-INF" />
+			</patternset>
+		</unzip>
+		<unzip src="./lib/asm-util-3.2.jar" dest="./lib/libclasses">
+			<patternset>
+				<include name="**/*.class" />
 				<exclude name="META-INF" />
 			</patternset>
 		</unzip>
@@ -43,6 +49,10 @@
 			<fileset dir="./bin" includes="**/output/**/*.class" />
 			<fileset dir="./bin" includes="**/shared/*.class" />
 			<fileset dir="./lib/libclasses" includes="**/*.class" />
+		</jar>
+		
+		<!-- Test Trace Agent -->
+		<jar destfile="./built/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
 		</jar>
 		
 		<!-- CUI Trace Client -->
@@ -70,6 +80,6 @@
 	</target>
 
 	<target name="deploy" description="Copy agent jar to another project">
-		<copy file="./built/traceagent.jar" tofile="../TestProject/lib/traceagent.jar" overwrite="true" />
+		<copy file="./built/traceagent.jar" tofile="../org.intrace.test/lib/traceagent.jar" overwrite="true" />
 	</target>
 </project>

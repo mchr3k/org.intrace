@@ -1,7 +1,5 @@
 package org.intrace.agent;
 
-import static org.objectweb.asm.Opcodes.GOTO;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,15 +49,15 @@ import org.objectweb.asm.commons.EmptyVisitor;
  * 
  * <h3>Line 5:</h3>
  * <ul>
- * <li>{@link ClassAnalysis#visitLineNumber(int, Label)} is called and
- * we record a mapping from label1 to line 5.
+ * <li>{@link ClassAnalysis#visitLineNumber(int, Label)} is called and we record
+ * a mapping from label1 to line 5.
  * </ul>
  * 
  * <h3>Line 8:</h3>
  * <ul>
- * <li>{@link ClassAnalysis#visitJumpInsn(int, Label)} is called with
- * a GOTO instruction so we check whether we have already seen the target label.
- * In this case, we have so we mark the target line number as a reverse GOTO.
+ * <li>{@link ClassAnalysis#visitJumpInsn(int, Label)} is called with a GOTO
+ * instruction so we check whether we have already seen the target label. In
+ * this case, we have so we mark the target line number as a reverse GOTO.
  * </ul>
  * 
  * <h1>Method Entry Line</h1> This analysis records the first source line of a
@@ -104,25 +102,19 @@ public class ClassAnalysis extends EmptyVisitor
   @Override
   public void visitJumpInsn(int xiOpCode, Label xiBranchLabel)
   {
-    if (xiOpCode == GOTO)
+    Integer lineNo = currentMethod_labelLineNos.get(xiBranchLabel);
+    if (lineNo != null)
     {
-      Integer lineNo = currentMethod_labelLineNos.get(xiBranchLabel);
-      if (lineNo != null)
-      {
-        currentMethod_reverseGOTOLines.add(lineNo);
-      }
+      currentMethod_reverseGOTOLines.add(lineNo);
     }
   }
 
   @Override
   public void visitEnd()
   {
-    if (currentMethod_sig != null)
-    {
-      methodReverseGOTOLines.put(currentMethod_sig,
-                                 currentMethod_reverseGOTOLines);
-      currentMethod_sig = null;
-      currentMethod_reverseGOTOLines = new HashSet<Integer>();
-    }
+    methodReverseGOTOLines.put(currentMethod_sig,
+                               currentMethod_reverseGOTOLines);
+    currentMethod_sig = null;
+    currentMethod_reverseGOTOLines = new HashSet<Integer>();
   }
 }

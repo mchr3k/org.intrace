@@ -1,3 +1,6 @@
 .metadata/
 */bin/*
 */built/*
+*/genbin/*
+asm3.2_*
+libsrc*

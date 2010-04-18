@@ -7,17 +7,15 @@ import java.util.regex.Pattern;
 import org.intrace.shared.AgentConfigConstants;
 
 /**
- * Args Format:
- *   "[arg1[arg2[arg3"
+ * Args Format: "[arg1[arg2[arg3"
  * 
- * where argx is of the form
- *   value-parameter
+ * where argx is of the form value-parameter
  */
 public class AgentSettings
 {
   private Pattern classRegex = Pattern.compile(".*");
   private boolean instruEnabled = false;
-  private boolean saveTracedClassfiles = false;
+  private boolean saveTracedClassfiles = true;
   private boolean verboseMode = false;
   private boolean allowJarsToBeTraced = false;
 
@@ -50,31 +48,41 @@ public class AgentSettings
     {
       verboseMode = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.VERBOSE_MODE + "false"))
+    else if (arg.toLowerCase().equals(
+                                      AgentConfigConstants.VERBOSE_MODE
+                                          + "false"))
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.INSTRU_ENABLED + "true"))
+    else if (arg.toLowerCase().equals(
+                                      AgentConfigConstants.INSTRU_ENABLED
+                                          + "true"))
     {
       instruEnabled = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.INSTRU_ENABLED + "false"))
+    else if (arg.toLowerCase().equals(
+                                      AgentConfigConstants.INSTRU_ENABLED
+                                          + "false"))
     {
       instruEnabled = false;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "true"))
+    else if (arg.toLowerCase()
+                .equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "true"))
     {
       saveTracedClassfiles = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "false"))
+    else if (arg.toLowerCase()
+                .equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "false"))
     {
       saveTracedClassfiles = false;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "true"))
+    else if (arg.toLowerCase()
+                .equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "true"))
     {
       allowJarsToBeTraced = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "false"))
+    else if (arg.toLowerCase()
+                .equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "false"))
     {
       allowJarsToBeTraced = false;
     }
@@ -116,19 +124,25 @@ public class AgentSettings
     String currentSettings = "";
     currentSettings += "Class Regex                : " + classRegex + "\n";
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
-    currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles + "\n";
-    currentSettings += "Trace Classes in JAR Files : " + allowJarsToBeTraced + "\n";
+    currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles
+                       + "\n";
+    currentSettings += "Trace Classes in JAR Files : " + allowJarsToBeTraced
+                       + "\n";
     return currentSettings;
   }
 
-  public Map<String,String> getSettingsMap()
+  public Map<String, String> getSettingsMap()
   {
-    Map<String,String> settingsMap = new HashMap<String, String>();
-    settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,         Boolean.toString(instruEnabled));
-    settingsMap.put(AgentConfigConstants.CLASS_REGEX,             classRegex.pattern());
-    settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, Boolean.toString(allowJarsToBeTraced));
-    settingsMap.put(AgentConfigConstants.VERBOSE_MODE,            Boolean.toString(verboseMode));
-    settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,  Boolean.toString(saveTracedClassfiles));
+    Map<String, String> settingsMap = new HashMap<String, String>();
+    settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,
+                    Boolean.toString(instruEnabled));
+    settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
+    settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED,
+                    Boolean.toString(allowJarsToBeTraced));
+    settingsMap.put(AgentConfigConstants.VERBOSE_MODE,
+                    Boolean.toString(verboseMode));
+    settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,
+                    Boolean.toString(saveTracedClassfiles));
     return settingsMap;
   }
 }

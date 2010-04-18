@@ -69,10 +69,12 @@ public class ClassTransformer implements ClassFileTransformer
   {
     ClassReader cr = new ClassReader(classfileBuffer);
     ClassAnalysis analysis = new ClassAnalysis();
-    cr.accept(analysis, false);
+    cr.accept(analysis, 0);
+
     InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
                                                                  cr, analysis);
-    cr.accept(writer, false);
+    cr.accept(writer, 0);
+
     return writer.toByteArray();
   }
 
@@ -93,6 +95,10 @@ public class ClassTransformer implements ClassFileTransformer
       {
         if (modifiedClasses.contains(loadedClass.getName()))
         {
+          if (settings.isVerboseMode())
+          {
+            System.out.println("Retransform class: " + loadedClass.getName());
+          }
           inst.retransformClasses(loadedClass);
         }
       }
@@ -136,7 +142,8 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class in gb.instrument package: "
+        System.out
+                  .println("Ignoring class in org.intrace or org.objectweb.asm package: "
                            + className);
       }
       return false;
@@ -214,37 +221,25 @@ public class ClassTransformer implements ClassFileTransformer
         System.out.println("!! Instrumenting class: " + className);
       }
 
-      byte[] newBytes = getInstrumentedClassBytes(className, originalClassfile);
+      byte[] newBytes;
+      try
+      {
+        newBytes = getInstrumentedClassBytes(className, originalClassfile);
+      }
+      catch (RuntimeException th)
+      {
+        th.printStackTrace();
+        throw th;
+      }
+      catch (Error th)
+      {
+        th.printStackTrace();
+        throw th;
+      }
 
       if (settings.saveTracedClassfiles())
       {
-        try
-        {
-          File classOut = new File("./genbin/" + internalClassName
-                                   + "_gen.class");
-          File parentDir = classOut.getParentFile();
-          boolean dirExists = parentDir.exists();
-          if (!dirExists)
-          {
-            dirExists = parentDir.mkdirs();
-          }
-          if (dirExists)
-          {
-            OutputStream out = new FileOutputStream(classOut);
-            out.write(newBytes);
-            out.flush();
-            out.close();
-          }
-          else
-          {
-            System.out.println("Can't create directory " + parentDir
-                               + " for saving traced classfiles.");
-          }
-        }
-        catch (Exception e)
-        {
-          e.printStackTrace();
-        }
+        writeClassBytes(newBytes, internalClassName + "_gen.class");
       }
 
       modifiedClasses.add(className);
@@ -254,6 +249,36 @@ public class ClassTransformer implements ClassFileTransformer
     {
       modifiedClasses.remove(className);
       return null;
+    }
+  }
+
+  private void writeClassBytes(byte[] newBytes, String className)
+  {
+    try
+    {
+      File classOut = new File("./genbin/" + className);
+      File parentDir = classOut.getParentFile();
+      boolean dirExists = parentDir.exists();
+      if (!dirExists)
+      {
+        dirExists = parentDir.mkdirs();
+      }
+      if (dirExists)
+      {
+        OutputStream out = new FileOutputStream(classOut);
+        out.write(newBytes);
+        out.flush();
+        out.close();
+      }
+      else
+      {
+        System.out.println("Can't create directory " + parentDir
+                           + " for saving traced classfiles.");
+      }
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
     }
   }
 
@@ -304,6 +329,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         try
         {
+          // System.out.println("ReTransform: " + loadedClass.getName());
           inst.retransformClasses(loadedClass);
         }
         catch (Throwable e)
