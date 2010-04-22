@@ -1,0 +1,10 @@
+h1. Main Projects
+
+* org.intrace - InTrace
+* org.intrace.agentloader - Command line agent loader for loading an agent into a running JVM process
+
+h2. Scratch Projects
+
+* binaries - images and jars used by wiki pages
+* org.intrace.agentbug - Project containing simple Agent used to illustrate bug report to Sun
+* org.intrace.test - Dumping ground for toy classes used in manual testing
