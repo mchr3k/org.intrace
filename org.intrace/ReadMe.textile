@@ -1,10 +1,25 @@
-h1. Main Projects
+h1. Functional Parts
 
-* org.intrace - InTrace
-* org.intrace.agentloader - Command line agent loader for loading an agent into a running JVM process
+* Instrumenting Agent
+** IP Agent control server
+* CUI Remote Agent Config Tool
+* GUI Remote Agent Config Tool/Network Trace Viewer
+* Common Output Classes
+* Instrumentation Handlers
+** Trace output
+** Callers recorder
 
-h2. Scratch Projects
+h1. Packages (org.intrace.)
 
-* binaries - images and jars used by wiki pages
-* org.intrace.agentbug - Project containing simple Agent used to illustrate bug report to Sun
-* org.intrace.test - Dumping ground for toy classes used in manual testing
+* agent - Instrumenting Agent
+* agent.server - IP Server for controlling the Agent, Output and Instrumentation Handlers
+
+* client.cui - Command Line Agent Config Client
+* client.gui - GUI Agent Config Client + Live Trace/Callers viewer
+* client.gui.helper - Helper classes used by the GUI interface
+
+* output - Common Output Classes
+* output.trace - Trace Instrumentation Handler
+* output.callers - Callers Analysis Instrumentation Handler
+
+* shared - String constants used by both the Agent Server and the Clients
