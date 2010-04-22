@@ -67,19 +67,16 @@ public class AgentLoader
 
   private static void loadAgent(BufferedReader xiReadIn, VirtualMachine vm) throws Exception
   {
-    System.out.print("Enter path to agent jar (blank for windows default): ");
+    System.out.print("Enter path to agent jar (blank for default /traceagent.jar): ");
     String agentPath = xiReadIn.readLine();
-    String defaultAgentPath = "../TestProject/lib/traceagent.jar";
+    String defaultAgentPath = "/traceagent.jar";
     if ("".equals(agentPath))
     {
       agentPath = defaultAgentPath;
     }
-    System.out.println("Agent Options");
-    System.out.println("Leave blank for default: [regex-dcl.*");
-    System.out.println("After loading you can only enabled/disable trace");
     System.out.print("Enter agent options: ");
     String agentOptions = xiReadIn.readLine();
-    String defaultAgentOpt = "[regex-dcl.*";
+    String defaultAgentOpt = "";
     if ("".equals(agentOptions))
     {
       agentOptions = defaultAgentOpt;
