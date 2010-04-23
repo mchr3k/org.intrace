@@ -16,7 +16,47 @@
     </javac>
   </target>
 
-  <target name="jar" description="Create Jars" depends="build" >
+  <target name="test" description="Run Tests" depends="build" >
+    <mkdir dir="./testbin" />
+
+    <javac destdir="./testbin" debug="true" source="1.6" target="1.6">
+      <src path="./testsrc"/>
+      <classpath>
+	    <pathelement  path="./bin" />
+            <fileset dir="./lib" includes="*.jar" />
+      </classpath>
+    </javac>
+	
+	<mkdir dir="./reports" />
+	<mkdir dir="./reports/junit" />
+	
+    <junit printsummary="yes" haltonfailure="no">
+	  <jvmarg value="-javaagent:built/traceagent_test.jar"/>
+	
+	  <classpath>
+		<pathelement location="./testbin"/>
+		<fileset dir="./built" includes="*.jar" />
+        <fileset dir="./lib" includes="*.jar" />
+	  </classpath>
+
+	  <formatter type="xml"/>
+	  <formatter type="plain"/>
+
+	  <batchtest fork="yes" todir="./reports/junit">
+		<fileset dir="./testsrc">
+		  <include name="**/*Test.java"/>
+		</fileset>
+	  </batchtest>
+	</junit>
+	
+	<junitreport todir="./reports/junit">
+	  <fileset dir="./reports/junit">
+		<include name="TEST-*.xml"/>
+	  </fileset>
+	  <report format="frames" todir="./reports/junit/html"/>
+	</junitreport>
+  </target>
+  <target name="jar" description="Create Jars" depends="build, test" >
     
     <delete dir="./lib/libclasses" />
     <mkdir dir="./lib/libclasses" />
@@ -76,51 +116,8 @@
     
     <delete dir="./lib/libclasses" includes="**/*" />
   </target>
-    
-  <target name="test" description="Run Tests" depends="build, jar" >
-    <mkdir dir="./testbin" />
 
-    <javac destdir="./testbin" debug="true" source="1.6" target="1.6">
-      <src path="./testsrc"/>
-      <classpath>
-	    <fileset dir="./built" includes="*.jar" />
-        <fileset dir="./lib" includes="*.jar" />
-      </classpath>
-    </javac>
-	
-	<mkdir dir="./reports" />
-	<mkdir dir="./reports/junit" />
-	
-    <junit printsummary="yes" haltonfailure="no">
-	  <jvmarg value="-javaagent:built/traceagent_test.jar"/>
-	
-	  <classpath>
-		<pathelement location="./testbin"/>
-		<fileset dir="./built" includes="*.jar" />
-        <fileset dir="./lib" includes="*.jar" />
-	  </classpath>
-
-	  <formatter type="xml"/>
-	  <formatter type="plain"/>
-
-	  <batchtest fork="yes" todir="./reports/junit">
-		<fileset dir="./testsrc">
-		  <include name="**/*Test.java"/>
-		</fileset>
-	  </batchtest>
-	</junit>
-	
-	<junitreport todir="./reports/junit">
-	  <fileset dir="./reports/junit">
-		<include name="TEST-*.xml"/>
-	  </fileset>
-	  <report format="frames" todir="./reports/junit/html"/>
-	</junitreport>
-
-	
-  </target>
-
-  <target name="deploy" description="Copy agent jar to another project" depends="build, jar, test" >
+  <target name="deploy" description="Copy agent jar to another project" depends="build, test, jar" >
     <copy file="./built/traceagent.jar" tofile="../org.intrace.test/lib/traceagent.jar" overwrite="true" />
   </target>
 </project>
