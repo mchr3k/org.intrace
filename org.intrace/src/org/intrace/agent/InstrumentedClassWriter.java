@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.intrace.output.AgentHelper;
-import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
@@ -112,13 +111,6 @@ public class InstrumentedClassWriter extends ClassWriter
       {
         ctorEntryState = CTorEntryState.ISCTOR;
       }
-    }
-
-    // MCHR: Need to preserve Synthetic attribute
-    @Override
-    public void visitAttribute(Attribute attr)
-    {
-      super.visitAttribute(attr);
     }
 
     /**
@@ -287,6 +279,13 @@ public class InstrumentedClassWriter extends ClassWriter
 
       if (xiOpCode == Opcodes.RETURN)
       {
+        // Ensure that cTor entry call gets written even if the cTor is
+        // implicit and therefore has only a single line number.
+        if (ctorEntryState == CTorEntryState.SEEN_SPECIAL) 
+        {
+          addEntryCalls();
+          ctorEntryState = CTorEntryState.ENTRY_WRITTEN;
+        }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
       super.visitInsn(xiOpCode);

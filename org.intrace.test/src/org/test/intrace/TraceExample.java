@@ -19,7 +19,7 @@ public class TraceExample
     while(true)
     {
       Thread.sleep(1000);
-      InnerTest.foo();
+      InnerTestClass.foo();
       workMethod("foobar");
     } 
   }
@@ -44,7 +44,7 @@ public class TraceExample
     System.setProperty("a",Arrays.toString(intArg));
   }
 
-  private static class InnerTest
+  private static class InnerTestClass
   {
     private static void foo()
     {
