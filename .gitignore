@@ -1,5 +1,7 @@
 .metadata/
 */bin/*
+*/testbin/*
+*/reports/*
 */built/*
 */genbin/*
 asm3.2_*

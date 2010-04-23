@@ -4,21 +4,19 @@
       <arg value="-projecthelp" />
     </java>
   </target>
-
-  <target name="build" depends="buildClasses, createJar, deploy" />
-
-  <target name="buildClasses" description="Comile classes">
-    <delete dir="./bin" />
+  
+  <target name="build" description="Comile classes">
     <mkdir dir="./bin" />
 
-    <javac srcdir="./src" destdir="./bin" debug="true" source="1.6" target="1.6" nowarn="true">
+    <javac destdir="./bin" debug="true" source="1.6" target="1.6">
+      <src path="./src"/>
       <classpath>
         <fileset dir="./lib" includes="*.jar" />
       </classpath>
     </javac>
   </target>
 
-  <target name="createJar" description="Create the Agent Jar">
+  <target name="jar" description="Create Jars" depends="build" >
     
     <delete dir="./lib/libclasses" />
     <mkdir dir="./lib/libclasses" />
@@ -78,8 +76,51 @@
     
     <delete dir="./lib/libclasses" includes="**/*" />
   </target>
+    
+  <target name="test" description="Run Tests" depends="build, jar" >
+    <mkdir dir="./testbin" />
 
-  <target name="deploy" description="Copy agent jar to another project">
+    <javac destdir="./testbin" debug="true" source="1.6" target="1.6">
+      <src path="./testsrc"/>
+      <classpath>
+	    <fileset dir="./built" includes="*.jar" />
+        <fileset dir="./lib" includes="*.jar" />
+      </classpath>
+    </javac>
+	
+	<mkdir dir="./reports" />
+	<mkdir dir="./reports/junit" />
+	
+    <junit printsummary="yes" haltonfailure="no">
+	  <jvmarg value="-javaagent:built/traceagent_test.jar"/>
+	
+	  <classpath>
+		<pathelement location="./testbin"/>
+		<fileset dir="./built" includes="*.jar" />
+        <fileset dir="./lib" includes="*.jar" />
+	  </classpath>
+
+	  <formatter type="xml"/>
+	  <formatter type="plain"/>
+
+	  <batchtest fork="yes" todir="./reports/junit">
+		<fileset dir="./testsrc">
+		  <include name="**/*Test.java"/>
+		</fileset>
+	  </batchtest>
+	</junit>
+	
+	<junitreport todir="./reports/junit">
+	  <fileset dir="./reports/junit">
+		<include name="TEST-*.xml"/>
+	  </fileset>
+	  <report format="frames" todir="./reports/junit/html"/>
+	</junitreport>
+
+	
+  </target>
+
+  <target name="deploy" description="Copy agent jar to another project" depends="build, jar, test" >
     <copy file="./built/traceagent.jar" tofile="../org.intrace.test/lib/traceagent.jar" overwrite="true" />
   </target>
 </project>
