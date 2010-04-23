@@ -357,6 +357,17 @@ public class InstrumentedClassWriter extends ClassWriter
       }
       super.visitTableSwitchInsn(min, max, dflt, labels);
     }
+    
+    @Override
+    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) 
+    {
+      traceLabels.add(dflt);
+      for (Label label : labels)
+      {
+        traceLabels.add(label);
+      }
+      super.visitLookupSwitchInsn(dflt, keys, labels);
+    }
 
     /**
      * Generate an ENTER/BRANCH/EXIT instrumentation call.

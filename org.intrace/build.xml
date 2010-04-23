@@ -4,11 +4,19 @@
       <arg value="-projecthelp" />
     </java>
   </target>
-  
-  <target name="build" description="Comile classes">
-    <mkdir dir="./bin" />
 
-    <javac destdir="./bin" debug="true" source="1.6" target="1.6">
+  <target name="clean" description="Comile classes">
+    <delete dir="./antbin" />
+    <delete dir="./built" />
+    <delete dir="./reports" />
+    <delete dir="./testbin" />
+  </target>
+
+  <target name="build" description="Comile classes">
+    <delete dir="./antbin" />
+    <mkdir dir="./antbin" />
+
+    <javac destdir="./antbin" debug="true" source="1.6" target="1.6">
       <src path="./src"/>
       <classpath>
         <fileset dir="./lib" includes="*.jar" />
@@ -17,47 +25,48 @@
   </target>
 
   <target name="test" description="Run Tests" depends="build" >
+    <delete dir="./testbin" />
     <mkdir dir="./testbin" />
 
     <javac destdir="./testbin" debug="true" source="1.6" target="1.6">
       <src path="./testsrc"/>
       <classpath>
-	    <pathelement  path="./bin" />
-            <fileset dir="./lib" includes="*.jar" />
+        <pathelement path="./antbin" />
+        <fileset dir="./lib" includes="*.jar" />
       </classpath>
     </javac>
-	
-	<mkdir dir="./reports" />
-	<mkdir dir="./reports/junit" />
-	
-    <junit printsummary="yes" haltonfailure="no">
-	  <jvmarg value="-javaagent:built/traceagent_test.jar"/>
-	
-	  <classpath>
-		<pathelement location="./testbin"/>
-		<fileset dir="./built" includes="*.jar" />
-        <fileset dir="./lib" includes="*.jar" />
-	  </classpath>
 
-	  <formatter type="xml"/>
-	  <formatter type="plain"/>
+  <mkdir dir="./reports" />
+  <mkdir dir="./reports/junit" />
 
-	  <batchtest fork="yes" todir="./reports/junit">
-		<fileset dir="./testsrc">
-		  <include name="**/*Test.java"/>
-		</fileset>
-	  </batchtest>
-	</junit>
-	
-	<junitreport todir="./reports/junit">
-	  <fileset dir="./reports/junit">
-		<include name="TEST-*.xml"/>
-	  </fileset>
-	  <report format="frames" todir="./reports/junit/html"/>
-	</junitreport>
+  <junit printsummary="yes" haltonfailure="no">
+    <jvmarg value="-javaagent:built/traceagent_test.jar"/>
+
+    <classpath>
+    <pathelement location="./testbin"/>
+      <pathelement path="./antbin" />
+      <fileset dir="./lib" includes="*.jar" />
+    </classpath>
+
+    <formatter type="xml"/>
+    <formatter type="plain"/>
+
+    <batchtest fork="yes" todir="./reports/junit">
+    <fileset dir="./testsrc">
+      <include name="**/*Test.java"/>
+    </fileset>
+    </batchtest>
+  </junit>
+
+  <junitreport todir="./reports/junit">
+    <fileset dir="./reports/junit">
+    <include name="TEST-*.xml"/>
+    </fileset>
+    <report format="frames" todir="./reports/junit/html"/>
+  </junitreport>
   </target>
   <target name="jar" description="Create Jars" depends="build, test" >
-    
+
     <delete dir="./lib/libclasses" />
     <mkdir dir="./lib/libclasses" />
     <unzip src="./lib/asm-3.2.jar" dest="./lib/libclasses">
@@ -80,40 +89,40 @@
     </unzip>
 
     <mkdir dir="./built/" />
-    
+
     <!-- Trace Agent -->
     <jar destfile="./built/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
-      <fileset dir="./bin" includes="**/agent/**/*.class" />
-      <fileset dir="./bin" includes="**/output/**/*.class" />
-      <fileset dir="./bin" includes="**/shared/*.class" />
+      <fileset dir="./antbin" includes="**/agent/**/*.class" />
+      <fileset dir="./antbin" includes="**/output/**/*.class" />
+      <fileset dir="./antbin" includes="**/shared/*.class" />
       <fileset dir="./lib/libclasses" includes="**/*.class" />
     </jar>
-    
+
     <!-- Test Trace Agent -->
     <jar destfile="./built/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
     </jar>
-    
+
     <!-- CUI Trace Client -->
     <jar destfile="./built/cuitraceclient.jar" compress="false">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
         <attribute name="Class-Path" value="." />
-      </manifest>     
-      <fileset dir="./bin" includes="**/shared/*.class" />            
-      <fileset dir="./bin" includes="**/client/cui/TraceClient.class" />
+      </manifest>
+      <fileset dir="./antbin" includes="**/shared/*.class" />
+      <fileset dir="./antbin" includes="**/client/cui/TraceClient.class" />
     </jar>
-    
+
     <!-- GUI Trace Client -->
     <jar destfile="./built/guitraceclient.jar" filesetmanifest="mergewithoutmain">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
       </manifest>
-      <fileset dir="./bin" includes="**/shared/*.class" />
-      <fileset dir="./bin" includes="**/client/gui/**/*.class" />
+      <fileset dir="./antbin" includes="**/shared/*.class" />
+      <fileset dir="./antbin" includes="**/client/gui/**/*.class" />
       <zipfileset excludes="META-INF/*.SF" src="lib/org.eclipse.swt.win32.win32.x86_3.5.2.v3557f.jar" />
     </jar>
-    
+
     <delete dir="./lib/libclasses" includes="**/*" />
   </target>
 
