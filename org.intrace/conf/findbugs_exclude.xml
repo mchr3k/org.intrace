@@ -1,0 +1,28 @@
+<FindBugsFilter>
+     // Ignore infinite loop
+	 <Match>
+       <Class name="org.intrace.agent.server.AgentClientConnection" />
+       <Or>
+         <Method name="run" />
+       </Or>
+       <Bug code="IL" />
+     </Match>
+	 
+	 // Ignore infinite loop
+	 <Match>
+       <Class name="org.intrace.agent.server.AgentServer" />
+       <Or>
+         <Method name="run" />
+       </Or>
+       <Bug code="IL" />
+     </Match>
+	 
+	 // Ignore return value warnings in this method
+     <Match>
+       <Class name="org.intrace.output.OutputSettings" />
+       <Or>
+         <Method name="resetTraceFiles" />
+       </Or>
+       <Bug code="RV" />
+     </Match>
+</FindBugsFilter>

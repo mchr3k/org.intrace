@@ -13,7 +13,8 @@ public class NetworkDataSenderThread implements Runnable
 {
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
-  private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(100);
+  private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(
+                                                                                     100);
   private Set<NetworkDataSenderThread> set;
 
   public NetworkDataSenderThread(ServerSocket networkSocket)
@@ -68,7 +69,9 @@ public class NetworkDataSenderThread implements Runnable
     {
       traceSendingSocket = networkSocket.accept();
       traceSendingSocket.setKeepAlive(true);
-      ObjectOutputStream traceWriter = new ObjectOutputStream(traceSendingSocket.getOutputStream());
+      ObjectOutputStream traceWriter = new ObjectOutputStream(
+                                                              traceSendingSocket
+                                                                                .getOutputStream());
       while (true)
       {
         Object traceLine = outgoingData.poll(5, TimeUnit.SECONDS);
@@ -82,7 +85,11 @@ public class NetworkDataSenderThread implements Runnable
         }
       }
     }
-    catch (Exception ex)
+    catch (InterruptedException ex)
+    {
+      stop();
+    }
+    catch (IOException ex)
     {
       stop();
     }

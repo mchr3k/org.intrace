@@ -95,6 +95,8 @@ public class AgentServer implements Runnable
       {
         ServerSocket serversock = new ServerSocket(tracePort);
         System.out.println("## Listening on port " + serversock.getLocalPort());
+        System.setProperty("org.intrace.port",
+                           Integer.toString(serversock.getLocalPort()));
         while (true)
         {
           Socket connectedClient = serversock.accept();

@@ -114,11 +114,13 @@ public class OutputSettings
     return file2TraceWriter;
   }
 
-  public Map<String,String> getSettingsMap()
+  public Map<String, String> getSettingsMap()
   {
-    Map<String,String> settingsMap = new HashMap<String, String>();
-    settingsMap.put(OutputConfigConstants.STD_OUT,  Boolean.toString(stdoutTraceOutputEnabled));
-    settingsMap.put(OutputConfigConstants.FILE_OUT, Boolean.toString(fileTraceOutputEnabled));
+    Map<String, String> settingsMap = new HashMap<String, String>();
+    settingsMap.put(OutputConfigConstants.STD_OUT,
+                    Boolean.toString(stdoutTraceOutputEnabled));
+    settingsMap.put(OutputConfigConstants.FILE_OUT,
+                    Boolean.toString(fileTraceOutputEnabled));
     return settingsMap;
   }
 }

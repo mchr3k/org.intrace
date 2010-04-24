@@ -1,7 +1,9 @@
 package org.intrace.agent;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -254,32 +256,50 @@ public class ClassTransformer implements ClassFileTransformer
 
   private void writeClassBytes(byte[] newBytes, String className)
   {
-    try
+    File classOut = new File("./genbin/" + className);
+    File parentDir = classOut.getParentFile();
+    boolean dirExists = parentDir.exists();
+    if (!dirExists)
     {
-      File classOut = new File("./genbin/" + className);
-      File parentDir = classOut.getParentFile();
-      boolean dirExists = parentDir.exists();
-      if (!dirExists)
-      {
-        dirExists = parentDir.mkdirs();
-      }
-      if (dirExists)
+      dirExists = parentDir.mkdirs();
+    }
+    if (dirExists)
+    {
+      try
       {
         OutputStream out = new FileOutputStream(classOut);
-        out.write(newBytes);
-        out.flush();
-        out.close();
+        try
+        {
+          out.write(newBytes);
+          out.flush();
+        }
+        catch (Exception ex)
+        {
+          ex.printStackTrace();
+        }
+        finally
+        {
+          try
+          {
+            out.close();
+          }
+          catch (IOException ex)
+          {
+            ex.printStackTrace();
+          }
+        }
       }
-      else
+      catch (FileNotFoundException ex)
       {
-        System.out.println("Can't create directory " + parentDir
-                           + " for saving traced classfiles.");
+        ex.printStackTrace();
       }
     }
-    catch (Exception e)
+    else
     {
-      e.printStackTrace();
+      System.out.println("Can't create directory " + parentDir
+                         + " for saving traced classfiles.");
     }
+
   }
 
   /**

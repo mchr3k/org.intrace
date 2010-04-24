@@ -60,11 +60,11 @@ public class AgentClientConnection implements Runnable
   {
     try
     {
-      boolean quit = false;
-      while (!quit)
+      try
       {
-        try
+        while (true)
         {
+
           String message = receiveMessage();
           if (message.equals("getsettings"))
           {
@@ -97,12 +97,12 @@ public class AgentClientConnection implements Runnable
             }
           }
         }
-        catch (IOException e)
-        {
-          quit = true;
-        }
       }
-      System.out.println("## Disconnected from: " + connectedClient.getPort());
+      catch (IOException ex)
+      {
+        System.out.println("## Disconnected from: " + connectedClient.getPort()
+                           + " : " + ex.toString());
+      }
       connectedClient.close();
     }
     catch (IOException e1)
