@@ -1,23 +1,26 @@
 <project name="TraceAgent" basedir="." default="help">
-  
+
   <!-- directory that contains emma.jar and emma_ant.jar: -->
   <path id="emma.lib" >
     <pathelement location="./lib/emma.jar" />
     <pathelement location="./lib/emma_ant.jar" />
   </path>
-  
+
   <path id="findbugs.lib" >
     <fileset dir="./lib/findbugs" includes="*.jar" />
   </path>
-  
-  <taskdef resource="emma_ant.properties" classpathref="emma.lib" />  
-  <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask">  
-	<classpath refid="findbugs.lib"/>
+
+  <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
+  <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
+    <classpath refid="findbugs.lib"/>
   </taskdef>
-  
+  <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+           classpath="./lib/jarjar-1.0.jar"/>
+
+
   <property name="findbugs.home" value="./lib/findbugs" />
-  
-  
+
+
   <target name="help">
     <java classname="org.apache.tools.ant.Main">
       <arg value="-projecthelp" />
@@ -30,11 +33,10 @@
     <delete dir="./build" />
     <delete dir="./reports" />
   </target>
-  
-  
+
+
 
   <target name="build" description="Comile classes">
-    <delete dir="./build" />
     <mkdir dir="./build" />
     <mkdir dir="./build/classes" />
 
@@ -46,11 +48,11 @@
     </javac>
   </target>
 
-  
-  
+
+
   <target name="test" description="Run Tests" depends="build" >
-    <property name="emma.enabled" value="true" />      
-    
+    <property name="emma.enabled" value="true" />
+
     <mkdir dir="./reports" />
     <mkdir dir="./reports/junit" />
     <mkdir dir="./reports/junit/raw" />
@@ -58,7 +60,7 @@
     <mkdir dir="./reports/emma/metadata" />
 
     <mkdir dir="./build/test" />
-    <mkdir dir="./build/classes_instr" />        
+    <mkdir dir="./build/classes_instr" />
 
     <javac destdir="./build/test" debug="true" source="1.6" target="1.6">
       <src path="./testsrc"/>
@@ -66,92 +68,76 @@
         <pathelement path="./build/classes" />
         <fileset dir="./lib" includes="*.jar" />
       </classpath>
-    </javac>    
-                    
+    </javac>
+
     <copy todir="./build/classes_instr">
       <fileset dir="./build/classes"/>
     </copy>
-    
+
     <emma enabled="${emma.enabled}" >
       <instr instrpath="./build/classes_instr"
              metadatafile="./reports/emma/metadata/metadata.emma"
              merge="true"
              mode="overwrite"
       />
-    </emma>  
-  
-    <junit printsummary="yes" haltonfailure="no"> 
+    </emma>
+
+    <junit printsummary="yes" haltonfailure="no">
       <classpath>
         <pathelement location="./build/classes_instr"/>
         <pathelement location="./build/test"/>
         <fileset dir="./lib" includes="*.jar" />
         <path refid="emma.lib" />
-      </classpath> 
+      </classpath>
       <jvmarg value="-Demma.coverage.out.file=./reports/emma/metadata/coverage.emma" />
       <jvmarg value="-Demma.coverage.out.merge=true" />
       <jvmarg value="-javaagent:lib/traceagent_test.jar"/>
-  
+
       <formatter type="xml"/>
       <formatter type="plain"/>
-  
+
       <batchtest fork="yes" todir="./reports/junit/raw">
       <fileset dir="./testsrc">
         <include name="**/*Test.java"/>
       </fileset>
       </batchtest>
     </junit>
-  
+
     <junitreport todir="./reports/junit">
       <fileset dir="./reports/junit/raw">
         <include name="TEST-*.xml"/>
       </fileset>
       <report format="frames" todir="./reports/junit/"/>
     </junitreport>
-    
+
     <emma enabled="${emma.enabled}" >
       <report sourcepath="./src" >
         <fileset dir="./reports/emma/metadata/" >
           <include name="*.emma" />
         </fileset>
-  
+
         <txt outfile="./reports/emma/coverage.txt" />
         <html outfile="./reports/emma/coverage.html" />
       </report>
     </emma>
   </target>
-  
-  
-  
+
+
+
   <target name="jar" description="Create Jars" depends="build, test" >
-    <mkdir dir="./lib/libclasses" />
-    <unzip src="./lib/asm-3.2.jar" dest="./lib/libclasses">
-      <patternset>
-        <include name="**/*.class" />
-        <exclude name="META-INF" />
-      </patternset>
-    </unzip>
-    <unzip src="./lib/asm-commons-3.2.jar" dest="./lib/libclasses">
-      <patternset>
-        <include name="**/*.class" />
-        <exclude name="META-INF" />
-      </patternset>
-    </unzip>
-    <unzip src="./lib/asm-util-3.2.jar" dest="./lib/libclasses">
-      <patternset>
-        <include name="**/*.class" />
-        <exclude name="META-INF" />
-      </patternset>
-    </unzip>
 
     <mkdir dir="./build/jars/" />
 
     <!-- Trace Agent -->
-    <jar destfile="./build/jars/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    <jarjar jarfile="./build/jars/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./lib/libclasses" includes="**/*.class" />
-    </jar>
+      <zipfileset src="./lib/asm-3.2.jar"/>
+      <zipfileset src="./lib/asm-commons-3.2.jar"/>
+      <zipfileset src="./lib/asm-util-3.2.jar"/>
+      <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
+    </jarjar>
 
     <!-- Test Trace Agent -->
     <jar destfile="./build/jars/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
@@ -178,36 +164,35 @@
       <zipfileset excludes="META-INF/*.SF" src="lib/org.eclipse.swt.win32.win32.x86_3.5.2.v3557f.jar" />
     </jar>
 
-    <delete dir="./lib/libclasses" includes="**/*" />
   </target>
-  
-  
+
+
 
   <target name="findbugs" depends="jar">
-      
+
     <mkdir dir="./reports/findbugs" />
-	
-	<!-- Findbugs Trace Agent -->	
-	<jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+  
+  <!-- Findbugs Trace Agent --> 
+  <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
-    </jar>  
-  
+    </jar>
+
     <findbugs home="${findbugs.home}"
               output="xml"
-              outputFile="./reports/findbugs/traceagent-fb.xml" 
-			  excludeFilter="./conf/findbugs_exclude.xml"
-			  jvmargs="-Xmx256m">
+              outputFile="./reports/findbugs/traceagent-fb.xml"
+        excludeFilter="./conf/findbugs_exclude.xml"
+        jvmargs="-Xmx256m">
       <auxClasspath>
-	    <fileset dir="./lib" includes="*.jar" />
-	  </auxClasspath>
+      <fileset dir="./lib" includes="*.jar" />
+    </auxClasspath>
       <sourcePath path="./src" />
       <class location="./reports/findbugs/traceagent_findbugs.jar" />
     </findbugs>
-  </target>  
+  </target>
 
-  
+
 
   <target name="deploy" description="Copy agent jar to another project" depends="build, test, jar" >
     <copy file="./build/jars/traceagent.jar" tofile="../org.intrace.test/lib/traceagent.jar" overwrite="true" />
