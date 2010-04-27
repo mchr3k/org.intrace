@@ -23,13 +23,6 @@ public class AgentHelper
   // Output Settings
   private static OutputSettings outputSettings = new OutputSettings("");
 
-  // Flag to indicate whether file output is currently going to file1 or file2
-  private static boolean file1Active = true;
-
-  // Variable for tracking the number of bytes written to the output files
-  private static int writtenChars = 0;
-  private static final int MAX_CHARS_PER_FILE = 100 * 1000; // 100kb
-
   // Set of active network output threads
   private static final Map<NetworkDataSenderThread, Object> networkOutputThreads = new ConcurrentHashMap<NetworkDataSenderThread, Object>();
 
@@ -136,7 +129,7 @@ public class AgentHelper
    */
   public static void writeOutput(String xiOutput)
   {
-    SimpleDateFormat dateFormat = new SimpleDateFormat();
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
@@ -180,25 +173,9 @@ public class AgentHelper
   private static synchronized void writeFileTrace(String traceString)
   {
     PrintWriter outputWriter;
-    if (file1Active)
-    {
-      outputWriter = outputSettings.getFile1TraceWriter();
-    }
-    else
-    {
-      outputWriter = outputSettings.getFile2TraceWriter();
-    }
+    outputWriter = outputSettings.getFileTraceWriter();
     outputWriter.println(traceString);
     outputWriter.flush();
-
-    // Switch trace files if necessary
-    writtenChars += traceString.length();
-    if (writtenChars > MAX_CHARS_PER_FILE)
-    {
-      writtenChars = 0;
-      outputSettings.resetTraceFiles(file1Active, !file1Active);
-      file1Active = !file1Active;
-    }
   }
 
   /*
