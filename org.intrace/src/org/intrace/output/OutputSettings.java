@@ -1,8 +1,10 @@
 package org.intrace.output;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,18 +15,15 @@ public class OutputSettings
 {
   private boolean stdoutTraceOutputEnabled = true;
   private boolean fileTraceOutputEnabled = false;
-  private File file1;
-  private File file2;
-  private PrintWriter file1TraceWriter;
-  private PrintWriter file2TraceWriter;
+  private File file1 = new File("trc1.txt");
+  private File file2 = new File("trc2.txt");
+  private PrintWriter file1TraceWriter = null;
+  private PrintWriter file2TraceWriter = null;
 
   public boolean networkTraceOutputRequested = false;
 
   public OutputSettings(String args)
   {
-    file1 = new File("trc1.txt");
-    file2 = new File("trc2.txt");
-    resetTraceFiles(true, true);
     parseArgs(args);
   }
 
@@ -54,18 +53,20 @@ public class OutputSettings
     else if (arg.equals(OutputConfigConstants.FILE_OUT + "false"))
     {
       fileTraceOutputEnabled = false;
+      file1TraceWriter = closeFile(file1TraceWriter);
+      file2TraceWriter = closeFile(file2TraceWriter);
     }
     else if (arg.startsWith("[out-file1-"))
     {
       String file1Name = arg.replace("[out-file1-", "");
+      file1TraceWriter = closeFile(file1TraceWriter);
       file1 = new File(file1Name);
-      resetTraceFiles(true, false);
     }
     else if (arg.startsWith("[out-file2-"))
     {
       String file2Name = arg.replace("[out-file2-", "");
+      file2TraceWriter = closeFile(file2TraceWriter);
       file2 = new File(file2Name);
-      resetTraceFiles(false, true);
     }
     else if (arg.equals("[out-network"))
     {
@@ -73,25 +74,45 @@ public class OutputSettings
     }
   }
 
-  public void resetTraceFiles(boolean resetFile1, boolean resetFile2)
+  private PrintWriter closeFile(PrintWriter printWriter)
   {
+    if (printWriter != null)
+    {
+      printWriter.flush();
+      printWriter.close();
+    }
+    return null;
+  }
+
+  private PrintWriter resetFile(PrintWriter printWriter, File file,
+                                boolean deleteFile)
+  {
+    writtenLines = 0;
+    PrintWriter ret = null;
     try
     {
-      if (resetFile1)
+      closeFile(printWriter);
+      if (deleteFile)
       {
-        file1.delete();
-        file1TraceWriter = new PrintWriter(new FileWriter(file1));
+        file.delete();
       }
-      if (resetFile2)
+      else if (file.exists())
       {
-        file2.delete();
-        file2TraceWriter = new PrintWriter(new FileWriter(file2));
+        LineNumberReader reader = new LineNumberReader(new FileReader(file));
+        while (reader.readLine() != null)
+        {
+          // Do nothing
+        }
+        writtenLines = reader.getLineNumber();
+        reader.close();
       }
+      ret = new PrintWriter(new FileWriter(file, true));
     }
     catch (IOException e)
     {
       // Throw away
     }
+    return ret;
   }
 
   public boolean isStdoutTraceOutputEnabled()
@@ -104,14 +125,47 @@ public class OutputSettings
     return fileTraceOutputEnabled;
   }
 
-  public PrintWriter getFile1TraceWriter()
-  {
-    return file1TraceWriter;
-  }
+  // Flag to indicate whether file output is currently going to file1 or file2
+  private boolean file1Active = true;
 
-  public PrintWriter getFile2TraceWriter()
+  // Variable for tracking the number of bytes written to the output files
+  private int writtenLines = 0;
+  private static final int MAX_LINES_PER_FILE = 100 * 1000; // 100k lines
+
+  public PrintWriter getFileTraceWriter()
   {
-    return file2TraceWriter;
+    // Handle rolling over between files
+    writtenLines++;
+    if (writtenLines > MAX_LINES_PER_FILE)
+    {
+      writtenLines = 0;
+      file1Active = !file1Active;
+
+      if (file1Active)
+      {
+        file1TraceWriter = resetFile(file1TraceWriter, file1, true);
+      }
+      else
+      {
+        file2TraceWriter = resetFile(file2TraceWriter, file2, true);
+      }
+    }
+    if (file1Active)
+    {
+      if (file1TraceWriter == null)
+      {
+        file1TraceWriter = resetFile(file1TraceWriter, file1, false);
+      }
+      return file1TraceWriter;
+    }
+    else
+    {
+      if (file2TraceWriter == null)
+      {
+        file2TraceWriter = resetFile(file2TraceWriter, file2, false);
+      }
+      return file2TraceWriter;
+    }
   }
 
   public Map<String, String> getSettingsMap()
