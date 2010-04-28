@@ -77,43 +77,17 @@ public class TraceWindow
   private Button callersStateButton = null;
   private Label generalLabel = null;
   private Button dumpSettingsButton = null;
+  private Button clearTextButton = null;
 
   /**
    * This method initializes sShell
    */
   private void createSShell()
   {
-    GridData gridData23 = new GridData();
-    gridData23.widthHint = 150;
-    GridData gridData12 = new GridData();
-    gridData12.widthHint = 150;
-    GridData gridData22 = new GridData();
-    gridData22.widthHint = 150;
-    GridData gridData11 = new GridData();
-    gridData11.widthHint = 150;
-    GridData gridData7 = new GridData();
-    gridData7.widthHint = 150;
-    GridData gridData6 = new GridData();
-    gridData6.widthHint = 150;
-    GridData gridData5 = new GridData();
-    gridData5.widthHint = 150;
-    GridData gridData41 = new GridData();
-    gridData41.widthHint = 150;
-    GridData gridData31 = new GridData();
-    gridData31.widthHint = 150;
-    GridData gridData21 = new GridData();
-    gridData21.widthHint = 150;
-    GridData gridData1 = new GridData();
-    gridData1.widthHint = 150;
-    GridData gridData4 = new GridData();
-    gridData4.widthHint = 150;
     GridLayout gridLayout = new GridLayout();
     gridLayout.numColumns = 2;
-    GridData gridData2 = new GridData();
-    gridData2.widthHint = 150;
     GridData gridData = new GridData();
     gridData.widthHint = 150;
-    gridData.verticalAlignment = org.eclipse.swt.layout.GridData.BEGINNING;
     sShell = new Shell();
     sShell.setText("Trace Window");
     sShell.setLayout(gridLayout);
@@ -124,7 +98,7 @@ public class TraceWindow
     createComposite();
     toggleInstrumentEnabled = new Button(sShell, SWT.LEFT);
     toggleInstrumentEnabled.setText(ClientStrings.ENABLE_INSTR);
-    toggleInstrumentEnabled.setLayoutData(gridData31);
+    toggleInstrumentEnabled.setLayoutData(gridData);
     toggleInstrumentEnabled
                            .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                            {
@@ -138,7 +112,7 @@ public class TraceWindow
                            });
     setClassRegexButton = new Button(sShell, SWT.LEFT);
     setClassRegexButton.setText(ClientStrings.SET_CLASSREGEX);
-    setClassRegexButton.setLayoutData(gridData41);
+    setClassRegexButton.setLayoutData(gridData);
     setClassRegexButton
                        .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                        {
@@ -153,7 +127,7 @@ public class TraceWindow
                        });
     toggleAllowJarInstru = new Button(sShell, SWT.LEFT);
     toggleAllowJarInstru.setText(ClientStrings.ENABLE_ALLOWJARS);
-    toggleAllowJarInstru.setLayoutData(gridData5);
+    toggleAllowJarInstru.setLayoutData(gridData);
     toggleAllowJarInstru
                         .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                         {
@@ -168,7 +142,7 @@ public class TraceWindow
                         });
     toggleSaveClassFiles = new Button(sShell, SWT.LEFT);
     toggleSaveClassFiles.setText(ClientStrings.ENABLE_SAVECLASSES);
-    toggleSaveClassFiles.setLayoutData(gridData6);
+    toggleSaveClassFiles.setLayoutData(gridData);
     toggleSaveClassFiles
                         .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                         {
@@ -183,7 +157,7 @@ public class TraceWindow
                         });
     toggleVerboseMode = new Button(sShell, SWT.LEFT);
     toggleVerboseMode.setText(ClientStrings.ENABLE_VERBOSEMODE);
-    toggleVerboseMode.setLayoutData(gridData7);
+    toggleVerboseMode.setLayoutData(gridData);
     toggleVerboseMode
                      .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                      {
@@ -207,7 +181,7 @@ public class TraceWindow
     });
     toggleEntryExitButton = new Button(sShell, SWT.LEFT);
     toggleEntryExitButton.setText(ClientStrings.ENABLE_EE_TRACE);
-    toggleEntryExitButton.setLayoutData(gridData2);
+    toggleEntryExitButton.setLayoutData(gridData);
     toggleEntryExitButton
                          .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                          {
@@ -221,7 +195,7 @@ public class TraceWindow
                          });
     toggleBranchButton = new Button(sShell, SWT.LEFT);
     toggleBranchButton.setText(ClientStrings.ENABLE_BRANCH_TRACE);
-    toggleBranchButton.setLayoutData(gridData1);
+    toggleBranchButton.setLayoutData(gridData);
     toggleBranchButton
                       .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                       {
@@ -235,11 +209,11 @@ public class TraceWindow
                       });
     toggleArgsButton = new Button(sShell, SWT.LEFT);
     toggleArgsButton.setText(ClientStrings.ENABLE_ARGS_TRACE);
-    toggleArgsButton.setLayoutData(gridData21);
+    toggleArgsButton.setLayoutData(gridData);
     callersLabel = new Label(sShell, SWT.NONE);
     callersLabel.setText("Callers Settings:");
     callersStateButton = new Button(sShell, SWT.NONE);
-    callersStateButton.setLayoutData(gridData12);
+    callersStateButton.setLayoutData(gridData);
     callersStateButton.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
     callersStateButton
                       .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
@@ -276,18 +250,18 @@ public class TraceWindow
     });
     toggleStdOutButton = new Button(sShell, SWT.LEFT);
     toggleStdOutButton.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
-    toggleStdOutButton.setLayoutData(gridData4);
+    toggleStdOutButton.setLayoutData(gridData);
     toggleFileOutputButton = new Button(sShell, SWT.LEFT);
     toggleFileOutputButton.setText(ClientStrings.ENABLE_FILE_OUTPUT);
-    toggleFileOutputButton.setLayoutData(gridData11);
+    toggleFileOutputButton.setLayoutData(gridData);
     toggleNetworkTraceButton = new Button(sShell, SWT.LEFT);
     toggleNetworkTraceButton.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
-    toggleNetworkTraceButton.setLayoutData(gridData22);
+    toggleNetworkTraceButton.setLayoutData(gridData);
     generalLabel = new Label(sShell, SWT.NONE);
     generalLabel.setText("General:");
     dumpSettingsButton = new Button(sShell, SWT.LEFT);
     dumpSettingsButton.setText("Dump Settings");
-    dumpSettingsButton.setLayoutData(gridData23);
+    dumpSettingsButton.setLayoutData(gridData);
     dumpSettingsButton
                       .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                       {
@@ -295,6 +269,23 @@ public class TraceWindow
                         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
                         {
                           addMessage("Settings:" + settingsData.dumpSettings());
+                        }
+                      });
+    clearTextButton = new Button(sShell, SWT.LEFT);
+    clearTextButton.setText("Clear Text");
+    clearTextButton.setLayoutData(gridData);
+    clearTextButton
+                      .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+                      {
+                        @Override
+                        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+                        {
+                          sShell.getDisplay().asyncExec(new Runnable() {                            
+                            @Override
+                            public void run() {
+                              statusTextArea.setText("");
+                            }
+                          });
                         }
                       });
     toggleNetworkTraceButton
