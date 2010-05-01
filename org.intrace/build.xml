@@ -167,13 +167,23 @@
   </target>
 
 
+  <target name="example" depends="jar">
+    <java classname="org.example.intrace.TraceExample" fork="true">
+      <arg value="" />
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
+    </java>
+  </target>
+
 
   <target name="findbugs" depends="jar">
 
     <mkdir dir="./reports/findbugs" />
   
-  <!-- Findbugs Trace Agent --> 
-  <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    <!-- Build Findbugs Trace Agent (Don't include ASM classes) --> 
+    <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
@@ -190,11 +200,7 @@
       <sourcePath path="./src" />
       <class location="./reports/findbugs/traceagent_findbugs.jar" />
     </findbugs>
+    
   </target>
-
-
-
-  <target name="deploy" description="Copy agent jar to another project" depends="build, test, jar" >
-    <copy file="./build/jars/traceagent.jar" tofile="../org.intrace.test/lib/traceagent.jar" overwrite="true" />
-  </target>
+  
 </project>

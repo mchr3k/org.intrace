@@ -11,6 +11,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -230,11 +231,13 @@ public class ClassTransformer implements ClassFileTransformer
       }
       catch (RuntimeException th)
       {
+        // Ensure the JVM doesn't silently swallow an unchecked exception
         th.printStackTrace();
         throw th;
       }
       catch (Error th)
       {
+        // Ensure the JVM doesn't silently swallow an unchecked exception
         th.printStackTrace();
         throw th;
       }
@@ -395,6 +398,7 @@ public class ClassTransformer implements ClassFileTransformer
    */
   public List<String> getResponse(String message)
   {
+    List<String> responses = new ArrayList<String>();
     AgentSettings oldSettings = new AgentSettings(settings);
     settings.parseArgs(message);
 
@@ -430,7 +434,13 @@ public class ClassTransformer implements ClassFileTransformer
       retransformModifiedClasses();
       instrumentLoadedClasses();
     }
+    else if (message.equals("[listmodifiedclasses"))
+    {
+      responses.add(modifiedClasses.toString());
+    }
 
-    return AgentHelper.getResponses(message);
+    responses.addAll(AgentHelper.getResponses(message));
+
+    return responses;
   }
 }

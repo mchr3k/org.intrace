@@ -66,6 +66,7 @@ public class TraceWindow
   private Button toggleAllowJarInstru = null;
   private Button toggleSaveClassFiles = null;
   private Button toggleVerboseMode = null;
+  private Button listModifiedClasses = null;
   private Button toggleFileOutputButton = null;
   private Button toggleNetworkTraceButton = null;
   private TabFolder outputTabFolder = null;
@@ -168,6 +169,18 @@ public class TraceWindow
                                        "[verbose-true", "[verbose-false");
                        }
                      });
+    listModifiedClasses = new Button(sShell, SWT.LEFT);
+    listModifiedClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
+    listModifiedClasses.setLayoutData(gridData);
+    listModifiedClasses
+                       .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+                       {
+                         @Override
+                         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+                         {
+                           getModifiedClasses();
+                         }
+                       });
     traceSettingsLabel = new Label(sShell, SWT.NONE);
     traceSettingsLabel.setText("Trace Settings:");
     sShell.addShellListener(new org.eclipse.swt.events.ShellAdapter()
@@ -274,20 +287,21 @@ public class TraceWindow
     clearTextButton = new Button(sShell, SWT.LEFT);
     clearTextButton.setText("Clear Text");
     clearTextButton.setLayoutData(gridData);
-    clearTextButton
-                      .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
-                      {
-                        @Override
-                        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
-                        {
-                          sShell.getDisplay().asyncExec(new Runnable() {                            
-                            @Override
-                            public void run() {
-                              statusTextArea.setText("");
-                            }
-                          });
-                        }
-                      });
+    clearTextButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    {
+      @Override
+      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      {
+        sShell.getDisplay().asyncExec(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            statusTextArea.setText("");
+          }
+        });
+      }
+    });
     toggleNetworkTraceButton
                             .addMouseListener(new org.eclipse.swt.events.MouseAdapter()
                             {
@@ -356,7 +370,7 @@ public class TraceWindow
     gridData3.grabExcessVerticalSpace = true;
     gridData3.heightHint = 99999;
     gridData3.widthHint = 99999;
-    gridData3.verticalSpan = 21;
+    gridData3.verticalSpan = 22;
     gridData3.grabExcessHorizontalSpace = true;
     composite = new Composite(sShell, SWT.NONE);
     composite.setLayoutData(gridData3);
@@ -379,7 +393,7 @@ public class TraceWindow
     callersTree = new Tree(outputTabFolder, SWT.BORDER);
     callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
     callersTreeRoot.setText("Callers");
-  
+
     textOutputTabItem = new TabItem(outputTabFolder, SWT.NONE);
     textOutputTabItem.setControl(statusTextArea);
     textOutputTabItem.setText("Text Output");
@@ -392,11 +406,11 @@ public class TraceWindow
   {
     Rectangle parentSize = parent.getBounds();
     Rectangle mySize = shell.getBounds();
-  
+
     int locationX, locationY;
     locationX = (parentSize.width - mySize.width) / 2 + parentSize.x;
     locationY = (parentSize.height - mySize.height) / 2 + parentSize.y;
-  
+
     shell.setLocation(new Point(locationX, locationY));
     shell.open();
   }
@@ -492,6 +506,42 @@ public class TraceWindow
     });
   }
 
+  private void getModifiedClasses()
+  {
+    new Thread(new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        controlThread.sendMessage("[listmodifiedclasses");
+        String modifiedClasses = controlThread.getMessage();
+        if (modifiedClasses.length() <= 2)
+        {
+          addMessage("*** No modified classes");
+        }
+        else
+        {
+          modifiedClasses = modifiedClasses
+                                           .substring(
+                                                      1,
+                                                      modifiedClasses.length() - 1);
+          if (modifiedClasses.indexOf(",") == -1)
+          {
+            addMessage("*** Modified: " + modifiedClasses);
+          }
+          else
+          {
+            String[] classNames = modifiedClasses.split(",");
+            for (String className : classNames)
+            {
+              addMessage("*** Modified: " + className);
+            }
+          }
+        }
+      }
+    }).start();
+  }
+
   public void setRegex(final String regex)
   {
     sShell.getDisplay().asyncExec(new Runnable()
@@ -578,6 +628,7 @@ public class TraceWindow
         chooseText(toggleVerboseMode, settingsData.verboseMode,
                    ClientStrings.ENABLE_VERBOSEMODE,
                    ClientStrings.DISABLE_VERBOSEMODE);
+        listModifiedClasses.setEnabled(true);
 
         chooseText(toggleEntryExitButton, settingsData.entryExitEnabled,
                    ClientStrings.ENABLE_EE_TRACE,
@@ -623,17 +674,18 @@ public class TraceWindow
     toggleAllowJarInstru.setEnabled(false);
     toggleSaveClassFiles.setEnabled(false);
     toggleVerboseMode.setEnabled(false);
-  
+    listModifiedClasses.setEnabled(false);
+
     toggleEntryExitButton.setEnabled(false);
     toggleBranchButton.setEnabled(false);
     toggleArgsButton.setEnabled(false);
-  
+
     callersStateButton.setEnabled(false);
-  
+
     toggleStdOutButton.setEnabled(false);
     toggleFileOutputButton.setEnabled(false);
     toggleNetworkTraceButton.setEnabled(false);
-  
+
     dumpSettingsButton.setEnabled(false);
   }
 

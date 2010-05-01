@@ -11,6 +11,7 @@ public class ClientStrings
   public static final String DISABLE_SAVECLASSES = "Don't Save Classes";
   public static final String ENABLE_VERBOSEMODE = "Enable Verbose Mode";
   public static final String DISABLE_VERBOSEMODE = "Disable Verbose Mode";
+  public static final String LIST_MODIFIED_CLASSES = "List Modifed Classes";
 
   public static final String ENABLE_EE_TRACE = "Enable Entry/Exit Trace";
   public static final String DISABLE_EE_TRACE = "Disable Entry/Exit Trace";

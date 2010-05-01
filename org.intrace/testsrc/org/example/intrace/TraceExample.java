@@ -1,4 +1,4 @@
-package org.test.intrace;
+package org.example.intrace;
 
 import java.util.Arrays;
 
