@@ -92,8 +92,8 @@ public class TraceWindow
     sShell = new Shell();
     sShell.setText("Trace Window");
     sShell.setLayout(gridLayout);
-    sShell.setSize(new Point(700, 600));
-    sShell.setMinimumSize(new Point(700, 600));
+    sShell.setSize(new Point(700, 750));
+    sShell.setMinimumSize(new Point(700, 750));
     instrumentSettingsLabel = new Label(sShell, SWT.NONE);
     instrumentSettingsLabel.setText("Instrumentation Settings:");
     createComposite();
