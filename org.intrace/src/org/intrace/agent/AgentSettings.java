@@ -8,14 +8,14 @@ import org.intrace.shared.AgentConfigConstants;
 
 /**
  * Args Format: "[arg1[arg2[arg3"
- * 
+ *
  * where argx is of the form value-parameter
  */
 public class AgentSettings
 {
   private Pattern classRegex = Pattern.compile(".*");
   private boolean instruEnabled = false;
-  private boolean saveTracedClassfiles = true;
+  private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
   private boolean allowJarsToBeTraced = false;
 
