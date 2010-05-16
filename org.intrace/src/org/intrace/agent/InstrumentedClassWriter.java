@@ -218,9 +218,7 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * Save the current line number and generate a call to {@link AgentHelper}
-     * if either writeTraceLine is set to true or the current line was marked by
-     * the Reverse GOTO Analysis {@link ClassAnalysis}.
+     * Write branch trace.
      */
     @Override
     public void visitLineNumber(int xiLineNumber, Label label)
@@ -256,8 +254,7 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * When we see a return instruction we must immediately generate an EXIT
-     * call to the Agent Helper.
+     * Handle return instructions by writing exit trace.
      */
     @Override
     public void visitInsn(int xiOpCode)
@@ -288,6 +285,17 @@ public class InstrumentedClassWriter extends ClassWriter
         }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
+      else if (xiOpCode == Opcodes.IRETURN)
+      {
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitLdcInsn(className);
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(methodName);
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "arg",
+                           "(Ljava/lang/String;Ljava/lang/String;I)V");
+        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
+      }
       super.visitInsn(xiOpCode);
     }
 
@@ -309,9 +317,10 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * A jump instruction indicates that we are about to enter an optional block
-     * of code. We set "writeTraceLine = true;" to ensure that we generate a
-     * trace call once we know the line number.
+     * For all forward branch instructions we trace the next line we see as we know it is 
+     * optional.
+     * <p>
+     * We don't mark the target label as we don't know whether it is optional code. 
      */
     @Override
     public void visitJumpInsn(int xiOpCode, Label xiBranchLabel)
@@ -320,8 +329,13 @@ public class InstrumentedClassWriter extends ClassWriter
       {
         ternState = TernaryState.SEEN_BRANCH;
       }
+      else
+      {
+    	  ternState = TernaryState.BASE;
+      }
 
       numBranchesOnLine++;
+      
       Integer lineNo = labelLineNos.get(xiBranchLabel);
       if (lineNo == null)
       {
@@ -332,7 +346,7 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * Try catch handler
+     * Try catch block - mark all labels for tracing
      */
     @Override
     public void visitTryCatchBlock(Label start, Label end, Label handler,
@@ -343,7 +357,7 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * Switch block
+     * Table switch block - mark all labels for tracing
      */
     @Override
     public void visitTableSwitchInsn(int min, int max, Label dflt,
@@ -357,6 +371,9 @@ public class InstrumentedClassWriter extends ClassWriter
       super.visitTableSwitchInsn(min, max, dflt, labels);
     }
     
+    /**
+     * Lookup switch block - mark all labels for tracing
+     */
     @Override
     public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) 
     {
@@ -411,15 +428,45 @@ public class InstrumentedClassWriter extends ClassWriter
    */
   private enum InstrumentationType
   {
-    ENTER, BRANCH, EXIT
+    ENTER, BRANCH, EXIT;
   }
 
+  /**
+   * Type used to suppress trace in the case where the following instruction sequence is seen.
+   * <ul>
+   * <li> ...
+   * <li> DUP
+   * <li> BRANCH
+   * <li> POP
+   * <li> ...
+   * </ul>
+   * This sequence is used in ternary if statements of the form (cond(x) ? x : Y). This agent currently does not
+   * support adding trace into these constructs.
+   * <p>
+   * MCHR: This should either be fixed or strengthened to ensure it covers all ternary statements. Does numBranchesOnLine
+   * already strengthen this?
+   */
   private enum TernaryState
   {
     BASE, SEEN_DUP, SEEN_BRANCH
     /* SEEN_POP */
   }
 
+  /**
+   * cTor related state.
+   * <p>
+   * Normal methods are assigned NORMALMETHOD.
+   * <p>
+   * cTors are assigned ISCTOR and then SEEN_SPECIAL once the superclass constructor call is issued.
+   * This allows us to avoid writing entry trace before the superclass constructor call.
+   * <p>
+   * ENTRY_WRITTEN is set if a line number is processed such that we write entry trace. Otherwise we
+   * know to write entry trace before exit trace when we visit a return instruction. This is mostly 
+   * only useful for processing implicit constructors.
+   * <p>
+   * MCHR: Ensure this all works in the case of a constructor calling through to another constructor
+   * in the same class.  
+   */
   private enum CTorEntryState
   {
     NORMALMETHOD, ISCTOR, SEEN_SPECIAL, ENTRY_WRITTEN

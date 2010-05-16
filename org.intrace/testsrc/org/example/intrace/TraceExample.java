@@ -28,8 +28,8 @@ public class TraceExample
   {
     long currentTime = System.currentTimeMillis();
     System.setProperty("a", foo);
-    intArrayMethod(new int[]
-    { 1, 2, 3 });
+    System.out.println(intArrayMethod(new int[]
+    { 1, 2, 3 }));
     if ((currentTime % 2) == 0)
     {
       System.setProperty("a", "Even time");
@@ -40,9 +40,10 @@ public class TraceExample
     }
   }
 
-  private static void intArrayMethod(int[] intArg)
+  private static int intArrayMethod(int[] intArg)
   {
     System.setProperty("a", Arrays.toString(intArg));
+    return 123;
   }
 
   private static class InnerTestClass
