@@ -22,117 +22,117 @@ public class ArgCapture implements IInstrumentationHandler
   }
 
   @Override
-  public void arg(String className, String methodName, byte byteArg)
+  public void val(String desc, String className, String methodName, byte byteArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + byteArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + byteArg + "]");
   }
 
-  public void arg(String className, String methodName, byte[] byteArrayArg)
+  public void val(String desc, String className, String methodName, byte[] byteArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(byteArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, short shortArg)
+  public void val(String desc, String className, String methodName, short shortArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + shortArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + shortArg + "]");
   }
 
-  public void arg(String className, String methodName, short[] shortArrayArg)
+  public void val(String desc, String className, String methodName, short[] shortArrayArg)
   {
 
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(shortArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, int intArg)
+  public void val(String desc, String className, String methodName, int intArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + intArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + intArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, int[] intArrayArg)
+  public void val(String desc, String className, String methodName, int[] intArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(intArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, long longArg)
+  public void val(String desc, String className, String methodName, long longArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + longArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + longArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, long[] longArrayArg)
+  public void val(String desc, String className, String methodName, long[] longArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(longArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, float floatArg)
+  public void val(String desc, String className, String methodName, float floatArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + floatArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + floatArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, float[] floatArrayArg)
+  public void val(String desc, String className, String methodName, float[] floatArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(floatArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, double doubleArg)
+  public void val(String desc, String className, String methodName, double doubleArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + doubleArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + doubleArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, double[] doubleArrayArg)
+  public void val(String desc, String className, String methodName, double[] doubleArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(doubleArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, boolean boolArg)
+  public void val(String desc, String className, String methodName, boolean boolArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + boolArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + boolArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, boolean[] boolArrayArg)
+  public void val(String desc, String className, String methodName, boolean[] boolArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(boolArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, char charArg)
+  public void val(String desc, String className, String methodName, char charArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + charArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + charArg + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, char[] charArrayArg)
+  public void val(String desc, String className, String methodName, char[] charArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(charArrayArg) + "]");
   }
 
   @Override
-  public void arg(String className, String methodName, Object objArg)
+  public void val(String desc, String className, String methodName, Object objArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", " + objArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + objArg + "]");
   }
 
-  public void arg(String className, String methodName, Object[] objArrayArg)
+  public void val(String desc, String className, String methodName, Object[] objArrayArg)
   {
-    addArg("Arg:##:[" + className + ", " + methodName + ", "
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.deepToString(objArrayArg) + "]");
   }
 

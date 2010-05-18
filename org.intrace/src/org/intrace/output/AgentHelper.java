@@ -191,173 +191,173 @@ public class AgentHelper
     }
   }
 
-  public static void arg(String className, String methodName, byte byteArg)
+  public static void val(String desc, String className, String methodName, byte byteArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, byteArg);
+      outputHandler.val(desc, className, methodName, byteArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          byte[] byteArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, byteArrayArg);
+      outputHandler.val(desc, className, methodName, byteArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, short shortArg)
+  public static void val(String desc, String className, String methodName, short shortArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, shortArg);
+      outputHandler.val(desc, className, methodName, shortArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          short[] shortArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, shortArrayArg);
+      outputHandler.val(desc, className, methodName, shortArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, int intArg)
+  public static void val(String desc, String className, String methodName, int intArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, intArg);
+      outputHandler.val(desc, className, methodName, intArg);
     }
   }
 
-  public static void arg(String className, String methodName, int[] intArrayArg)
+  public static void val(String desc, String className, String methodName, int[] intArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, intArrayArg);
+      outputHandler.val(desc, className, methodName, intArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, long longArg)
+  public static void val(String desc, String className, String methodName, long longArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, longArg);
+      outputHandler.val(desc, className, methodName, longArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          long[] longArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, longArrayArg);
+      outputHandler.val(desc, className, methodName, longArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, float floatArg)
+  public static void val(String desc, String className, String methodName, float floatArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, floatArg);
+      outputHandler.val(desc, className, methodName, floatArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          float[] floatArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, floatArrayArg);
+      outputHandler.val(desc, className, methodName, floatArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, double doubleArg)
+  public static void val(String desc, String className, String methodName, double doubleArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, doubleArg);
+      outputHandler.val(desc, className, methodName, doubleArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          double[] doubleArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, doubleArrayArg);
+      outputHandler.val(desc, className, methodName, doubleArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, boolean boolArg)
+  public static void val(String desc, String className, String methodName, boolean boolArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, boolArg);
+      outputHandler.val(desc, className, methodName, boolArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          boolean[] boolArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, boolArrayArg);
+      outputHandler.val(desc, className, methodName, boolArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, char charArg)
+  public static void val(String desc, String className, String methodName, char charArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, charArg);
+      outputHandler.val(desc, className, methodName, charArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          char[] charArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, charArrayArg);
+      outputHandler.val(desc, className, methodName, charArrayArg);
     }
   }
 
-  public static void arg(String className, String methodName, Object objArg)
+  public static void val(String desc, String className, String methodName, Object objArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, objArg);
+      outputHandler.val(desc, className, methodName, objArg);
     }
   }
 
-  public static void arg(String className, String methodName,
+  public static void val(String desc, String className, String methodName,
                          Object[] objArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.arg(className, methodName, objArrayArg);
+      outputHandler.val(desc, className, methodName, objArrayArg);
     }
   }
 

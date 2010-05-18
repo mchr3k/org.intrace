@@ -45,178 +45,183 @@ public class TraceHandler implements IInstrumentationHandler
   }
 
   @Override
-  public void arg(String className, String methodName, byte byteArg)
+  public void val(String desc, String className, String methodName, byte byteArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + byteArg);
     }
   }
 
-  public void arg(String className, String methodName, byte[] byteArrayArg)
+  public void val(String desc, String className, String methodName, byte[] byteArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(byteArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, short shortArg)
+  public void val(String desc, String className, String methodName, short shortArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + shortArg);
     }
   }
 
-  public void arg(String className, String methodName, short[] shortArrayArg)
+  public void val(String desc, String className, String methodName, short[] shortArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(shortArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, int intArg)
+  public void val(String desc, String className, String methodName, int intArg)
   {
     if (argTrace)
     {
       AgentHelper
-                 .writeOutput(className + ":" + methodName + ": Arg: " + intArg);
+                 .writeOutput(className + ":" + methodName + ": " + desc + ":" + intArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, int[] intArrayArg)
+  public void val(String desc, String className, String methodName, int[] intArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(intArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, long longArg)
+  public void val(String desc, String className, String methodName, long longArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + longArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, long[] longArrayArg)
+  public void val(String desc, String className, String methodName, long[] longArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(longArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, float floatArg)
+  public void val(String desc, String className, String methodName, float floatArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + floatArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, float[] floatArrayArg)
+  public void val(String desc, String className, String methodName, float[] floatArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(floatArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, double doubleArg)
+  public void val(String desc, String className, String methodName, double doubleArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + doubleArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, double[] doubleArrayArg)
+  public void val(String desc, String className, String methodName, double[] doubleArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(doubleArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, boolean boolArg)
+  public void val(String desc, String className, String methodName, boolean boolArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + boolArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, boolean[] boolArrayArg)
+  public void val(String desc, String className, String methodName, boolean[] boolArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(boolArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, char charArg)
+  public void val(String desc, String className, String methodName, char charArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + charArg);
     }
   }
 
   @Override
-  public void arg(String className, String methodName, char[] charArrayArg)
+  public void val(String desc, String className, String methodName, char[] charArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.toString(charArrayArg));
     }
   }
 
   @Override
-  public void arg(String className, String methodName, Object objArg)
+  public void val(String desc, String className, String methodName, Object objArg)
   {
+    // Array return values pass through this arm so we must do something
+    // a bit special - use Arrays.deepToString and discard the surrounding
+    // [] that we add.
     if (argTrace)
     {
+      String objStr = Arrays.deepToString(new Object[] {objArg});
+      objStr = objStr.substring(1, objStr.length() - 1);
       AgentHelper
-                 .writeOutput(className + ":" + methodName + ": Arg: " + objArg);
+                 .writeOutput(className + ":" + methodName + ": " + desc + ":" + objStr);
     }
   }
 
-  public void arg(String className, String methodName, Object[] objArrayArg)
+  public void val(String desc, String className, String methodName, Object[] objArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": Arg: "
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
                               + Arrays.deepToString(objArrayArg));
     }
   }

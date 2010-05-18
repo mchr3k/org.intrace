@@ -181,11 +181,11 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().andAnswer(exitTraceWriter).anyTimes();
 
     testHandler
-               .arg(isA(String.class), isA(String.class), EasyMock.anyBoolean());
+               .val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyBoolean());
     EasyMock.expectLastCall().anyTimes();
-    testHandler.arg(isA(String.class), isA(String.class), EasyMock.anyObject());
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyObject());
     EasyMock.expectLastCall().anyTimes();
-    testHandler.arg(isA(String.class), isA(String.class), EasyMock.anyInt());
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyInt());
     EasyMock.expectLastCall().anyTimes();
 
     EasyMock.replay(testHandler);
