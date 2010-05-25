@@ -187,6 +187,8 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().anyTimes();
     testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyInt());
     EasyMock.expectLastCall().anyTimes();
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class), isA(Throwable.class));
+    EasyMock.expectLastCall().anyTimes();
 
     EasyMock.replay(testHandler);
     AgentHelper.instrumentationHandlers.put(testHandler, new Object());

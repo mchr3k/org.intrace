@@ -122,9 +122,10 @@
     </emma>
   </target>
 
+  <target name="jar" description="Create Jars" depends="build, test, onlyjar" >
+  </target>
 
-
-  <target name="jar" description="Create Jars" depends="build, test" >
+  <target name="onlyjar" >
 
     <mkdir dir="./build/jars/" />
 
@@ -192,8 +193,8 @@
   <target name="findbugs" depends="jar">
 
     <mkdir dir="./reports/findbugs" />
-  
-    <!-- Build Findbugs Trace Agent (Don't include ASM classes) --> 
+
+    <!-- Build Findbugs Trace Agent (Don't include ASM classes) -->
     <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
@@ -211,7 +212,7 @@
       <sourcePath path="./src" />
       <class location="./reports/findbugs/traceagent_findbugs.jar" />
     </findbugs>
-    
+
   </target>
-  
+
 </project>

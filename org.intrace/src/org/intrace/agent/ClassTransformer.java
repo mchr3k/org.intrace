@@ -141,12 +141,12 @@ public class ClassTransformer implements ClassFileTransformer
 
     // Don't modify self
     if (className.startsWith("org.intrace")
-        || className.startsWith("org.objectweb.asm"))
+        || className.contains("objectweb.asm"))
     {
       if (settings.isVerboseMode())
       {
         System.out
-                  .println("Ignoring class in org.intrace or org.objectweb.asm package: "
+                  .println("Ignoring class in org.intrace or objectweb.asm package: "
                            + className);
       }
       return false;
@@ -158,18 +158,6 @@ public class ClassTransformer implements ClassFileTransformer
       if (settings.isVerboseMode())
       {
         System.out.println("Ignoring class already modified: " + className);
-      }
-      return false;
-    }
-
-    // Don't modify test classes
-    int p = className.lastIndexOf('$');
-    if (className.endsWith("Test") || p > 0
-        && className.substring(0, p).endsWith("Test"))
-    {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("Ignoring class name ending in Test: " + className);
       }
       return false;
     }

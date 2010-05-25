@@ -1,5 +1,7 @@
 package org.intrace.output.trace;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -49,7 +51,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + byteArg);
     }
   }
@@ -58,7 +60,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(byteArrayArg));
     }
   }
@@ -68,7 +70,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + shortArg);
     }
   }
@@ -77,7 +79,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(shortArrayArg));
     }
   }
@@ -88,7 +90,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       AgentHelper
-                 .writeOutput(className + ":" + methodName + ": " + desc + ":" + intArg);
+                 .writeOutput(className + ":" + methodName + ": " + desc + ": " + intArg);
     }
   }
 
@@ -97,7 +99,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(intArrayArg));
     }
   }
@@ -107,7 +109,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + longArg);
     }
   }
@@ -117,7 +119,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(longArrayArg));
     }
   }
@@ -127,7 +129,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + floatArg);
     }
   }
@@ -137,7 +139,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(floatArrayArg));
     }
   }
@@ -147,7 +149,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + doubleArg);
     }
   }
@@ -157,7 +159,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(doubleArrayArg));
     }
   }
@@ -167,7 +169,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + boolArg);
     }
   }
@@ -177,7 +179,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(boolArrayArg));
     }
   }
@@ -187,7 +189,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + charArg);
     }
   }
@@ -197,7 +199,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.toString(charArrayArg));
     }
   }
@@ -213,7 +215,7 @@ public class TraceHandler implements IInstrumentationHandler
       String objStr = Arrays.deepToString(new Object[] {objArg});
       objStr = objStr.substring(1, objStr.length() - 1);
       AgentHelper
-                 .writeOutput(className + ":" + methodName + ": " + desc + ":" + objStr);
+                 .writeOutput(className + ":" + methodName + ": " + desc + ": " + objStr);
     }
   }
 
@@ -221,9 +223,35 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ":"
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
                               + Arrays.deepToString(objArrayArg));
     }
+  }
+  
+  public void val(String desc, String className, String methodName, Throwable throwable)
+  {
+    if (argTrace)
+    {
+      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
+                              + throwableToString(throwable));
+    }
+  }
+
+  private String throwableToString(Throwable throwable)
+  {
+    StringBuilder throwToStr = new StringBuilder();
+    if (throwable == null)
+    {
+      throwToStr.append("null");
+    }
+    else
+    {
+      StringWriter strWriter = new StringWriter();
+      PrintWriter writer = new PrintWriter(strWriter);
+      throwable.printStackTrace(writer);
+      throwToStr.append(strWriter.toString());
+    }
+    return throwToStr.toString();
   }
 
   @Override

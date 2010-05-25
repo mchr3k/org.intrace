@@ -71,13 +71,14 @@ public class InstrumentedClassWriter extends ClassWriter
     // Final method fields
     private final String methodName;
     private final String methodDescriptor;
-    private final int methodAccess;
-    private final Map<Label, Integer> labelLineNos = new HashMap<Label, Integer>();
-    private final Set<Label> traceLabels = new HashSet<Label>();
+    private final int methodAccess;    
 
     // Analysis data
     private final Set<Integer> reverseGOTOLines;
     private final Integer entryLine;
+    private final Map<Label, Integer> labelLineNos = new HashMap<Label, Integer>();
+    private final Set<Label> traceLabels = new HashSet<Label>();
+    private final Set<Label> exceptionHandlerLabels = new HashSet<Label>();
 
     // State
     private boolean writeTraceLine = false;
@@ -249,6 +250,25 @@ public class InstrumentedClassWriter extends ClassWriter
           writeTraceLine = false;
         }
       }
+      
+      if (exceptionHandlerLabels.contains(label))
+      {
+        // Top of the stack contains an exception - generate code to trace it
+        // Duplicate the exception
+        mv.visitInsn(Opcodes.DUP);
+        
+        // Load args
+        mv.visitLdcInsn("Caught exception");
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(className);
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(methodName);
+        mv.visitInsn(Opcodes.SWAP);
+        
+        // Generate call to trace exception
+        mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V");
+      }
 
       numBranchesOnLine = 0;
       super.visitLineNumber(xiLineNumber, label);
@@ -387,7 +407,7 @@ public class InstrumentedClassWriter extends ClassWriter
     public void visitTryCatchBlock(Label start, Label end, Label handler,
                                    String type)
     {
-      traceLabels.add(handler);
+      exceptionHandlerLabels.add(handler);
       super.visitTryCatchBlock(start, end, handler, type);
     }
 

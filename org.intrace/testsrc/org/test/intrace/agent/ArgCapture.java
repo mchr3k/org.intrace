@@ -135,6 +135,12 @@ public class ArgCapture implements IInstrumentationHandler
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.deepToString(objArrayArg) + "]");
   }
+  
+  public void val(String desc, String className, String methodName, Throwable th)
+  {
+    addArg(desc + ":##:[" + className + ", " + methodName + ", "
+           + th + "]");
+  }
 
   @Override
   public void branch(String className, String methodName, int lineNo)

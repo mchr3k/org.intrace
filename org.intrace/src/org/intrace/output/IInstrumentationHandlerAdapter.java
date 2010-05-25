@@ -113,6 +113,12 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   {
     // Do nothing
   }
+  
+  @Override
+  public void val(String desc, String className, String methodName, Throwable throwable)
+  {
+    // Do nothing
+  }
 
   @Override
   public void branch(String className, String methodName, int lineNo)

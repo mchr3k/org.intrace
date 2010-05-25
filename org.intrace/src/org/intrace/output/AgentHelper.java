@@ -360,6 +360,16 @@ public class AgentHelper
       outputHandler.val(desc, className, methodName, objArrayArg);
     }
   }
+  
+  public static void val(String desc, String className, String methodName,
+      Throwable throwable)
+  {
+    for (IInstrumentationHandler outputHandler : instrumentationHandlers
+        .keySet())
+    {
+      outputHandler.val(desc, className, methodName, throwable);
+    }
+  }
 
   public static void branch(String className, String methodName, int lineNo)
   {
