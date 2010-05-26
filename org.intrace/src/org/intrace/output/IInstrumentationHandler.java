@@ -55,7 +55,7 @@ public interface IInstrumentationHandler
 
   public void val(String desc, String className, String methodName, Object[] objArrayArg);
   
-  public void val(String desc, String className, String methodName, Throwable throwable);
+  public void caught(String className, String methodName, int lineNo, Throwable throwable);
 
   public void branch(String className, String methodName, int lineNo);
 

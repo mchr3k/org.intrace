@@ -241,7 +241,28 @@ public class InstrumentedClassWriter extends ClassWriter
           }
           else
           {
-            generateCallToAgentHelper(InstrumentationType.BRANCH, lineNumber);
+            if (exceptionHandlerLabels.contains(label))
+            {
+              // Top of the stack contains an exception - generate code to trace it
+              // Duplicate the exception
+              mv.visitInsn(Opcodes.DUP);
+              
+              // Load args
+              mv.visitLdcInsn(className);
+              mv.visitInsn(Opcodes.SWAP);
+              mv.visitLdcInsn(methodName);
+              mv.visitInsn(Opcodes.SWAP);
+              mv.visitLdcInsn(lineNumber);
+              mv.visitInsn(Opcodes.SWAP);
+              
+              // Generate call to trace exception
+              mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "caught",
+              "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V");
+            }
+            else
+            {
+              generateCallToAgentHelper(InstrumentationType.BRANCH, lineNumber);
+            }            
           }
           writeTraceLine = false;
         }
@@ -249,25 +270,6 @@ public class InstrumentedClassWriter extends ClassWriter
         {
           writeTraceLine = false;
         }
-      }
-      
-      if (exceptionHandlerLabels.contains(label))
-      {
-        // Top of the stack contains an exception - generate code to trace it
-        // Duplicate the exception
-        mv.visitInsn(Opcodes.DUP);
-        
-        // Load args
-        mv.visitLdcInsn("Caught exception");
-        mv.visitInsn(Opcodes.SWAP);
-        mv.visitLdcInsn(className);
-        mv.visitInsn(Opcodes.SWAP);
-        mv.visitLdcInsn(methodName);
-        mv.visitInsn(Opcodes.SWAP);
-        
-        // Generate call to trace exception
-        mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V");
       }
 
       numBranchesOnLine = 0;
@@ -407,7 +409,13 @@ public class InstrumentedClassWriter extends ClassWriter
     public void visitTryCatchBlock(Label start, Label end, Label handler,
                                    String type)
     {
-      exceptionHandlerLabels.add(handler);
+      // Null type means that handler is a finally block which will always be
+      // executed
+      if (type != null)
+      {
+        traceLabels.add(handler);
+        exceptionHandlerLabels.add(handler);
+      }
       super.visitTryCatchBlock(start, end, handler, type);
     }
 

@@ -228,11 +228,20 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
   
-  public void val(String desc, String className, String methodName, Throwable throwable)
+  @Override
+  public void branch(String className, String methodName, int lineNo)
   {
-    if (argTrace)
+    if (branchTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
+      AgentHelper.writeOutput(className + ":" + methodName + ": /:" + lineNo);
+    }
+  }
+
+  public void caught(String className, String methodName, int lineNo, Throwable throwable)
+  {
+    if (branchTrace)
+    {
+      AgentHelper.writeOutput(className + ":" + methodName + ":CaughtException:" + lineNo + ": "
                               + throwableToString(throwable));
     }
   }
@@ -252,15 +261,6 @@ public class TraceHandler implements IInstrumentationHandler
       throwToStr.append(strWriter.toString());
     }
     return throwToStr.toString();
-  }
-
-  @Override
-  public void branch(String className, String methodName, int lineNo)
-  {
-    if (branchTrace)
-    {
-      AgentHelper.writeOutput(className + ":" + methodName + ": /:" + lineNo);
-    }
   }
 
   @Override

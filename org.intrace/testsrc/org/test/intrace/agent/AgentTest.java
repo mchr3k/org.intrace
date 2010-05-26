@@ -147,7 +147,7 @@ public class AgentTest extends TestCase
       public Object answer() throws Throwable
       {
         Object[] args = EasyMock.getCurrentArguments();
-        capturedTrace.put("Enter:##:" + Arrays.toString(args));
+        capturedTrace.add("Enter:##:" + Arrays.toString(args));
         return null;
       }
     };
@@ -157,7 +157,17 @@ public class AgentTest extends TestCase
       public Object answer() throws Throwable
       {
         Object[] args = EasyMock.getCurrentArguments();
-        capturedTrace.put("Branch:##:" + Arrays.toString(args));
+        capturedTrace.add("Branch:##:" + Arrays.toString(args));
+        return null;
+      }
+    };
+    IAnswer<Object> caughtTraceWriter = new IAnswer<Object>()
+    {
+      @Override
+      public Object answer() throws Throwable
+      {
+        Object[] args = EasyMock.getCurrentArguments();
+        capturedTrace.add("CaughtEx:##:" + Arrays.toString(args));
         return null;
       }
     };
@@ -167,7 +177,7 @@ public class AgentTest extends TestCase
       public Object answer() throws Throwable
       {
         Object[] args = EasyMock.getCurrentArguments();
-        capturedTrace.put("Exit:##:" + Arrays.toString(args));
+        capturedTrace.add("Exit:##:" + Arrays.toString(args));
         return null;
       }
     };
@@ -179,6 +189,8 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().andAnswer(branchTraceWriter).anyTimes();
     testHandler.exit(isA(String.class), isA(String.class), EasyMock.anyInt());
     EasyMock.expectLastCall().andAnswer(exitTraceWriter).anyTimes();
+    testHandler.caught(isA(String.class), isA(String.class), EasyMock.anyInt(), isA(Throwable.class));
+    EasyMock.expectLastCall().andAnswer(caughtTraceWriter).anyTimes();
 
     testHandler
                .val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyBoolean());
@@ -186,9 +198,7 @@ public class AgentTest extends TestCase
     testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyObject());
     EasyMock.expectLastCall().anyTimes();
     testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyInt());
-    EasyMock.expectLastCall().anyTimes();
-    testHandler.val(isA(String.class), isA(String.class), isA(String.class), isA(Throwable.class));
-    EasyMock.expectLastCall().anyTimes();
+    EasyMock.expectLastCall().anyTimes();    
 
     EasyMock.replay(testHandler);
     AgentHelper.instrumentationHandlers.put(testHandler, new Object());
@@ -205,7 +215,7 @@ public class AgentTest extends TestCase
     BranchPatterns branchPatterns = new BranchPatterns();
     Thread patternThread = new Thread(branchPatterns);
     patternThread.start();
-    patternThread.join();
+    patternThread.join(5 * 1000);
     if (branchPatterns.th != null)
     {
       throw branchPatterns.th;
@@ -245,7 +255,8 @@ public class AgentTest extends TestCase
       TraceData trData = parsedTraceData.get("trycatchfinally");
       assertTrue(trData.seenEnter);
       assertTrue(trData.seenExit);
-      assertEquals(1, trData.branchLines.size());
+      assertEquals(0, trData.branchLines.size());
+      assertEquals(1, trData.caughtLines.size());
     }
 
     assertNotNull(parsedTraceData.get("whileloop"));
@@ -320,7 +331,7 @@ public class AgentTest extends TestCase
     ArgumentTypes argTypes = new ArgumentTypes();
     Thread patternThread = new Thread(argTypes);
     patternThread.start();
-    patternThread.join();
+    patternThread.join(5 * 1000);
     if (argTypes.th != null)
     {
       throw argTypes.th;
@@ -476,6 +487,7 @@ public class AgentTest extends TestCase
   private void parseLine(Map<String, TraceData> parsedTraceData,
                          String traceLine)
   {
+    System.out.println("Parse: " + traceLine);
     String[] traceParts = traceLine.split(":##:");
     String traceType = traceParts[0];
     String traceLineData = traceParts[1];
@@ -501,6 +513,10 @@ public class AgentTest extends TestCase
     else if (traceType.equals("Branch"))
     {
       traceData.branchLines.add(Integer.parseInt(dataParts[2].trim()));
+    }
+    else if (traceType.equals("CaughtEx"))
+    {
+      traceData.caughtLines.add(Integer.parseInt(dataParts[2].trim()));
     }
     else if (traceType.equals("Arg"))
     {

@@ -108,6 +108,8 @@ public class ClassTransformer implements ClassFileTransformer
       catch (UnmodifiableClassException e)
       {
         // Write exception to stdout
+        System.err.println("Caught exception when modifying Class: " + 
+                           loadedClass.getCanonicalName());
         e.printStackTrace();
       }
     }

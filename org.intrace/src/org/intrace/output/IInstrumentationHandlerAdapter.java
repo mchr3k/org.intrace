@@ -115,7 +115,7 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   }
   
   @Override
-  public void val(String desc, String className, String methodName, Throwable throwable)
+  public void caught(String className, String methodName, int lineNo, Throwable throwable)
   {
     // Do nothing
   }
