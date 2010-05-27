@@ -1,4 +1,4 @@
-package org.example.intrace;
+package example;
 
 import java.util.Arrays;
 
@@ -28,6 +28,7 @@ public class TraceExample
   {
     long currentTime = System.currentTimeMillis();
     System.setProperty("a", foo);
+    System.out.println(exceptionMethod());
     System.out.println(intArrayMethod(new int[]
     { 1, 2, 3 }));
     if ((currentTime % 2) == 0)
@@ -38,6 +39,23 @@ public class TraceExample
     {
       System.setProperty("a", "Odd time");
     }
+  }
+
+  private static String exceptionMethod()
+  {
+    try
+    {
+      long currentTime = System.currentTimeMillis();
+      if ((currentTime % 2) == 0)
+      {
+        throw new Exception("Exception text");
+      }
+    }
+    catch (Exception ex)
+    {
+      return "seen exception";      
+    }
+    return "no exception";
   }
 
   private static int intArrayMethod(int[] intArg)

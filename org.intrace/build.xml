@@ -125,7 +125,7 @@
   <target name="jar" description="Create Jars" depends="build, test, onlyjar" >
   </target>
 
-  <target name="onlyjar" >
+  <target name="onlyjar" depends="build" >
 
     <mkdir dir="./build/jars/" />
 
@@ -180,7 +180,7 @@
 
 
   <target name="example" depends="jar">
-    <java classname="org.example.intrace.TraceExample" fork="true">
+    <java classname="example.TraceExample" fork="true">
       <arg value="" />
       <classpath>
         <pathelement path="./build/test" />
