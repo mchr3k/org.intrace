@@ -214,6 +214,11 @@ public class ClassTransformer implements ClassFileTransformer
         System.out.println("!! Instrumenting class: " + className);
       }
 
+      if (settings.saveTracedClassfiles())
+      {
+        writeClassBytes(originalClassfile, internalClassName + "_src.class");
+      }
+
       byte[] newBytes;
       try
       {
