@@ -25,20 +25,16 @@ import org.intrace.client.gui.helper.ParsedSettingsData;
 
 public class DevTraceWindow
 {
-  private Shell sWindow = null;
-
   /**
    * @param args
    */
   public static void main(String[] args)
   {
-    DevTraceWindow window = new DevTraceWindow();
-    window.open();
+    new DevTraceWindow().open();
   }
 
   private void open()
   {
-    createWindow();
     sWindow.open();
     Display display = Display.getDefault();
     while (!sWindow.isDisposed())
@@ -49,9 +45,11 @@ public class DevTraceWindow
     display.dispose();
   }
 
-  private void createWindow()
+  private Shell sWindow = null;
+
+  private DevTraceWindow()
   {
-    MigLayout windowLayout = new MigLayout("fill", "", "[100][grow]");
+    MigLayout windowLayout = new MigLayout("fill", "", "[130][grow]");
 
     sWindow = new Shell();
     sWindow.setText("Trace Window");
@@ -68,243 +66,279 @@ public class DevTraceWindow
     fillOutputTabs(outputTabs);
   }
 
+  private ConnectionTab connTab;
+  private InstruTab instruTab;
+  private OutputSettingsTab outSettingsTab;
+  private TraceTab traceTab;
+  private CallersSettingsTab callSettingsTab;
+
   private void fillButtonTabs(TabFolder tabFolder)
   {
-    TabItem connTab = new TabItem(tabFolder, SWT.NONE);
-    connTab.setText("Connection");
-    fillConnectionTab(tabFolder, connTab);
+    TabItem connTabItem = new TabItem(tabFolder, SWT.NONE);
+    connTabItem.setText("Connection");
+    connTab = new ConnectionTab(tabFolder, connTabItem);
 
-    TabItem instrTab = new TabItem(tabFolder, SWT.NONE);
-    instrTab.setText("Instrumentation");
-    fillInstruTab(tabFolder, instrTab);
+    TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
+    instrTabItem.setText("Instrumentation");
+    instruTab = new InstruTab(tabFolder, instrTabItem);
 
-    TabItem outputSettingsTab = new TabItem(tabFolder, SWT.NONE);
-    outputSettingsTab.setText("Output");
-    fillOutputSettingsTab(tabFolder, outputSettingsTab);
+    TabItem outputSettingsTabItem = new TabItem(tabFolder, SWT.NONE);
+    outputSettingsTabItem.setText("Output");
+    outSettingsTab = new OutputSettingsTab(tabFolder, outputSettingsTabItem);
 
-    TabItem traceTab = new TabItem(tabFolder, SWT.NONE);
-    traceTab.setText("Trace");
-    fillTraceTab(tabFolder, traceTab);
+    TabItem traceTabItem = new TabItem(tabFolder, SWT.NONE);
+    traceTabItem.setText("Trace");
+    traceTab = new TraceTab(tabFolder, traceTabItem);
 
-    TabItem callersTab = new TabItem(tabFolder, SWT.NONE);
-    callersTab.setText("Callers");
-    fillCallersSettingsTab(tabFolder, callersTab);
+    TabItem callersTabItem = new TabItem(tabFolder, SWT.NONE);
+    callersTabItem.setText("Callers");
+    callSettingsTab = new CallersSettingsTab(tabFolder, callersTabItem);
   }
 
-  Button connectButton;
-  StatusUpdater connectStatus;
-
-  private void fillConnectionTab(TabFolder tabFolder, TabItem connTab)
+  private class ConnectionTab
   {
-    MigLayout windowLayout = new MigLayout("fill",
-                                           "[100][50][100][300][grow][100]");
+    final Button connectButton;
+    final StatusUpdater connectStatus;
+    final Text addressInput;
+    final Text portInput;
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    connTab.setControl(composite);
-
-    connectButton = new Button(composite, SWT.LEFT);
-    connectButton.setText(ClientStrings.CONNECT);
-    connectButton.setAlignment(SWT.CENTER);
-    connectButton.setLayoutData("spany,grow");
-
-    Label addressLabel = new Label(composite, SWT.NONE);
-    addressLabel.setText(ClientStrings.CONN_ADDRESS);
-    addressLabel.setLayoutData("right");
-    final Text addressInput = new Text(composite, SWT.BORDER);
-    addressInput.setText("localhost");
-    addressInput.setLayoutData("grow,gapy 8px");
-
-    Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-    MigLayout groupLayout = new MigLayout("fill");
-    statusGroup.setLayout(groupLayout);
-    statusGroup.setText("Connection Status");
-    statusGroup.setLayoutData("spany,grow");
-
-    final Label statusLabel = new Label(statusGroup, SWT.NONE);
-    statusLabel.setText("Disconnected");
-    statusLabel.setAlignment(SWT.CENTER);
-    statusLabel.setLayoutData("grow");
-    connectStatus = new StatusUpdater(sWindow, statusLabel);
-
-    Button printSettings = new Button(composite, SWT.TOGGLE);
-    printSettings.setText(ClientStrings.DUMP_SETTINGS);
-    printSettings.setAlignment(SWT.CENTER);
-    printSettings.setLayoutData("skip,spany,grow,wrap");
-
-    Label portLabel = new Label(composite, SWT.NONE);
-    portLabel.setText(ClientStrings.CONN_PORT);
-    portLabel.setLayoutData("right");
-    final Text portInput = new Text(composite, SWT.BORDER);
-    portInput.setText("9123");
-    portInput.setLayoutData("grow,wrap");
-
-    connectButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+    private ConnectionTab(TabFolder tabFolder, TabItem connTab)
     {
-      @Override
-      public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+      MigLayout windowLayout = new MigLayout("fill", "[300][grow][100]");
+
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      connTab.setControl(composite);
+
+      Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout connGroupLayout = new MigLayout("fill", "[80][40][grow]");
+      connectionGroup.setLayout(connGroupLayout);
+      connectionGroup.setText("Details");
+      connectionGroup.setLayoutData("spany,grow");
+
+      connectButton = new Button(connectionGroup, SWT.LEFT);
+      connectButton.setText(ClientStrings.CONNECT);
+      connectButton.setAlignment(SWT.CENTER);
+      connectButton.setLayoutData("spany,grow");
+
+      Label addressLabel = new Label(connectionGroup, SWT.NONE);
+      addressLabel.setText(ClientStrings.CONN_ADDRESS);
+      addressLabel.setLayoutData("right");
+      addressInput = new Text(connectionGroup, SWT.BORDER);
+      addressInput.setText("localhost");
+      addressInput.setLayoutData("grow,gapy 8px,wrap");
+
+      Label portLabel = new Label(connectionGroup, SWT.NONE);
+      portLabel.setText(ClientStrings.CONN_PORT);
+      portLabel.setLayoutData("right");
+      portInput = new Text(connectionGroup, SWT.BORDER);
+      portInput.setText("9123");
+      portInput.setLayoutData("grow,wrap");
+
+      Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      statusGroup.setLayoutData("spany,grow");
+      MigLayout groupLayout = new MigLayout("fill", "[align center]");
+      statusGroup.setLayout(groupLayout);
+      statusGroup.setText("Status");
+
+      final Label statusLabel = new Label(statusGroup, SWT.NONE);
+      statusLabel.setText("Disconnected");
+      statusLabel.setAlignment(SWT.CENTER);
+      statusLabel.setLayoutData("grow,wmax 230");
+      connectStatus = new StatusUpdater(sWindow, statusLabel);
+
+      Button printSettings = new Button(composite, SWT.TOGGLE);
+      printSettings.setText(ClientStrings.DUMP_SETTINGS);
+      printSettings.setAlignment(SWT.CENTER);
+      printSettings.setLayoutData("gap 10px 0px 5px,spany,grow,wrap");
+
+      connectButton.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
       {
-        if ((connected == ConnectState.DISCONNECTED)
-            || (connected == ConnectState.DISCONNECTED_ERR))
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
-          connected = ConnectState.CONNECTING;
-          updateUIStateSameThread();
-          Connection.connectToAgent(traceDialogRef, sWindow,
-                                    addressInput.getText(),
-                                    portInput.getText(), connectStatus);
+          if ((connectionState == ConnectState.DISCONNECTED)
+              || (connectionState == ConnectState.DISCONNECTED_ERR))
+          {
+            connectionState = ConnectState.CONNECTING;
+            updateUIStateSameThread();
+            Connection.connectToAgent(traceDialogRef, sWindow,
+                                      addressInput.getText(),
+                                      portInput.getText(), connectStatus);
+          }
+          else if (connectionState == ConnectState.CONNECTED)
+          {
+            disconnect();
+          }
         }
-        else if (connected == ConnectState.CONNECTED)
-        {
-          disconnect();
-        }
-      }
-    });
+      });
+    }
   }
 
-  private void fillInstruTab(TabFolder tabFolder, TabItem instrTab)
+  private class InstruTab
   {
-    MigLayout windowLayout = new MigLayout("fill",
-                                           "[100][100][100][grow][100][100]");
+    private InstruTab(TabFolder tabFolder, TabItem instrTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill",
+                                             "[100][100][100][grow][100][100]");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    instrTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      instrTab.setControl(composite);
 
-    Button togInstru = new Button(composite, SWT.TOGGLE);
-    togInstru.setText(ClientStrings.ENABLE_INSTR);
-    togInstru.setAlignment(SWT.CENTER);
-    togInstru.setLayoutData("spany,grow");
+      Button togInstru = new Button(composite, SWT.TOGGLE);
+      togInstru.setText(ClientStrings.ENABLE_INSTR);
+      togInstru.setAlignment(SWT.CENTER);
+      togInstru.setLayoutData("spany,grow");
 
-    Button classRegex = new Button(composite, SWT.PUSH);
-    classRegex.setText(ClientStrings.SET_CLASSREGEX);
-    classRegex.setLayoutData("gapx 10px,spany,grow");
+      Button classRegex = new Button(composite, SWT.PUSH);
+      classRegex.setText(ClientStrings.SET_CLASSREGEX);
+      classRegex.setLayoutData("gapx 10px,spany,grow");
 
-    Button listClasses = new Button(composite, SWT.PUSH);
-    listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
-    listClasses.setAlignment(SWT.CENTER);
-    listClasses.setLayoutData("spany,grow");
+      Button listClasses = new Button(composite, SWT.PUSH);
+      listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
+      listClasses.setAlignment(SWT.CENTER);
+      listClasses.setLayoutData("spany,grow");
 
-    Button togJars = new Button(composite, SWT.TOGGLE);
-    togJars.setText(ClientStrings.ENABLE_ALLOWJARS);
-    togJars.setAlignment(SWT.CENTER);
-    togJars.setLayoutData("skip,growx");
+      Button togJars = new Button(composite, SWT.TOGGLE);
+      togJars.setText(ClientStrings.ENABLE_ALLOWJARS);
+      togJars.setAlignment(SWT.CENTER);
+      togJars.setLayoutData("skip,growx");
 
-    Button togSaveClasses = new Button(composite, SWT.TOGGLE);
-    togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
-    togSaveClasses.setAlignment(SWT.CENTER);
-    togSaveClasses.setLayoutData("growx,wrap");
+      Button togSaveClasses = new Button(composite, SWT.TOGGLE);
+      togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
+      togSaveClasses.setAlignment(SWT.CENTER);
+      togSaveClasses.setLayoutData("growx,wrap");
 
-    Button togVerbose = new Button(composite, SWT.TOGGLE);
-    togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
-    togVerbose.setAlignment(SWT.CENTER);
-    togVerbose.setLayoutData("skip,growx");
+      Button togVerbose = new Button(composite, SWT.TOGGLE);
+      togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
+      togVerbose.setAlignment(SWT.CENTER);
+      togVerbose.setLayoutData("skip,growx");
 
+    }
   }
 
-  private void fillOutputSettingsTab(TabFolder tabFolder,
-                                     TabItem outputSettingsTab)
+  private class OutputSettingsTab
   {
-    MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+    private OutputSettingsTab(TabFolder tabFolder, TabItem outputSettingsTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    outputSettingsTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      outputSettingsTab.setControl(composite);
 
-    Button stdOutOutput = new Button(composite, SWT.TOGGLE);
-    stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
-    stdOutOutput.setLayoutData("spany,grow");
+      Button stdOutOutput = new Button(composite, SWT.TOGGLE);
+      stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
+      stdOutOutput.setLayoutData("spany,grow");
 
-    Button fileOutput = new Button(composite, SWT.TOGGLE);
-    fileOutput.setText(ClientStrings.ENABLE_FILE_OUTPUT);
-    fileOutput.setAlignment(SWT.CENTER);
-    fileOutput.setLayoutData("spany,grow");
+      Button fileOutput = new Button(composite, SWT.TOGGLE);
+      fileOutput.setText(ClientStrings.ENABLE_FILE_OUTPUT);
+      fileOutput.setAlignment(SWT.CENTER);
+      fileOutput.setLayoutData("spany,grow");
 
-    Button networkOutput = new Button(composite, SWT.TOGGLE);
-    networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
-    networkOutput.setAlignment(SWT.CENTER);
-    networkOutput.setLayoutData("spany,grow");
+      Button networkOutput = new Button(composite, SWT.TOGGLE);
+      networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
+      networkOutput.setAlignment(SWT.CENTER);
+      networkOutput.setLayoutData("spany,grow");
+    }
   }
 
-  private void fillTraceTab(TabFolder tabFolder, TabItem traceTab)
+  private class TraceTab
   {
-    MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+    private TraceTab(TabFolder tabFolder, TabItem traceTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    traceTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      traceTab.setControl(composite);
 
-    Button entryExitTrace = new Button(composite, SWT.TOGGLE);
-    entryExitTrace.setText(ClientStrings.ENABLE_EE_TRACE);
-    entryExitTrace.setLayoutData("spany,grow");
+      Button entryExitTrace = new Button(composite, SWT.TOGGLE);
+      entryExitTrace.setText(ClientStrings.ENABLE_EE_TRACE);
+      entryExitTrace.setLayoutData("spany,grow");
 
-    Button branchTrace = new Button(composite, SWT.TOGGLE);
-    branchTrace.setText(ClientStrings.ENABLE_BRANCH_TRACE);
-    branchTrace.setAlignment(SWT.CENTER);
-    branchTrace.setLayoutData("spany,grow");
+      Button branchTrace = new Button(composite, SWT.TOGGLE);
+      branchTrace.setText(ClientStrings.ENABLE_BRANCH_TRACE);
+      branchTrace.setAlignment(SWT.CENTER);
+      branchTrace.setLayoutData("spany,grow");
 
-    Button argsTrace = new Button(composite, SWT.TOGGLE);
-    argsTrace.setText(ClientStrings.ENABLE_ARGS_TRACE);
-    argsTrace.setAlignment(SWT.CENTER);
-    argsTrace.setLayoutData("spany,grow");
+      Button argsTrace = new Button(composite, SWT.TOGGLE);
+      argsTrace.setText(ClientStrings.ENABLE_ARGS_TRACE);
+      argsTrace.setAlignment(SWT.CENTER);
+      argsTrace.setLayoutData("spany,grow");
+    }
   }
 
-  private void fillCallersSettingsTab(TabFolder tabFolder, TabItem callersTab)
+  private class CallersSettingsTab
   {
-    MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+    private CallersSettingsTab(TabFolder tabFolder, TabItem callersTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    callersTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      callersTab.setControl(composite);
 
-    Button callersCapture = new Button(composite, SWT.PUSH);
-    callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
-    callersCapture.setLayoutData("spany,grow");
+      Button callersCapture = new Button(composite, SWT.PUSH);
+      callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
+      callersCapture.setLayoutData("spany,grow");
+    }
   }
+
+  TextOutputTab textOutputTab;
+  CallersTab callersTab;
 
   private void fillOutputTabs(TabFolder tabFolder)
   {
-    TabItem textOutputTab = new TabItem(tabFolder, SWT.NONE);
-    textOutputTab.setText("Output");
-    fillTextOutputTab(tabFolder, textOutputTab);
+    TabItem textOutputTabItem = new TabItem(tabFolder, SWT.NONE);
+    textOutputTabItem.setText("Output");
+    textOutputTab = new TextOutputTab(tabFolder, textOutputTabItem);
 
-    TabItem callersTab = new TabItem(tabFolder, SWT.NONE);
-    callersTab.setText("Callers");
-    fillCallersTab(tabFolder, callersTab);
+    TabItem callersTabItem = new TabItem(tabFolder, SWT.NONE);
+    callersTabItem.setText("Callers");
+    callersTab = new CallersTab(tabFolder, callersTabItem);
   }
 
-  private void fillTextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
+  private class TextOutputTab
   {
-    MigLayout windowLayout = new MigLayout("fill", "[70][grow]", "[20][grow]");
+    private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill", "[70][grow]", "[20][grow]");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    textOutputTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      textOutputTab.setControl(composite);
 
-    Button callersCapture = new Button(composite, SWT.PUSH);
-    callersCapture.setText(ClientStrings.CLEAR_TEXT);
-    callersCapture.setLayoutData("wrap,grow");
+      Button callersCapture = new Button(composite, SWT.PUSH);
+      callersCapture.setText(ClientStrings.CLEAR_TEXT);
+      callersCapture.setLayoutData("wrap,grow");
 
-    Text statusTextArea = new Text(composite, SWT.MULTI | SWT.WRAP
-                                              | SWT.V_SCROLL | SWT.BORDER);
-    statusTextArea.setEditable(false);
-    statusTextArea.setLayoutData("spanx,grow");
-    statusTextArea.setBackground(Display.getCurrent()
-                                        .getSystemColor(SWT.COLOR_WHITE));
+      Text statusTextArea = new Text(composite, SWT.MULTI | SWT.WRAP
+                                                | SWT.V_SCROLL | SWT.BORDER);
+      statusTextArea.setEditable(false);
+      statusTextArea.setLayoutData("spanx,grow");
+      statusTextArea.setBackground(Display.getCurrent()
+                                          .getSystemColor(SWT.COLOR_WHITE));
 
+    }
   }
 
-  private void fillCallersTab(TabFolder tabFolder, TabItem callersTab)
+  private class CallersTab
   {
-    MigLayout windowLayout = new MigLayout("fill");
+    private CallersTab(TabFolder tabFolder, TabItem callersTab)
+    {
+      MigLayout windowLayout = new MigLayout("fill");
 
-    Composite composite = new Composite(tabFolder, SWT.NONE);
-    composite.setLayout(windowLayout);
-    callersTab.setControl(composite);
+      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite.setLayout(windowLayout);
+      callersTab.setControl(composite);
 
-    Tree callersTree = new Tree(composite, SWT.BORDER);
-    callersTree.setLayoutData("grow");
-    TreeItem callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
-    callersTreeRoot.setText("Callers");
+      Tree callersTree = new Tree(composite, SWT.BORDER);
+      callersTree.setLayoutData("grow");
+      TreeItem callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
+      callersTreeRoot.setText("Callers");
+    }
   }
 
   // Window ref
@@ -316,7 +350,7 @@ public class DevTraceWindow
     DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
   }
 
-  private ConnectState connected = ConnectState.DISCONNECTED;
+  private ConnectState connectionState = ConnectState.DISCONNECTED;
 
   // Network details
   private InetAddress remoteAddress;
@@ -338,12 +372,12 @@ public class DevTraceWindow
       controlThread = new ControlConnectionThread(socket, this);
       controlThread.start();
       controlThread.sendMessage("getsettings");
-      connected = ConnectState.CONNECTED;
+      connectionState = ConnectState.CONNECTED;
       // updateButtonText();
     }
     else
     {
-      connected = ConnectState.DISCONNECTED_ERR;
+      connectionState = ConnectState.DISCONNECTED_ERR;
     }
     updateUIState();
   }
@@ -358,7 +392,7 @@ public class DevTraceWindow
     {
       networkTraceThread.disconnect();
     }
-    connected = ConnectState.DISCONNECTED;
+    connectionState = ConnectState.DISCONNECTED;
     updateUIState();
   }
 
@@ -568,18 +602,27 @@ public class DevTraceWindow
     // disableButtons();
     // }
 
-    if (connected == ConnectState.CONNECTING)
+    if (connectionState == ConnectState.CONNECTING)
     {
-      connectButton.setText(ClientStrings.CONNECTING);
-      connectButton.setEnabled(false);
+      connTab.connectButton.setText(ClientStrings.CONNECTING);
+      connTab.connectButton.setEnabled(false);
+      connTab.addressInput.setEnabled(false);
+      connTab.portInput.setEnabled(false);
     }
     else
     {
-      chooseText(connectButton, (connected == ConnectState.CONNECTED),
+      chooseText(connTab.connectButton,
+                 (connectionState == ConnectState.CONNECTED),
                  ClientStrings.CONNECT, ClientStrings.DISCONNECT);
-      if (connected == ConnectState.DISCONNECTED)
+      if (connectionState == ConnectState.DISCONNECTED)
       {
-        connectStatus.setStatusText("Disconnected");
+        connTab.connectStatus.setStatusText("Disconnected");
+      }
+      if ((connectionState == ConnectState.DISCONNECTED)
+          || (connectionState == ConnectState.DISCONNECTED_ERR))
+      {
+        connTab.addressInput.setEnabled(true);
+        connTab.portInput.setEnabled(true);
       }
     }
   }
