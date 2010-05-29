@@ -9,20 +9,20 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.intrace.client.gui.TraceWindow;
+import org.intrace.client.gui.DevTraceWindow;
 
 public class ControlConnectionThread implements Runnable
 {
   private final Socket socket;
-  private final TraceWindow window;
+  private final DevTraceWindow window;
   private final BlockingQueue<String> incomingMessages = new LinkedBlockingQueue<String>();
   private final BlockingQueue<String> outgoingMessages = new LinkedBlockingQueue<String>();
   private final ControlConnectionSenderThread senderThread = new ControlConnectionSenderThread();
   private Thread sendThread;
 
-  public ControlConnectionThread(Socket socket, TraceWindow window)
+  public ControlConnectionThread(Socket socket, DevTraceWindow devTraceWindow)
   {
-    this.window = window;
+    this.window = devTraceWindow;
     this.socket = socket;
   }
 
@@ -61,14 +61,14 @@ public class ControlConnectionThread implements Runnable
       {
         ObjectInputStream objIn = new ObjectInputStream(socket.getInputStream());
         Object receivedMessage = objIn.readObject();
-        if (receivedMessage instanceof Map<?,?>)
+        if (receivedMessage instanceof Map<?, ?>)
         {
-          Map<String,String> settingsMap = (Map<String,String>)receivedMessage;
-          window.setConfig(settingsMap);
+          Map<String, String> settingsMap = (Map<String, String>) receivedMessage;
+          // window.setConfig(settingsMap);
         }
         else
         {
-          String strMessage = (String)receivedMessage;
+          String strMessage = (String) receivedMessage;
           if (!"OK".equals(strMessage))
           {
             incomingMessages.put(strMessage);

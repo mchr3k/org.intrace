@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/asm-commons-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/asm-util-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/swt-windows-3.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-3.7-swt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -431,9 +431,9 @@ public class TraceWindow
   public void setConnection(Socket socket)
   {
     this.remoteAddress = socket.getInetAddress();
-    controlThread = new ControlConnectionThread(socket, this);
-    controlThread.start();
-    controlThread.sendMessage("getsettings");
+    // controlThread = new ControlConnectionThread(socket, this);
+    // controlThread.start();
+    // controlThread.sendMessage("getsettings");
     connected = true;
     sShell.getDisplay().asyncExec(new Runnable()
     {
