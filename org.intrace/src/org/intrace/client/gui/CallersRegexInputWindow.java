@@ -10,12 +10,12 @@ import org.eclipse.swt.widgets.Text;
 
 public class CallersRegexInputWindow
 {
-  Shell sShell = null;  //  @jve:decl-index=0:visual-constraint="10,10"
+  Shell sShell = null; // @jve:decl-index=0:visual-constraint="10,10"
   private Text regexInput = null;
   private Button setRegexButton = null;
   private Button cancelButton = null;
 
-  private TraceWindow mainWindowRef = null;  //  @jve:decl-index=0:
+  private DevTraceWindow mainWindowRef = null; // @jve:decl-index=0:
 
   /**
    * This method initializes sShell
@@ -73,10 +73,10 @@ public class CallersRegexInputWindow
     });
   }
 
-  public void open(TraceWindow instanceWindowRef, String initText)
+  public void open(DevTraceWindow traceDialogRef, String initText)
   {
     createSShell();
     regexInput.setText(initText);
-    mainWindowRef = instanceWindowRef;
+    mainWindowRef = traceDialogRef;
   }
 }

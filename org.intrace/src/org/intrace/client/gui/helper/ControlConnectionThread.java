@@ -64,7 +64,7 @@ public class ControlConnectionThread implements Runnable
         if (receivedMessage instanceof Map<?, ?>)
         {
           Map<String, String> settingsMap = (Map<String, String>) receivedMessage;
-          // window.setConfig(settingsMap);
+          window.setConfig(settingsMap);
         }
         else
         {

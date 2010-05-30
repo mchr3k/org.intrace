@@ -1,11 +1,9 @@
 package org.intrace.client.gui.helper;
 
-
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.CallersConfigConstants;
 import org.intrace.shared.OutputConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
@@ -17,14 +15,12 @@ public class ParsedSettingsData
   public final boolean verboseMode;
   public final boolean allowJarsToBeTraced;
 
-  public final boolean callersCaptureInProgress;
-
   public final boolean entryExitEnabled;
   public final boolean branchEnabled;
   public final boolean argsEnabled;
   public final boolean stdOutEnabled;
   public final boolean fileOutEnabled;
-  public final String callersRegex;
+  public final boolean netOutEnabled;
 
   private final Map<String, String> settingsMap;
 
@@ -43,7 +39,9 @@ public class ParsedSettingsData
       instrEnabled = false;
     }
 
-    if ("true".equals(settingsMap.get(AgentConfigConstants.SAVE_TRACED_CLASSFILES)))
+    if ("true"
+              .equals(settingsMap
+                                 .get(AgentConfigConstants.SAVE_TRACED_CLASSFILES)))
     {
       saveTracedClassfiles = true;
     }
@@ -61,24 +59,15 @@ public class ParsedSettingsData
       verboseMode = false;
     }
 
-    if ("true".equals(settingsMap.get(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED)))
+    if ("true"
+              .equals(settingsMap
+                                 .get(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED)))
     {
       allowJarsToBeTraced = true;
     }
     else
     {
       allowJarsToBeTraced = false;
-    }
-
-    callersRegex = settingsMap.get(CallersConfigConstants.PATTERN);
-
-    if ("true".equals(settingsMap.get(CallersConfigConstants.CALLERS_ENABLED)))
-    {
-      callersCaptureInProgress = true;
-    }
-    else
-    {
-      callersCaptureInProgress = false;
     }
 
     if ("true".equals(settingsMap.get(TraceConfigConstants.ENTRY_EXIT)))
@@ -125,18 +114,35 @@ public class ParsedSettingsData
     {
       fileOutEnabled = false;
     }
+
+    if ("true".equals(settingsMap.get(OutputConfigConstants.NET_OUT)))
+    {
+      netOutEnabled = true;
+    }
+    else
+    {
+      netOutEnabled = false;
+    }
   }
 
-  public String dumpSettings()
+  @Override
+  public String toString()
   {
     StringBuffer settingsString = new StringBuffer();
-    for (Entry<String,String> entry : settingsMap.entrySet())
+    if (settingsMap.size() > 0)
     {
-      if (entry.getKey().startsWith("["))
+      for (Entry<String, String> entry : settingsMap.entrySet())
       {
-        settingsString.append(entry.getKey());
-        settingsString.append(entry.getValue());
+        if (entry.getKey().startsWith("["))
+        {
+          settingsString.append(entry.getKey());
+          settingsString.append(entry.getValue());
+        }
       }
+    }
+    else
+    {
+      settingsString.append("<unknown>");
     }
     return settingsString.toString();
   }

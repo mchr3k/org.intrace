@@ -20,7 +20,7 @@ public class ClientStrings
   public static final String ENABLE_ARGS_TRACE = "Enable Args Trace";
   public static final String DISABLE_ARGS_TRACE = "Disable Args Trace";
 
-  public static final String BEGIN_CAPTURE_CALLERS = "Begin Callers Capture";
+  public static final String BEGIN_CAPTURE_CALLERS = "New Callers Capture...";
   public static final String END_CAPTURE_CALLERS = "End Callers Capture";
 
   public static final String ENABLE_STDOUT_OUTPUT = "StdOut Output";

@@ -143,12 +143,16 @@ public class AgentHelper
       writeFileTrace(traceString);
     }
 
-    Set<NetworkDataSenderThread> networkThreads = networkOutputThreads.keySet();
-    if (networkThreads.size() > 0)
+    if (outputSettings.isNetTraceOutputEnabled())
     {
-      for (NetworkDataSenderThread thread : networkThreads)
+      Set<NetworkDataSenderThread> networkThreads = networkOutputThreads
+                                                                        .keySet();
+      if (networkThreads.size() > 0)
       {
-        thread.queueData(traceString);
+        for (NetworkDataSenderThread thread : networkThreads)
+        {
+          thread.queueData(traceString);
+        }
       }
     }
   }
@@ -191,7 +195,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, byte byteArg)
+  public static void val(String desc, String className, String methodName,
+                         byte byteArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -210,7 +215,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, short shortArg)
+  public static void val(String desc, String className, String methodName,
+                         short shortArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -229,7 +235,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, int intArg)
+  public static void val(String desc, String className, String methodName,
+                         int intArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -238,7 +245,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, int[] intArrayArg)
+  public static void val(String desc, String className, String methodName,
+                         int[] intArrayArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -247,7 +255,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, long longArg)
+  public static void val(String desc, String className, String methodName,
+                         long longArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -266,7 +275,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, float floatArg)
+  public static void val(String desc, String className, String methodName,
+                         float floatArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -285,7 +295,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, double doubleArg)
+  public static void val(String desc, String className, String methodName,
+                         double doubleArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -304,7 +315,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, boolean boolArg)
+  public static void val(String desc, String className, String methodName,
+                         boolean boolArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -323,7 +335,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, char charArg)
+  public static void val(String desc, String className, String methodName,
+                         char charArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -342,7 +355,8 @@ public class AgentHelper
     }
   }
 
-  public static void val(String desc, String className, String methodName, Object objArg)
+  public static void val(String desc, String className, String methodName,
+                         Object objArg)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
@@ -360,12 +374,12 @@ public class AgentHelper
       outputHandler.val(desc, className, methodName, objArrayArg);
     }
   }
-  
-  public static void caught(String className, String methodName, int lineNo, 
-      Throwable throwable)
+
+  public static void caught(String className, String methodName, int lineNo,
+                            Throwable throwable)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
-        .keySet())
+                                                                        .keySet())
     {
       outputHandler.caught(className, methodName, lineNo, throwable);
     }

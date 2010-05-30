@@ -15,6 +15,7 @@ public class OutputSettings
 {
   private boolean stdoutTraceOutputEnabled = true;
   private boolean fileTraceOutputEnabled = false;
+  private boolean netTraceOutputEnabled = false;
   private File file1 = new File("trc1.txt");
   private File file2 = new File("trc2.txt");
   private PrintWriter file1TraceWriter = null;
@@ -72,6 +73,14 @@ public class OutputSettings
     {
       networkTraceOutputRequested = true;
     }
+    else if (arg.equals(OutputConfigConstants.NET_OUT + "true"))
+    {
+      netTraceOutputEnabled = true;
+    }
+    else if (arg.equals(OutputConfigConstants.NET_OUT + "false"))
+    {
+      netTraceOutputEnabled = false;
+    }
   }
 
   private PrintWriter closeFile(PrintWriter printWriter)
@@ -125,6 +134,11 @@ public class OutputSettings
     return fileTraceOutputEnabled;
   }
 
+  public boolean isNetTraceOutputEnabled()
+  {
+    return netTraceOutputEnabled;
+  }
+
   // Flag to indicate whether file output is currently going to file1 or file2
   private boolean file1Active = true;
 
@@ -175,6 +189,8 @@ public class OutputSettings
                     Boolean.toString(stdoutTraceOutputEnabled));
     settingsMap.put(OutputConfigConstants.FILE_OUT,
                     Boolean.toString(fileTraceOutputEnabled));
+    settingsMap.put(OutputConfigConstants.NET_OUT,
+                    Boolean.toString(netTraceOutputEnabled));
     return settingsMap;
   }
 }

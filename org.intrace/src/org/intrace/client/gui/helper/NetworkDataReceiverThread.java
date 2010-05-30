@@ -7,15 +7,17 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
 
-import org.intrace.client.gui.TraceWindow;
+import org.intrace.client.gui.DevTraceWindow;
 
 public class NetworkDataReceiverThread implements Runnable
 {
   private final Socket traceSocket;
-  private final TraceWindow window;
-  public NetworkDataReceiverThread(InetAddress address, int networkTracePort, TraceWindow window) throws IOException
+  private final DevTraceWindow window;
+
+  public NetworkDataReceiverThread(InetAddress address, int networkTracePort,
+      DevTraceWindow traceDialogRef) throws IOException
   {
-    this.window = window;
+    this.window = traceDialogRef;
     traceSocket = new Socket();
     traceSocket.connect(new InetSocketAddress(address, networkTracePort));
   }
@@ -34,21 +36,23 @@ public class NetworkDataReceiverThread implements Runnable
   {
     try
     {
-      ObjectInputStream objIn = new ObjectInputStream(traceSocket.getInputStream());
+      ObjectInputStream objIn = new ObjectInputStream(
+                                                      traceSocket
+                                                                 .getInputStream());
       while (true)
       {
         Object data = objIn.readObject();
         if (data instanceof String)
         {
-          String traceLine = (String)data;
+          String traceLine = (String) data;
           if (!"NOOP".equals(traceLine))
           {
             window.addMessage(traceLine);
           }
         }
-        else if (data instanceof Map<?,?>)
+        else if (data instanceof Map<?, ?>)
         {
-          Map<String,Object> callersMap = (Map<String,Object>)data;
+          Map<String, Object> callersMap = (Map<String, Object>) data;
           window.setCallers(callersMap);
         }
       }

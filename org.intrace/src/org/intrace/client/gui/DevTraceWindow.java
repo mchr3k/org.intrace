@@ -1,13 +1,18 @@
 package org.intrace.client.gui;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -22,6 +27,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.intrace.client.gui.helper.ControlConnectionThread;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread;
 import org.intrace.client.gui.helper.ParsedSettingsData;
+import org.intrace.shared.CallersConfigConstants;
 
 public class DevTraceWindow
 {
@@ -46,6 +52,7 @@ public class DevTraceWindow
   }
 
   private Shell sWindow = null;
+  final TabFolder outputTabs;
 
   private DevTraceWindow()
   {
@@ -58,12 +65,14 @@ public class DevTraceWindow
     sWindow.setMinimumSize(new Point(700, 750));
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
-    TabFolder outputTabs = new TabFolder(sWindow, SWT.NONE);
-    buttonTabs.setLayoutData("grow,wrap");
+    outputTabs = new TabFolder(sWindow, SWT.NONE);
+    buttonTabs.setLayoutData("grow,wrap,wmin 0");
     outputTabs.setLayoutData("grow");
 
     fillButtonTabs(buttonTabs);
     fillOutputTabs(outputTabs);
+
+    updateUIStateSameThread();
   }
 
   private ConnectionTab connTab;
@@ -98,9 +107,10 @@ public class DevTraceWindow
   private class ConnectionTab
   {
     final Button connectButton;
-    final StatusUpdater connectStatus;
     final Text addressInput;
     final Text portInput;
+    final StatusUpdater connectStatus;
+    final Button printSettings;
 
     private ConnectionTab(TabFolder tabFolder, TabItem connTab)
     {
@@ -114,7 +124,7 @@ public class DevTraceWindow
       MigLayout connGroupLayout = new MigLayout("fill", "[80][40][grow]");
       connectionGroup.setLayout(connGroupLayout);
       connectionGroup.setText("Details");
-      connectionGroup.setLayoutData("spany,grow");
+      connectionGroup.setLayoutData("spany,grow,wmin 300");
 
       connectButton = new Button(connectionGroup, SWT.LEFT);
       connectButton.setText(ClientStrings.CONNECT);
@@ -136,18 +146,17 @@ public class DevTraceWindow
       portInput.setLayoutData("grow,wrap");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      statusGroup.setLayoutData("spany,grow");
+      statusGroup.setLayoutData("spany,grow,wmin 0");
       MigLayout groupLayout = new MigLayout("fill", "[align center]");
       statusGroup.setLayout(groupLayout);
       statusGroup.setText("Status");
 
-      final Label statusLabel = new Label(statusGroup, SWT.NONE);
-      statusLabel.setText("Disconnected");
+      final Label statusLabel = new Label(statusGroup, SWT.WRAP);
       statusLabel.setAlignment(SWT.CENTER);
-      statusLabel.setLayoutData("grow,wmax 230");
+      statusLabel.setLayoutData("grow,wmin 0");
       connectStatus = new StatusUpdater(sWindow, statusLabel);
 
-      Button printSettings = new Button(composite, SWT.TOGGLE);
+      printSettings = new Button(composite, SWT.PUSH);
       printSettings.setText(ClientStrings.DUMP_SETTINGS);
       printSettings.setAlignment(SWT.CENTER);
       printSettings.setLayoutData("gap 10px 0px 5px,spany,grow,wrap");
@@ -172,136 +181,319 @@ public class DevTraceWindow
           }
         }
       });
+
+      printSettings.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          addMessage("Settings:" + settingsData.toString());
+        }
+      });
     }
   }
 
   private class InstruTab
   {
+    final Button togInstru;
+    final Button classRegex;
+    final Button listClasses;
+    final Button togJars;
+    final Button togSaveClasses;
+    final Button togVerbose;
+
     private InstruTab(TabFolder tabFolder, TabItem instrTab)
     {
-      MigLayout windowLayout = new MigLayout("fill",
-                                             "[100][100][100][grow][100][100]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       instrTab.setControl(composite);
 
-      Button togInstru = new Button(composite, SWT.TOGGLE);
+      Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout mainControlGroupLayout = new MigLayout("fill",
+                                                       "[100][100][100]");
+      mainControlGroup.setLayout(mainControlGroupLayout);
+      mainControlGroup.setText("");
+      mainControlGroup.setLayoutData("spany,grow");
+
+      togInstru = new Button(mainControlGroup, SWT.TOGGLE);
       togInstru.setText(ClientStrings.ENABLE_INSTR);
       togInstru.setAlignment(SWT.CENTER);
       togInstru.setLayoutData("spany,grow");
 
-      Button classRegex = new Button(composite, SWT.PUSH);
+      classRegex = new Button(mainControlGroup, SWT.PUSH);
       classRegex.setText(ClientStrings.SET_CLASSREGEX);
       classRegex.setLayoutData("gapx 10px,spany,grow");
 
-      Button listClasses = new Button(composite, SWT.PUSH);
+      listClasses = new Button(mainControlGroup, SWT.PUSH);
       listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
       listClasses.setAlignment(SWT.CENTER);
       listClasses.setLayoutData("spany,grow");
 
-      Button togJars = new Button(composite, SWT.TOGGLE);
+      Group settingsGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout settingsGroupLayout = new MigLayout("fill", "[100]");
+      settingsGroup.setLayout(settingsGroupLayout);
+      settingsGroup.setText("Settings");
+      settingsGroup.setLayoutData("spany,grow,skip");
+
+      togJars = new Button(settingsGroup, SWT.TOGGLE);
       togJars.setText(ClientStrings.ENABLE_ALLOWJARS);
       togJars.setAlignment(SWT.CENTER);
-      togJars.setLayoutData("skip,growx");
+      togJars.setLayoutData("growx,wrap");
 
-      Button togSaveClasses = new Button(composite, SWT.TOGGLE);
+      Group debugGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout debugGroupLayout = new MigLayout("fill", "[100]");
+      debugGroup.setLayout(debugGroupLayout);
+      debugGroup.setText("Debug");
+      debugGroup.setLayoutData("spany,grow,skip");
+
+      togSaveClasses = new Button(debugGroup, SWT.TOGGLE);
       togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
       togSaveClasses.setAlignment(SWT.CENTER);
       togSaveClasses.setLayoutData("growx,wrap");
 
-      Button togVerbose = new Button(composite, SWT.TOGGLE);
+      togVerbose = new Button(debugGroup, SWT.TOGGLE);
       togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
       togVerbose.setAlignment(SWT.CENTER);
-      togVerbose.setLayoutData("skip,growx");
+      togVerbose.setLayoutData("growx");
+
+      togInstru.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.instrEnabled, "[instru-true",
+                        "[instru-false");
+        }
+      });
+      classRegex.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          InstruRegexInputWindow regexInput = new InstruRegexInputWindow();
+          regexInput.open(traceDialogRef, settingsData.classRegex);
+          placeDialogInCenter(sWindow, regexInput.sShell);
+        }
+      });
+      listClasses.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          getModifiedClasses();
+        }
+      });
+      togJars.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.allowJarsToBeTraced, "[instrujars-true",
+                        "[instrujars-false");
+        }
+      });
+      togSaveClasses.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.saveTracedClassfiles, "[saveinstru-true",
+                        "[saveinstru-false");
+        }
+      });
+      togVerbose.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.verboseMode, "[verbose-true",
+                        "[verbose-false");
+        }
+      });
 
     }
   }
 
   private class OutputSettingsTab
   {
+    final Button stdOutOutput;
+    final Button fileOutput;
+    final Button networkOutput;
+
     private OutputSettingsTab(TabFolder tabFolder, TabItem outputSettingsTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       outputSettingsTab.setControl(composite);
 
-      Button stdOutOutput = new Button(composite, SWT.TOGGLE);
+      Group outputTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout outputTypesGroupLayout = new MigLayout("fill",
+                                                       "[100][100][100]");
+      outputTypesGroup.setLayout(outputTypesGroupLayout);
+      outputTypesGroup.setText("");
+      outputTypesGroup.setLayoutData("spany,grow");
+
+      stdOutOutput = new Button(outputTypesGroup, SWT.TOGGLE);
       stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
       stdOutOutput.setLayoutData("spany,grow");
 
-      Button fileOutput = new Button(composite, SWT.TOGGLE);
+      fileOutput = new Button(outputTypesGroup, SWT.TOGGLE);
       fileOutput.setText(ClientStrings.ENABLE_FILE_OUTPUT);
       fileOutput.setAlignment(SWT.CENTER);
       fileOutput.setLayoutData("spany,grow");
 
-      Button networkOutput = new Button(composite, SWT.TOGGLE);
+      networkOutput = new Button(outputTypesGroup, SWT.TOGGLE);
       networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
       networkOutput.setAlignment(SWT.CENTER);
       networkOutput.setLayoutData("spany,grow");
+
+      stdOutOutput.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.stdOutEnabled, "[out-stdout-true",
+                        "[out-stdout-false");
+        }
+      });
+      fileOutput.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.fileOutEnabled, "[out-file-true",
+                        "[out-file-false");
+        }
+      });
+      networkOutput.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.netOutEnabled, "[out-network-true",
+                        "[out-network-false");
+        }
+      });
     }
   }
 
   private class TraceTab
   {
+    final Button entryExitTrace;
+    final Button branchTrace;
+    final Button argsTrace;
+
     private TraceTab(TabFolder tabFolder, TabItem traceTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       traceTab.setControl(composite);
 
-      Button entryExitTrace = new Button(composite, SWT.TOGGLE);
+      Group traceTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout traceTypesGroupLayout = new MigLayout("fill", "[100][100][100]");
+      traceTypesGroup.setLayout(traceTypesGroupLayout);
+      traceTypesGroup.setText("");
+      traceTypesGroup.setLayoutData("spany,grow");
+
+      entryExitTrace = new Button(traceTypesGroup, SWT.TOGGLE);
       entryExitTrace.setText(ClientStrings.ENABLE_EE_TRACE);
       entryExitTrace.setLayoutData("spany,grow");
 
-      Button branchTrace = new Button(composite, SWT.TOGGLE);
+      branchTrace = new Button(traceTypesGroup, SWT.TOGGLE);
       branchTrace.setText(ClientStrings.ENABLE_BRANCH_TRACE);
       branchTrace.setAlignment(SWT.CENTER);
       branchTrace.setLayoutData("spany,grow");
 
-      Button argsTrace = new Button(composite, SWT.TOGGLE);
+      argsTrace = new Button(traceTypesGroup, SWT.TOGGLE);
       argsTrace.setText(ClientStrings.ENABLE_ARGS_TRACE);
       argsTrace.setAlignment(SWT.CENTER);
       argsTrace.setLayoutData("spany,grow");
+
+      entryExitTrace.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.entryExitEnabled, "[trace-ee-true",
+                        "[trace-ee-false");
+        }
+      });
+      branchTrace.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.branchEnabled, "[trace-branch-true",
+                        "[trace-branch-false");
+        }
+      });
+      argsTrace.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          toggleSetting(settingsData.argsEnabled, "[trace-args-true",
+                        "[trace-args-false");
+        }
+      });
     }
   }
 
   private class CallersSettingsTab
   {
+    final Button callersCapture;
+
     private CallersSettingsTab(TabFolder tabFolder, TabItem callersTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[100][100][100][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       callersTab.setControl(composite);
 
-      Button callersCapture = new Button(composite, SWT.PUSH);
+      Group callersTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
+      MigLayout callersTypesGroupLayout = new MigLayout("fill", "[100]");
+      callersTypesGroup.setLayout(callersTypesGroupLayout);
+      callersTypesGroup.setText("");
+      callersTypesGroup.setLayoutData("spany,grow");
+
+      callersCapture = new Button(callersTypesGroup, SWT.PUSH);
       callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
       callersCapture.setLayoutData("spany,grow");
+
+      callersCapture.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          CallersRegexInputWindow regexInput = new CallersRegexInputWindow();
+          regexInput.open(traceDialogRef, "");
+          placeDialogInCenter(sWindow, regexInput.sShell);
+        }
+      });
     }
   }
 
   TextOutputTab textOutputTab;
-  CallersTab callersTab;
+  Map<Long, CallersTab> callerTabs = new ConcurrentHashMap<Long, CallersTab>();
 
   private void fillOutputTabs(TabFolder tabFolder)
   {
     TabItem textOutputTabItem = new TabItem(tabFolder, SWT.NONE);
     textOutputTabItem.setText("Output");
     textOutputTab = new TextOutputTab(tabFolder, textOutputTabItem);
-
-    TabItem callersTabItem = new TabItem(tabFolder, SWT.NONE);
-    callersTabItem.setText("Callers");
-    callersTab = new CallersTab(tabFolder, callersTabItem);
   }
 
   private class TextOutputTab
   {
+    final Text statusTextArea;
+
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
       MigLayout windowLayout = new MigLayout("fill", "[70][grow]", "[20][grow]");
@@ -314,8 +506,8 @@ public class DevTraceWindow
       callersCapture.setText(ClientStrings.CLEAR_TEXT);
       callersCapture.setLayoutData("wrap,grow");
 
-      Text statusTextArea = new Text(composite, SWT.MULTI | SWT.WRAP
-                                                | SWT.V_SCROLL | SWT.BORDER);
+      statusTextArea = new Text(composite, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL
+                                           | SWT.BORDER);
       statusTextArea.setEditable(false);
       statusTextArea.setLayoutData("spanx,grow");
       statusTextArea.setBackground(Display.getCurrent()
@@ -326,18 +518,93 @@ public class DevTraceWindow
 
   private class CallersTab
   {
-    private CallersTab(TabFolder tabFolder, TabItem callersTab)
+    final TabItem callersTabItem;
+    final TreeItem callersTreeRoot;
+    final TabFolder tabFolder;
+
+    private CallersTab(TabFolder tabFolder)
     {
+      this.tabFolder = tabFolder;
+
+      callersTabItem = new TabItem(tabFolder, SWT.NONE);
+      callersTabItem.setText("Callers");
+
       MigLayout windowLayout = new MigLayout("fill");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
-      callersTab.setControl(composite);
+      callersTabItem.setControl(composite);
 
       Tree callersTree = new Tree(composite, SWT.BORDER);
       callersTree.setLayoutData("grow");
-      TreeItem callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
+      callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
       callersTreeRoot.setText("Callers");
+    }
+
+    public void setData(final Map<String, Object> callersMap)
+    {
+      final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
+      final Object callersRegex = callersMap
+                                            .remove(CallersConfigConstants.PATTERN);
+
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          String newRootText = "Callers: " + callersRegex;
+          String currentRootText = callersTreeRoot.getText();
+          if (!currentRootText.equals(newRootText))
+          {
+            callersTreeRoot.removeAll();
+            callersTreeRoot.setText(newRootText);
+          }
+          setCallersData(callersTreeRoot, callersMap);
+          if ("true".equals(finalFlag))
+          {
+            tabFolder.setSelection(callersTabItem);
+          }
+        }
+      });
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setCallersData(TreeItem parentItem,
+                                Map<String, Object> callersMap)
+    {
+      for (Entry<String, Object> mapEntry : callersMap.entrySet())
+      {
+        String entryName = mapEntry.getKey();
+
+        TreeItem item = null;
+        // Look for existing item
+        for (TreeItem iter_item : parentItem.getItems())
+        {
+          if (iter_item.getText().equals(entryName))
+          {
+            item = iter_item;
+            break;
+          }
+        }
+
+        // Create new item
+        if (item == null)
+        {
+          item = new TreeItem(parentItem, SWT.NULL);
+          item.setText(entryName);
+        }
+
+        // Process children
+        Object entryValue = mapEntry.getValue();
+        if (entryValue instanceof Map<?, ?>)
+        {
+          Map<String, Object> entryMap = (Map<String, Object>) entryValue;
+          if (entryMap.size() > 0)
+          {
+            setCallersData(item, entryMap);
+          }
+        }
+      }
     }
   }
 
@@ -347,22 +614,21 @@ public class DevTraceWindow
   // State
   private enum ConnectState
   {
-    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
+    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED, CONNECTED_UPDATING
   }
 
   private ConnectState connectionState = ConnectState.DISCONNECTED;
 
   // Network details
   private InetAddress remoteAddress;
-  private final boolean networkDataEnabled = false;
 
   // Threads
   private NetworkDataReceiverThread networkTraceThread;
   private ControlConnectionThread controlThread;
 
   // Settings
-  private final ParsedSettingsData settingsData = new ParsedSettingsData(
-                                                                         new HashMap<String, String>());
+  private ParsedSettingsData settingsData = new ParsedSettingsData(
+                                                                   new HashMap<String, String>());
 
   public void setConnectionState(Socket socket)
   {
@@ -373,7 +639,21 @@ public class DevTraceWindow
       controlThread.start();
       controlThread.sendMessage("getsettings");
       connectionState = ConnectState.CONNECTED;
-      // updateButtonText();
+
+      controlThread.sendMessage("[out-network");
+      String networkTracePortStr = controlThread.getMessage();
+      int networkTracePort = Integer.parseInt(networkTracePortStr);
+      try
+      {
+        networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
+                                                           networkTracePort,
+                                                           traceDialogRef);
+        networkTraceThread.start();
+      }
+      catch (IOException ex)
+      {
+        addMessage("*** Failed to setup network trace: " + ex.toString());
+      }
     }
     else
     {
@@ -396,133 +676,92 @@ public class DevTraceWindow
     updateUIState();
   }
 
-  // private void toggleNetworkTrace()
-  // {
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // disableButtons();
-  // if (!networkDataEnabled)
-  // {
-  // controlThread.sendMessage("[out-network");
-  // String networkTracePortStr = controlThread.getMessage();
-  // int networkTracePort = Integer.parseInt(networkTracePortStr);
-  // try
-  // {
-  // networkTraceThread = new NetworkDataReceiverThread(
-  // remoteAddress,
-  // networkTracePort,
-  // traceDialogRef);
-  // networkTraceThread.start();
-  // networkDataEnabled = true;
-  // }
-  // catch (IOException ex)
-  // {
-  // addMessage("*** Failed to setup network trace: " + ex.toString());
-  // }
-  // }
-  // else
-  // {
-  // networkTraceThread.disconnect();
-  // networkDataEnabled = false;
-  // }
-  // updateButtonText();
-  // }
-  // });
-  // }
+  private void getModifiedClasses()
+  {
+    new Thread(new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        controlThread.sendMessage("[listmodifiedclasses");
+        String modifiedClasses = controlThread.getMessage();
+        if (modifiedClasses.length() <= 2)
+        {
+          addMessage("*** No modified classes");
+        }
+        else
+        {
+          modifiedClasses = modifiedClasses
+                                           .substring(
+                                                      1,
+                                                      modifiedClasses.length() - 1);
+          if (modifiedClasses.indexOf(",") == -1)
+          {
+            addMessage("*** Modified: " + modifiedClasses);
+          }
+          else
+          {
+            String[] classNames = modifiedClasses.split(",");
+            for (String className : classNames)
+            {
+              addMessage("*** Modified: "
+                         + (className != null ? className.trim() : "null"));
+            }
+          }
+        }
+      }
+    }).start();
+  }
 
-  // private void getModifiedClasses()
-  // {
-  // new Thread(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // controlThread.sendMessage("[listmodifiedclasses");
-  // String modifiedClasses = controlThread.getMessage();
-  // if (modifiedClasses.length() <= 2)
-  // {
-  // addMessage("*** No modified classes");
-  // }
-  // else
-  // {
-  // modifiedClasses = modifiedClasses
-  // .substring(
-  // 1,
-  // modifiedClasses.length() - 1);
-  // if (modifiedClasses.indexOf(",") == -1)
-  // {
-  // addMessage("*** Modified: " + modifiedClasses);
-  // }
-  // else
-  // {
-  // String[] classNames = modifiedClasses.split(",");
-  // for (String className : classNames)
-  // {
-  // addMessage("*** Modified: " + className);
-  // }
-  // }
-  // }
-  // }
-  // }).start();
-  // }
-  //
-  // public void setRegex(final String regex)
-  // {
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // disableButtons();
-  // controlThread.sendMessage("[regex-" + regex);
-  // controlThread.sendMessage("getsettings");
-  // }
-  // });
-  // }
-  //
-  // public void setCallersRegex(final String regex)
-  // {
-  // if (!settingsData.callersCaptureInProgress)
-  // {
-  // controlThread.sendMessage("[callers-regex-" + regex);
-  // toggleSetting(settingsData.callersCaptureInProgress,
-  // "[callers-enabled-true", "[callers-enabled-false");
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // callersTreeRoot.removeAll();
-  // }
-  // });
-  // }
-  // }
-  //
-  // private void toggleSetting(final boolean settingValue,
-  // final String enableCommand,
-  // final String disableCommand)
-  // {
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // disableButtons();
-  // if (settingValue)
-  // {
-  // controlThread.sendMessage(disableCommand);
-  // }
-  // else
-  // {
-  // controlThread.sendMessage(enableCommand);
-  // }
-  // controlThread.sendMessage("getsettings");
-  // }
-  // });
-  // }
+  public void setRegex(final String regex)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          connectionState = ConnectState.CONNECTED_UPDATING;
+          updateUIStateSameThread();
+          controlThread.sendMessage("[regex-" + regex);
+          controlThread.sendMessage("getsettings");
+        }
+      });
+    }
+  }
+
+  public void setCallersRegex(final String regex)
+  {
+    controlThread.sendMessage("[callers-start-" + regex);
+  }
+
+  private void toggleSetting(final boolean settingValue,
+                             final String enableCommand,
+                             final String disableCommand)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          connectionState = ConnectState.CONNECTED_UPDATING;
+          updateUIStateSameThread();
+          if (settingValue)
+          {
+            controlThread.sendMessage(disableCommand);
+          }
+          else
+          {
+            controlThread.sendMessage(enableCommand);
+          }
+          controlThread.sendMessage("getsettings");
+        }
+      });
+    }
+  }
 
   private void chooseText(Button control, boolean option, String enabledText,
                           String disabledText)
@@ -555,53 +794,6 @@ public class DevTraceWindow
 
   private void updateUIStateSameThread()
   {
-    // if (connected)
-    // {
-    // chooseText(toggleInstrumentEnabled, settingsData.instrEnabled,
-    // ClientStrings.ENABLE_INSTR, ClientStrings.DISABLE_INSTR);
-    // chooseText(toggleAllowJarInstru, settingsData.allowJarsToBeTraced,
-    // ClientStrings.ENABLE_ALLOWJARS,
-    // ClientStrings.DISABLE_ALLOWJARS);
-    // chooseText(toggleSaveClassFiles, settingsData.saveTracedClassfiles,
-    // ClientStrings.ENABLE_SAVECLASSES,
-    // ClientStrings.DISABLE_SAVECLASSES);
-    // chooseText(toggleVerboseMode, settingsData.verboseMode,
-    // ClientStrings.ENABLE_VERBOSEMODE,
-    // ClientStrings.DISABLE_VERBOSEMODE);
-    // listModifiedClasses.setEnabled(true);
-    //
-    // chooseText(toggleEntryExitButton, settingsData.entryExitEnabled,
-    // ClientStrings.ENABLE_EE_TRACE, ClientStrings.DISABLE_EE_TRACE);
-    // chooseText(toggleBranchButton, settingsData.branchEnabled,
-    // ClientStrings.ENABLE_BRANCH_TRACE,
-    // ClientStrings.DISABLE_BRANCH_TRACE);
-    // chooseText(toggleArgsButton, settingsData.argsEnabled,
-    // ClientStrings.ENABLE_ARGS_TRACE,
-    // ClientStrings.DISABLE_ARGS_TRACE);
-    //
-    // chooseText(callersStateButton, settingsData.callersCaptureInProgress,
-    // ClientStrings.BEGIN_CAPTURE_CALLERS,
-    // ClientStrings.END_CAPTURE_CALLERS);
-    // callersStateButton.setEnabled(networkDataEnabled);
-    //
-    // chooseText(toggleStdOutButton, settingsData.stdOutEnabled,
-    // ClientStrings.ENABLE_STDOUT_OUTPUT,
-    // ClientStrings.DISABLE_STDOUT_OUTPUT);
-    // chooseText(toggleFileOutputButton, settingsData.fileOutEnabled,
-    // ClientStrings.ENABLE_FILE_OUTPUT,
-    // ClientStrings.DISABLE_FILE_OUTPUT);
-    // chooseText(toggleNetworkTraceButton, networkDataEnabled,
-    // ClientStrings.ENABLE_NETWORK_OUTPUT,
-    // ClientStrings.DISABLE_NETWORK_OUTPUT);
-    // setClassRegexButton.setEnabled(true);
-    //
-    // dumpSettingsButton.setEnabled(true);
-    // }
-    // else
-    // {
-    // disableButtons();
-    // }
-
     if (connectionState == ConnectState.CONNECTING)
     {
       connTab.connectButton.setText(ClientStrings.CONNECTING);
@@ -614,132 +806,167 @@ public class DevTraceWindow
       chooseText(connTab.connectButton,
                  (connectionState == ConnectState.CONNECTED),
                  ClientStrings.CONNECT, ClientStrings.DISCONNECT);
+
+      if (connectionState == ConnectState.CONNECTED)
+      {
+        // Enable all buttons
+        connTab.printSettings.setEnabled(true);
+
+        instruTab.classRegex.setEnabled(true);
+        instruTab.listClasses.setEnabled(true);
+        instruTab.togInstru.setEnabled(true);
+        instruTab.togJars.setEnabled(true);
+        instruTab.togSaveClasses.setEnabled(true);
+        instruTab.togVerbose.setEnabled(true);
+
+        outSettingsTab.fileOutput.setEnabled(true);
+        outSettingsTab.networkOutput.setEnabled(true);
+        outSettingsTab.stdOutOutput.setEnabled(true);
+
+        traceTab.argsTrace.setEnabled(true);
+        traceTab.branchTrace.setEnabled(true);
+        traceTab.entryExitTrace.setEnabled(true);
+
+        callSettingsTab.callersCapture.setEnabled(true);
+
+        // Update the button pressed/unpressed state
+        instruTab.togInstru.setSelection(settingsData.instrEnabled);
+        instruTab.togJars.setSelection(settingsData.allowJarsToBeTraced);
+        instruTab.togSaveClasses
+                                .setSelection(settingsData.saveTracedClassfiles);
+        instruTab.togVerbose.setSelection(settingsData.verboseMode);
+
+        outSettingsTab.fileOutput.setSelection(settingsData.fileOutEnabled);
+        outSettingsTab.networkOutput.setSelection(settingsData.netOutEnabled);
+        outSettingsTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
+
+        traceTab.argsTrace.setSelection(settingsData.argsEnabled);
+        traceTab.branchTrace.setSelection(settingsData.branchEnabled);
+        traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
+      }
+
+      if (connectionState == ConnectState.CONNECTED_UPDATING)
+      {
+        connTab.addressInput.setEnabled(true);
+        connTab.portInput.setEnabled(true);
+        connTab.printSettings.setEnabled(false);
+
+        instruTab.classRegex.setEnabled(false);
+        instruTab.listClasses.setEnabled(false);
+        instruTab.togInstru.setEnabled(false);
+        instruTab.togJars.setEnabled(false);
+        instruTab.togSaveClasses.setEnabled(false);
+        instruTab.togVerbose.setEnabled(false);
+
+        outSettingsTab.fileOutput.setEnabled(false);
+        outSettingsTab.networkOutput.setEnabled(false);
+        outSettingsTab.stdOutOutput.setEnabled(false);
+      }
+
+      // Only reset status text if we didn't hit an error
       if (connectionState == ConnectState.DISCONNECTED)
       {
         connTab.connectStatus.setStatusText("Disconnected");
       }
+
+      // Always reset button states
       if ((connectionState == ConnectState.DISCONNECTED)
           || (connectionState == ConnectState.DISCONNECTED_ERR))
       {
         connTab.addressInput.setEnabled(true);
         connTab.portInput.setEnabled(true);
+        connTab.printSettings.setEnabled(false);
+
+        instruTab.classRegex.setEnabled(false);
+        instruTab.listClasses.setEnabled(false);
+        instruTab.togInstru.setEnabled(false);
+        instruTab.togJars.setEnabled(false);
+        instruTab.togSaveClasses.setEnabled(false);
+        instruTab.togVerbose.setEnabled(false);
+
+        outSettingsTab.fileOutput.setEnabled(false);
+        outSettingsTab.networkOutput.setEnabled(false);
+        outSettingsTab.stdOutOutput.setEnabled(false);
+
+        traceTab.argsTrace.setEnabled(false);
+        traceTab.branchTrace.setEnabled(false);
+        traceTab.entryExitTrace.setEnabled(false);
+
+        callSettingsTab.callersCapture.setEnabled(false);
       }
     }
   }
 
-  // private void disableButtons()
-  // {
-  // toggleInstrumentEnabled.setEnabled(false);
-  // setClassRegexButton.setEnabled(false);
-  // toggleAllowJarInstru.setEnabled(false);
-  // toggleSaveClassFiles.setEnabled(false);
-  // toggleVerboseMode.setEnabled(false);
-  // listModifiedClasses.setEnabled(false);
-  //
-  // toggleEntryExitButton.setEnabled(false);
-  // toggleBranchButton.setEnabled(false);
-  // toggleArgsButton.setEnabled(false);
-  //
-  // callersStateButton.setEnabled(false);
-  //
-  // toggleStdOutButton.setEnabled(false);
-  // toggleFileOutputButton.setEnabled(false);
-  // toggleNetworkTraceButton.setEnabled(false);
-  //
-  // dumpSettingsButton.setEnabled(false);
-  // }
+  public void setConfig(final Map<String, String> settingsMap)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          addMessageSameThread("*** Latest Settings Received");
+          settingsData = new ParsedSettingsData(settingsMap);
+          connectionState = ConnectState.CONNECTED;
+          updateUIStateSameThread();
+        }
+      });
+    }
+  }
 
-  // public void setConfig(final Map<String, String> settingsMap)
-  // {
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // addMessage("*** Latest Settings Received");
-  // settingsData = new ParsedSettingsData(settingsMap);
-  // updateButtonText();
-  // }
-  // });
-  // }
-  //
-  // public void addMessage(final String message)
-  // {
-  // if (!sShell.isDisposed())
-  // {
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // statusTextArea.append(message + "\n");
-  // }
-  // });
-  // }
-  // }
-  //
-  // public void setCallers(final Map<String, Object> callersMap)
-  // {
-  // final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
-  // final Object callersRegex = callersMap
-  // .remove(CallersConfigConstants.PATTERN);
-  // sShell.getDisplay().asyncExec(new Runnable()
-  // {
-  // @Override
-  // public void run()
-  // {
-  // String newRootText = "Callers: " + callersRegex;
-  // String currentRootText = callersTreeRoot.getText();
-  // if (!currentRootText.equals(newRootText))
-  // {
-  // callersTreeRoot.removeAll();
-  // callersTreeRoot.setText(newRootText);
-  // }
-  // setCallersData(callersTreeRoot, callersMap);
-  // if ("true".equals(finalFlag))
-  // {
-  // outputTabFolder.setSelection(callersOutputTabItem);
-  // }
-  // }
-  // });
-  // }
-  //
-  // @SuppressWarnings("unchecked")
-  // private void setCallersData(TreeItem parentItem,
-  // Map<String, Object> callersMap)
-  // {
-  // for (Entry<String, Object> mapEntry : callersMap.entrySet())
-  // {
-  // String entryName = mapEntry.getKey();
-  //
-  // TreeItem item = null;
-  // // Look for existing item
-  // for (TreeItem iter_item : parentItem.getItems())
-  // {
-  // if (iter_item.getText().equals(entryName))
-  // {
-  // item = iter_item;
-  // break;
-  // }
-  // }
-  //
-  // // Create new item
-  // if (item == null)
-  // {
-  // item = new TreeItem(parentItem, SWT.NULL);
-  // item.setText(entryName);
-  // }
-  //
-  // // Process children
-  // Object entryValue = mapEntry.getValue();
-  // if (entryValue instanceof Map<?, ?>)
-  // {
-  // Map<String, Object> entryMap = (Map<String, Object>) entryValue;
-  // if (entryMap.size() > 0)
-  // {
-  // setCallersData(item, entryMap);
-  // }
-  // }
-  // }
-  // }
+  public void addMessage(final String message)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          addMessageSameThread(message);
+        }
+      });
+    }
+  }
+
+  public void addMessageSameThread(final String message)
+  {
+    textOutputTab.statusTextArea.append(message + "\n");
+  }
+
+  public void setCallers(final Map<String, Object> callersMap)
+  {
+    final Object callersId = callersMap.remove(CallersConfigConstants.ID);
+
+    CallersTab cTab = callerTabs.get(callersId);
+    if (cTab == null)
+    {
+      sWindow.getDisplay().syncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          CallersTab cTab = new CallersTab(outputTabs);
+          callerTabs.put((Long) callersId, cTab);
+        }
+      });
+      cTab = callerTabs.get(callersId);
+    }
+
+    cTab.setData(callersMap);
+  }
+
+  private static void placeDialogInCenter(Shell parent, Shell shell)
+  {
+    Rectangle parentSize = parent.getBounds();
+    Rectangle mySize = shell.getBounds();
+
+    int locationX, locationY;
+    locationX = (parentSize.width - mySize.width) / 2 + parentSize.x;
+    locationY = (parentSize.height - mySize.height) / 2 + parentSize.y;
+
+    shell.setLocation(new Point(locationX, locationY));
+    shell.open();
+  }
 }
