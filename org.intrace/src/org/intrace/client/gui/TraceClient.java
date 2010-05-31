@@ -7,8 +7,7 @@ public class TraceClient
    */
   public static void main(String[] args)
   {
-    TraceWindow window = new TraceWindow();
-    window.open();
+    new TraceWindow().open();
   }
 
 }

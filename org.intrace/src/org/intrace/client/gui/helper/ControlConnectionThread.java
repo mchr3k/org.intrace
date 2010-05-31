@@ -9,18 +9,18 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.intrace.client.gui.DevTraceWindow;
+import org.intrace.client.gui.TraceWindow;
 
 public class ControlConnectionThread implements Runnable
 {
   private final Socket socket;
-  private final DevTraceWindow window;
+  private final TraceWindow window;
   private final BlockingQueue<String> incomingMessages = new LinkedBlockingQueue<String>();
   private final BlockingQueue<String> outgoingMessages = new LinkedBlockingQueue<String>();
   private final ControlConnectionSenderThread senderThread = new ControlConnectionSenderThread();
   private Thread sendThread;
 
-  public ControlConnectionThread(Socket socket, DevTraceWindow devTraceWindow)
+  public ControlConnectionThread(Socket socket, TraceWindow devTraceWindow)
   {
     this.window = devTraceWindow;
     this.socket = socket;

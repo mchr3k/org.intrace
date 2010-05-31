@@ -7,15 +7,15 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
 
-import org.intrace.client.gui.DevTraceWindow;
+import org.intrace.client.gui.TraceWindow;
 
 public class NetworkDataReceiverThread implements Runnable
 {
   private final Socket traceSocket;
-  private final DevTraceWindow window;
+  private final TraceWindow window;
 
   public NetworkDataReceiverThread(InetAddress address, int networkTracePort,
-      DevTraceWindow traceDialogRef) throws IOException
+      TraceWindow traceDialogRef) throws IOException
   {
     this.window = traceDialogRef;
     traceSocket = new Socket();

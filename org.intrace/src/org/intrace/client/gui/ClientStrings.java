@@ -39,5 +39,8 @@ public class ClientStrings
 
   public static final String DUMP_SETTINGS = "Dump Settings";
 
+  public static final String CAPTURE_END = "End Capture";
+  public static final String CAPTURE_CLOSE = "Close";
+
   public static final String CLEAR_TEXT = "Clear";
 }

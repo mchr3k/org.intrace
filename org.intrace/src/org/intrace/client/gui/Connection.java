@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Shell;
 
 public class Connection
 {
-  public static void connectToAgent(final DevTraceWindow owningWindow,
+  public static void connectToAgent(final TraceWindow owningWindow,
                                     final Shell sShell, final String host,
                                     final String port,
                                     final StatusUpdater statusUpdater)

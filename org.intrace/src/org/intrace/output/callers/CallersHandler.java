@@ -48,7 +48,7 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
     else if (arg.startsWith("[callers-end-"))
     {
       String argIDStr = arg.replace("[callers-end-", "");
-      Integer argID = Integer.parseInt(argIDStr);
+      Long argID = Long.parseLong(argIDStr);
       System.out.println("## Callers Analysis Ended, ID: " + argID);
       CallersCapture oldCallersCapture = activeCaptures.get(argID);
       oldCallersCapture.running = false;
@@ -143,10 +143,10 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
       if (pattern.matcher(methodName).matches())
       {
         StackTraceElement[] stackTrace = new Exception().getStackTrace();
-        if ((stackTrace != null) && (stackTrace.length > 3))
+        if ((stackTrace != null) && (stackTrace.length > 4))
         {
           Map<String, Object> treeElement = recordedData;
-          for (int ii = 3; ii < stackTrace.length; ii++)
+          for (int ii = 4; ii < stackTrace.length; ii++)
           {
             StackTraceElement element = stackTrace[ii];
             String stackLine = element.getClassName()

@@ -15,7 +15,7 @@ public class CallersRegexInputWindow
   private Button setRegexButton = null;
   private Button cancelButton = null;
 
-  private DevTraceWindow mainWindowRef = null; // @jve:decl-index=0:
+  private TraceWindow mainWindowRef = null; // @jve:decl-index=0:
 
   /**
    * This method initializes sShell
@@ -73,7 +73,7 @@ public class CallersRegexInputWindow
     });
   }
 
-  public void open(DevTraceWindow traceDialogRef, String initText)
+  public void open(TraceWindow traceDialogRef, String initText)
   {
     createSShell();
     regexInput.setText(initText);
