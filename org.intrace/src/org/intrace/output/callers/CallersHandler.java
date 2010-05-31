@@ -49,11 +49,14 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
     {
       String argIDStr = arg.replace("[callers-end-", "");
       Long argID = Long.parseLong(argIDStr);
-      System.out.println("## Callers Analysis Ended, ID: " + argID);
       CallersCapture oldCallersCapture = activeCaptures.get(argID);
-      oldCallersCapture.running = false;
-      oldCallersCapture.thread.interrupt();
-      oldCallersCapture.sendFinalData();
+      if (oldCallersCapture != null)
+      {
+        System.out.println("## Callers Analysis Ended, ID: " + argID);
+        oldCallersCapture.running = false;
+        oldCallersCapture.thread.interrupt();
+        oldCallersCapture.sendFinalData();
+      }
     }
     return null;
   }

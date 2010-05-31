@@ -573,6 +573,7 @@ public class TraceWindow
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
+          controlThread.sendMessage("[callers-end-" + tabCallersId);
           sWindow.getDisplay().asyncExec(new Runnable()
           {
             @Override
