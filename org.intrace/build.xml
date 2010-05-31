@@ -162,7 +162,8 @@
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.SF" src="lib/swt-windows-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/swt-windows-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
     </jar>
 
     <!-- GUI Trace Client - Linux -->
@@ -173,7 +174,8 @@
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.SF" src="lib/swt-linux-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/swt-linux-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
     </jar>
 
   </target>

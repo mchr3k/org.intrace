@@ -1,4 +1,4 @@
-package org.intrace.client.gui;
+package org.intrace.client.gui.helper;
 
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;

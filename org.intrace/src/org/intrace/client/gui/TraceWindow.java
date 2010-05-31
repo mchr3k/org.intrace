@@ -24,9 +24,11 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.intrace.client.gui.helper.Connection;
 import org.intrace.client.gui.helper.ControlConnectionThread;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread;
 import org.intrace.client.gui.helper.ParsedSettingsData;
+import org.intrace.client.gui.helper.StatusUpdater;
 import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow

@@ -1,4 +1,4 @@
-package org.intrace.client.gui;
+package org.intrace.client.gui.helper;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -6,6 +6,7 @@ import java.net.Socket;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.intrace.client.gui.TraceWindow;
 
 public class Connection
 {
