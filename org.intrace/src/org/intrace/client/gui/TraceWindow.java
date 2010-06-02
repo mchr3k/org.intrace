@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.intrace.client.gui.PatternInputWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.Connection;
 import org.intrace.client.gui.helper.ControlConnectionThread;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread;
@@ -261,14 +262,28 @@ public class TraceWindow
                         "[instru-false");
         }
       });
+      
+      final String helpText = "Enter pattern in the form " +
+      "\"mypack.mysubpack.MyClass\" or using wildcards " +
+      "\"mypack.*.MyClass\" or \"*MyClass\" etc";
       classRegex.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
       {
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
-          InstruRegexInputWindow regexInput = new InstruRegexInputWindow();
-          regexInput.open(traceDialogRef, settingsData.classRegex);
-          placeDialogInCenter(sWindow, regexInput.sShell);
+          PatternInputWindow regexInput = new PatternInputWindow(
+              "Set Class Regex",
+              helpText,
+              new PatternInputCallback()
+              {               
+                @Override
+                public void setPattern(String newPattern)
+                {
+                  setRegex(newPattern);
+                }
+              },
+              settingsData.classRegex);
+          placeDialogInCenter(sWindow, regexInput.sWindow);
         }
       });
       listClasses.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
@@ -461,14 +476,28 @@ public class TraceWindow
       callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
       callersCapture.setLayoutData("spany,grow");
 
+      final String helpText = "Enter pattern in the form " +
+      "\"functionName\" or using wildcards " +
+      "\"functionN*\" or \"*tionName\" etc";
+      
       callersCapture.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
       {
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
-          CallersRegexInputWindow regexInput = new CallersRegexInputWindow();
-          regexInput.open(traceDialogRef, "");
-          placeDialogInCenter(sWindow, regexInput.sShell);
+          PatternInputWindow regexInput = new PatternInputWindow(
+              "Enter Method Regex",
+              helpText,
+              new PatternInputCallback()
+              {               
+                @Override
+                public void setPattern(String newPattern)
+                {
+                  setCallersRegex(newPattern);
+                }
+              },
+              "");
+          placeDialogInCenter(sWindow, regexInput.sWindow);
         }
       });
     }
@@ -548,7 +577,7 @@ public class TraceWindow
       composite.setLayout(windowLayout);
       callersTabItem.setControl(composite);
 
-      Button endCapture = new Button(composite, SWT.PUSH);
+      final Button endCapture = new Button(composite, SWT.PUSH);
       endCapture.setText(ClientStrings.CAPTURE_END);
       endCapture.setLayoutData("grow");
 
@@ -566,6 +595,7 @@ public class TraceWindow
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
+          endCapture.setEnabled(false);
           controlThread.sendMessage("[callers-end-" + tabCallersId);
         }
       });

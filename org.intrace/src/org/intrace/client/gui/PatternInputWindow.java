@@ -6,7 +6,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
@@ -14,42 +13,16 @@ import org.eclipse.swt.widgets.Text;
 
 public class PatternInputWindow
 {
-  /**
-   * @param args
-   */
-  public static void main(String[] args)
-  {
-    String helpText = "Enter pattern in the form " +
-    		"\"mypack.mysubpack.MyClass\" or using wildcards " +
-    		"\"mypack.*.MyClass\" or \"*MyClass\" etc";
-    new PatternInputWindow("Test",helpText, new PatternInputCallback()
-    {      
-      @Override
-      public void setPattern(String newPattern)
-      {
-        System.out.println(newPattern);
-      }
-    }).open();
-  }
   
-  public void open()
-  {
-    sWindow.open();
-    Display display = Display.getDefault();
-    while (!sWindow.isDisposed())
-    {
-      if (!display.readAndDispatch())
-        display.sleep();
-    }
-    display.dispose();
-  }
-  
-  private Shell sWindow = null;
+  public final Shell sWindow;
   private final Text patternInput; 
   private final List patternSet;
   private final PatternInputCallback callback;
   
-  public PatternInputWindow(String windowTitle, String helpText, PatternInputCallback callback)
+  public PatternInputWindow(String windowTitle, 
+                            String helpText, 
+                            PatternInputCallback callback, 
+                            String initPatterns)
   {
     this.callback = callback;
     MigLayout windowLayout = new MigLayout("fill","[grow][100][100][grow]","[25][grow][25]");
@@ -85,7 +58,7 @@ public class PatternInputWindow
     patternSet.setLayoutData("grow");
     
     Button saveButton = new Button(sWindow, SWT.PUSH);
-    saveButton.setText("Save Changes");
+    saveButton.setText("Apply Changes");
     saveButton.setAlignment(SWT.CENTER);
     saveButton.setLayoutData("skip,grow");
     
@@ -127,12 +100,45 @@ public class PatternInputWindow
         sWindow.close();
       }}
     );
+    
+    parsePatternSet(initPatterns);
   }
   
+  private void parsePatternSet(String initPattern)
+  {
+    if (initPattern.indexOf("|") > -1)
+    {
+      String[] initPatterns = initPattern.split("\\|");
+      for (String pattern : initPatterns)
+      {
+        parsePattern(pattern);
+      }
+    }
+    else
+    {
+      parsePattern(initPattern);
+    }
+  }
+
+  private void parsePattern(String pattern)
+  {
+    if ((pattern != null) &&
+        (pattern.length() > 0))
+    {
+      pattern = pattern.replace(".*", "*").replace("\\.", ".");
+      addItem(pattern);
+    }
+  }
+
   private void addItem()
   {
-    String newItem = patternInput.getText();
-    
+    String newItem = patternInput.getText();    
+    addItem(newItem);
+    patternInput.setText("");
+  }
+  
+  private void addItem(String newItem)
+  {
     if (!newItem.equals(""))
     {    
       boolean addItem = true;
@@ -148,7 +154,6 @@ public class PatternInputWindow
       {
         patternSet.add(newItem);
       }
-      patternInput.setText("");
     }
   }
   
