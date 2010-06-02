@@ -1009,7 +1009,7 @@ public class TraceWindow
 
   public void addMessageSameThread(final String message)
   {
-    textOutputTab.textOutput.append(message + "\n");
+    textOutputTab.textOutput.append(message + "\r\n");
   }
 
   public void setCallers(final Map<String, Object> callersMap)
