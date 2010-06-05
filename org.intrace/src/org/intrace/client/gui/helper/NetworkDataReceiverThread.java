@@ -13,11 +13,14 @@ public class NetworkDataReceiverThread implements Runnable
 {
   private final Socket traceSocket;
   private final TraceWindow window;
+  private final TraceFilterThread traceThread;
 
   public NetworkDataReceiverThread(InetAddress address, int networkTracePort,
-      TraceWindow traceDialogRef) throws IOException
+      TraceWindow traceDialogRef, TraceFilterThread traceThread)
+      throws IOException
   {
     this.window = traceDialogRef;
+    this.traceThread = traceThread;
     traceSocket = new Socket();
     traceSocket.connect(new InetSocketAddress(address, networkTracePort));
   }
@@ -47,7 +50,7 @@ public class NetworkDataReceiverThread implements Runnable
           String traceLine = (String) data;
           if (!"NOOP".equals(traceLine))
           {
-            window.addMessage(traceLine);
+            traceThread.addTraceLine(traceLine);
           }
         }
         else if (data instanceof Map<?, ?>)

@@ -7,10 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
@@ -18,6 +20,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
@@ -30,6 +33,9 @@ import org.intrace.client.gui.helper.ControlConnectionThread;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread;
 import org.intrace.client.gui.helper.ParsedSettingsData;
 import org.intrace.client.gui.helper.StatusUpdater;
+import org.intrace.client.gui.helper.TraceFilterThread;
+import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
+import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow
@@ -182,7 +188,8 @@ public class TraceWindow
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
-          addMessage("Settings:" + settingsData.toString());
+          textOutputTab.filterThread.addTraceLine("Settings:"
+                                                  + settingsData.toString());
         }
       });
     }
@@ -262,27 +269,28 @@ public class TraceWindow
                         "[instru-false");
         }
       });
-      
-      final String helpText = "Enter pattern in the form " +
-      "\"mypack.mysubpack.MyClass\" or using wildcards " +
-      "\"mypack.*.MyClass\" or \"*MyClass\" etc";
+
+      final String helpText = "Enter pattern in the form "
+                              + "\"mypack.mysubpack.MyClass\" or using wildcards "
+                              + "\"mypack.*.MyClass\" or \"*MyClass\" etc";
       classRegex.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
       {
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
           PatternInputWindow regexInput = new PatternInputWindow(
-              "Set Class Regex",
-              helpText,
-              new PatternInputCallback()
-              {               
-                @Override
-                public void setPattern(String newPattern)
-                {
-                  setRegex(newPattern);
-                }
-              },
-              settingsData.classRegex);
+                                                                 "Set Class Regex",
+                                                                 helpText,
+                                                                 new PatternInputCallback()
+                                                                 {
+                                                                   @Override
+                                                                   public void setPattern(
+                                                                                          String newPattern)
+                                                                   {
+                                                                     setRegex(newPattern);
+                                                                   }
+                                                                 },
+                                                                 settingsData.classRegex);
           placeDialogInCenter(sWindow, regexInput.sWindow);
         }
       });
@@ -476,27 +484,27 @@ public class TraceWindow
       callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
       callersCapture.setLayoutData("spany,grow");
 
-      final String helpText = "Enter pattern in the form " +
-      "\"functionName\" or using wildcards " +
-      "\"functionN*\" or \"*tionName\" etc";
-      
+      final String helpText = "Enter pattern in the form "
+                              + "\"functionName\" or using wildcards "
+                              + "\"functionN*\" or \"*tionName\" etc";
+
       callersCapture.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
       {
         @Override
         public void mouseUp(org.eclipse.swt.events.MouseEvent e)
         {
           PatternInputWindow regexInput = new PatternInputWindow(
-              "Enter Method Regex",
-              helpText,
-              new PatternInputCallback()
-              {               
-                @Override
-                public void setPattern(String newPattern)
-                {
-                  setCallersRegex(newPattern);
-                }
-              },
-              "");
+                                                                 "Enter Method Regex",
+                                                                 helpText,
+                                                                 new PatternInputCallback()
+                                                                 {
+                                                                   @Override
+                                                                   public void setPattern(
+                                                                                          String newPattern)
+                                                                   {
+                                                                     setCallersRegex(newPattern);
+                                                                   }
+                                                                 }, "");
           placeDialogInCenter(sWindow, regexInput.sWindow);
         }
       });
@@ -516,18 +524,33 @@ public class TraceWindow
   private class TextOutputTab
   {
     final Text textOutput;
+    final TraceFilterThread filterThread;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[70][grow]", "[20][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[70][70][150][70][grow]",
+                                             "[20][grow]");
 
-      Composite composite = new Composite(tabFolder, SWT.NONE);
+      final Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       textOutputTab.setControl(composite);
 
       Button clearText = new Button(composite, SWT.PUSH);
       clearText.setText(ClientStrings.CLEAR_TEXT);
-      clearText.setLayoutData("wrap,grow");
+      clearText.setLayoutData("grow");
+
+      final Button textFilter = new Button(composite, SWT.PUSH);
+      textFilter.setText(ClientStrings.FILTER_TEXT);
+      textFilter.setLayoutData("grow");
+
+      final ProgressBar pBar = new ProgressBar(composite, SWT.NORMAL);
+      pBar.setLayoutData("grow");
+      pBar.setVisible(false);
+
+      final Button cancelButton = new Button(composite, SWT.PUSH);
+      cancelButton.setText(ClientStrings.CANCEL_TEXT);
+      cancelButton.setLayoutData("grow,wrap");
+      cancelButton.setVisible(false);
 
       textOutput = new Text(composite, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL
                                        | SWT.BORDER);
@@ -546,12 +569,145 @@ public class TraceWindow
             @Override
             public void run()
             {
-              textOutput.setText("");
+              filterThread.clearTrace();
             }
           });
         }
       });
 
+      final String helpText = "Enter pattern in the form "
+                              + "\"text\" or using wildcards "
+                              + "\"tex*\" or \"*ext\" etc";
+
+      final PatternInputCallback patternCallback = new PatternInputCallback()
+      {
+        @Override
+        public void setPattern(String newPattern)
+        {
+          if (newPattern.equals(filterPattern.pattern()))
+          {
+            return;
+          }
+          else
+          {
+            oldFilterPattern = filterPattern;
+            if (newPattern.equals(".*") || newPattern.equals(""))
+            {
+              filterPattern = TraceFilterThread.NO_PATTERN;
+            }
+            else
+            {
+              filterPattern = Pattern.compile(newPattern, Pattern.DOTALL);
+            }
+          }
+          if (sWindow.isDisposed())
+            return;
+          sWindow.getDisplay().asyncExec(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              textFilter.setEnabled(false);
+              pBar.setVisible(true);
+              cancelButton.setVisible(true);
+              final boolean[] filterCancelled = new boolean[]
+              { false };
+
+              final MouseListener cancelListener = new org.eclipse.swt.events.MouseAdapter()
+              {
+                @Override
+                public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+                {
+                  filterCancelled[0] = true;
+                }
+              };
+
+              cancelButton.addMouseListener(cancelListener);
+
+              final TraceFilterProgressHandler progressHandler = new TraceFilterProgressHandler()
+              {
+                @Override
+                public boolean setProgress(final int percent)
+                {
+                  if (sWindow.isDisposed())
+                    return false;
+                  sWindow.getDisplay().asyncExec(new Runnable()
+                  {
+                    @Override
+                    public void run()
+                    {
+                      if (percent < 100)
+                      {
+                        pBar.setSelection(percent);
+                      }
+                      else
+                      {
+                        pBar.setVisible(false);
+                        cancelButton.setVisible(false);
+                        cancelButton.removeMouseListener(cancelListener);
+                        textFilter.setEnabled(true);
+                        if (filterCancelled[0])
+                        {
+                          filterPattern = oldFilterPattern;
+                        }
+                      }
+                    }
+                  });
+                  return filterCancelled[0];
+                }
+              };
+
+              filterThread.applyFilter(filterPattern, progressHandler);
+            }
+          });
+        }
+      };
+
+      textFilter.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
+      {
+        @Override
+        public void mouseUp(org.eclipse.swt.events.MouseEvent e)
+        {
+          PatternInputWindow regexInput;
+          regexInput = new PatternInputWindow("Set Text Filter", helpText,
+                                              patternCallback,
+                                              filterPattern.pattern());
+          placeDialogInCenter(sWindow, regexInput.sWindow);
+        }
+      });
+
+      filterThread = new TraceFilterThread(new TraceTextHandler()
+      {
+        @Override
+        public void setText(final String traceText)
+        {
+          if (sWindow.isDisposed())
+            return;
+          sWindow.getDisplay().asyncExec(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              textOutput.setText(traceText);
+            }
+          });
+        }
+
+        @Override
+        public void appendText(final String traceText)
+        {
+          if (sWindow.isDisposed())
+            return;
+          sWindow.getDisplay().asyncExec(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              textOutput.append(traceText);
+            }
+          });
+        }
+      });
     }
   }
 
@@ -706,6 +862,8 @@ public class TraceWindow
   // Settings
   private ParsedSettingsData settingsData = new ParsedSettingsData(
                                                                    new HashMap<String, String>());
+  private Pattern filterPattern = TraceFilterThread.NO_PATTERN;
+  private Pattern oldFilterPattern = TraceFilterThread.NO_PATTERN;
 
   public void setConnectionState(Socket socket)
   {
@@ -722,14 +880,18 @@ public class TraceWindow
       int networkTracePort = Integer.parseInt(networkTracePortStr);
       try
       {
-        networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
+        networkTraceThread = new NetworkDataReceiverThread(
+                                                           remoteAddress,
                                                            networkTracePort,
-                                                           traceDialogRef);
+                                                           traceDialogRef,
+                                                           textOutputTab.filterThread);
         networkTraceThread.start();
       }
       catch (IOException ex)
       {
-        addMessage("*** Failed to setup network trace: " + ex.toString());
+        textOutputTab.filterThread
+                                  .addTraceLine("*** Failed to setup network trace: "
+                                                + ex.toString());
       }
     }
     else
@@ -764,7 +926,7 @@ public class TraceWindow
         String modifiedClasses = controlThread.getMessage();
         if (modifiedClasses.length() <= 2)
         {
-          addMessage("*** No modified classes");
+          textOutputTab.filterThread.addTraceLine("*** No modified classes");
         }
         else
         {
@@ -774,15 +936,19 @@ public class TraceWindow
                                                       modifiedClasses.length() - 1);
           if (modifiedClasses.indexOf(",") == -1)
           {
-            addMessage("*** Modified: " + modifiedClasses);
+            textOutputTab.filterThread.addTraceLine("*** Modified: "
+                                                    + modifiedClasses);
           }
           else
           {
             String[] classNames = modifiedClasses.split(",");
             for (String className : classNames)
             {
-              addMessage("*** Modified: "
-                         + (className != null ? className.trim() : "null"));
+              textOutputTab.filterThread
+                                        .addTraceLine("*** Modified: "
+                                                      + (className != null ? className
+                                                                                      .trim()
+                                                                          : "null"));
             }
           }
         }
@@ -983,33 +1149,14 @@ public class TraceWindow
         @Override
         public void run()
         {
-          addMessageSameThread("*** Latest Settings Received");
+          textOutputTab.filterThread
+                                    .addTraceLine("*** Latest Settings Received");
           settingsData = new ParsedSettingsData(settingsMap);
           connectionState = ConnectState.CONNECTED;
           updateUIStateSameThread();
         }
       });
     }
-  }
-
-  public void addMessage(final String message)
-  {
-    if (!sWindow.isDisposed())
-    {
-      sWindow.getDisplay().asyncExec(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          addMessageSameThread(message);
-        }
-      });
-    }
-  }
-
-  public void addMessageSameThread(final String message)
-  {
-    textOutputTab.textOutput.append(message + "\r\n");
   }
 
   public void setCallers(final Map<String, Object> callersMap)

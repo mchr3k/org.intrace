@@ -33,4 +33,6 @@ public class ClientStrings
   public static final String CAPTURE_CLOSE = "Close";
 
   public static final String CLEAR_TEXT = "Clear";
+  public static final String FILTER_TEXT = "Filter...";
+  public static final String CANCEL_TEXT = "Cancel";
 }
