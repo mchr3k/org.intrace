@@ -4,7 +4,7 @@ public class ClientStrings
 {
   public static final String ENABLE_INSTR = "Instrument Classes";
   public static final String SET_CLASSREGEX = "Set Class Regex...";
-  public static final String ENABLE_ALLOWJARS = "Instrument JARs";
+  public static final String ENABLE_ALLOWJARS = "Instru JARs";
   public static final String ENABLE_SAVECLASSES = "Save Instru'd Classes";
   public static final String ENABLE_VERBOSEMODE = "Verbose Mode";
   public static final String LIST_MODIFIED_CLASSES = "List Instru'd Classes";

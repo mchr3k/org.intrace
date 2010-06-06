@@ -63,8 +63,8 @@ public class TraceWindow
     sWindow = new Shell();
     sWindow.setText("Trace Window");
     sWindow.setLayout(windowLayout);
-    sWindow.setSize(new Point(700, 750));
-    sWindow.setMinimumSize(new Point(700, 750));
+    sWindow.setSize(new Point(800, 800));
+    sWindow.setMinimumSize(new Point(800, 480));
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     outputTabs = new TabFolder(sWindow, SWT.NONE);
