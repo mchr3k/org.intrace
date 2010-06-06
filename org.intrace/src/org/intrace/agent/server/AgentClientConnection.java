@@ -15,7 +15,6 @@ import java.util.Set;
 import org.intrace.agent.ClassTransformer;
 import org.intrace.output.AgentHelper;
 import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.OutputConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
 /**
@@ -77,7 +76,6 @@ public class AgentClientConnection implements Runnable
           {
             Set<String> commandSet = new HashSet<String>();
             commandSet.addAll(AgentConfigConstants.COMMANDS);
-            commandSet.addAll(OutputConfigConstants.COMMANDS);
             commandSet.addAll(TraceConfigConstants.COMMANDS);
             sendMessage(commandSet);
           }

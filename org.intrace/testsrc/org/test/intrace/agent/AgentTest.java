@@ -25,7 +25,6 @@ import org.easymock.classextension.EasyMock;
 import org.intrace.output.AgentHelper;
 import org.intrace.output.IInstrumentationHandler;
 import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.OutputConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
 /**
@@ -104,7 +103,6 @@ public class AgentTest extends TestCase
     assertTrue(helpResponse instanceof Set<?>);
     Set<String> expectedHelpResponse = new HashSet<String>();
     expectedHelpResponse.addAll(AgentConfigConstants.COMMANDS);
-    expectedHelpResponse.addAll(OutputConfigConstants.COMMANDS);
     expectedHelpResponse.addAll(TraceConfigConstants.COMMANDS);
     assertEquals(helpResponse, expectedHelpResponse);
   }
@@ -189,16 +187,19 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().andAnswer(branchTraceWriter).anyTimes();
     testHandler.exit(isA(String.class), isA(String.class), EasyMock.anyInt());
     EasyMock.expectLastCall().andAnswer(exitTraceWriter).anyTimes();
-    testHandler.caught(isA(String.class), isA(String.class), EasyMock.anyInt(), isA(Throwable.class));
+    testHandler.caught(isA(String.class), isA(String.class), EasyMock.anyInt(),
+                       isA(Throwable.class));
     EasyMock.expectLastCall().andAnswer(caughtTraceWriter).anyTimes();
 
-    testHandler
-               .val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyBoolean());
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class),
+                    EasyMock.anyBoolean());
     EasyMock.expectLastCall().anyTimes();
-    testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyObject());
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class),
+                    EasyMock.anyObject());
     EasyMock.expectLastCall().anyTimes();
-    testHandler.val(isA(String.class), isA(String.class), isA(String.class), EasyMock.anyInt());
-    EasyMock.expectLastCall().anyTimes();    
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class),
+                    EasyMock.anyInt());
+    EasyMock.expectLastCall().anyTimes();
 
     EasyMock.replay(testHandler);
     AgentHelper.instrumentationHandlers.put(testHandler, new Object());

@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.OutputConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
 public class ParsedSettingsData
@@ -97,7 +96,7 @@ public class ParsedSettingsData
       argsEnabled = false;
     }
 
-    if ("true".equals(settingsMap.get(OutputConfigConstants.STD_OUT)))
+    if ("true".equals(settingsMap.get(TraceConfigConstants.STD_OUT)))
     {
       stdOutEnabled = true;
     }
@@ -106,7 +105,7 @@ public class ParsedSettingsData
       stdOutEnabled = false;
     }
 
-    if ("true".equals(settingsMap.get(OutputConfigConstants.FILE_OUT)))
+    if ("true".equals(settingsMap.get(TraceConfigConstants.FILE_OUT)))
     {
       fileOutEnabled = true;
     }
@@ -115,7 +114,7 @@ public class ParsedSettingsData
       fileOutEnabled = false;
     }
 
-    if ("true".equals(settingsMap.get(OutputConfigConstants.NET_OUT)))
+    if ("true".equals(settingsMap.get(TraceConfigConstants.NET_OUT)))
     {
       netOutEnabled = true;
     }

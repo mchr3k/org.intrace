@@ -1,11 +1,8 @@
 package org.intrace.output;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,15 +60,7 @@ public class AgentHelper
    */
   private static String getResponse(String args)
   {
-    boolean oldStdOutEnabled = outputSettings.isStdoutTraceOutputEnabled();
-    boolean oldFileOutEnabled = outputSettings.isFileTraceOutputEnabled();
     outputSettings.parseArgs(args);
-
-    if ((oldStdOutEnabled != outputSettings.isStdoutTraceOutputEnabled())
-        || (oldFileOutEnabled != outputSettings.isFileTraceOutputEnabled()))
-    {
-      System.out.println("## Output Settings Changed");
-    }
 
     if (outputSettings.networkTraceOutputRequested)
     {
@@ -118,46 +107,6 @@ public class AgentHelper
   }
 
   /**
-   * Write output to zero or more of the following.
-   * <ul>
-   * <li>StdOut
-   * <li>FileOut
-   * <li>NetworkOut
-   * </ul>
-   * 
-   * @param xiOutput
-   */
-  public static void writeOutput(String xiOutput)
-  {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
-    long threadID = Thread.currentThread().getId();
-    String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
-                         + "]:" + xiOutput;
-    if (outputSettings.isStdoutTraceOutputEnabled())
-    {
-      System.out.println(traceString);
-    }
-
-    if (outputSettings.isFileTraceOutputEnabled())
-    {
-      writeFileTrace(traceString);
-    }
-
-    if (outputSettings.isNetTraceOutputEnabled())
-    {
-      Set<NetworkDataSenderThread> networkThreads = networkOutputThreads
-                                                                        .keySet();
-      if (networkThreads.size() > 0)
-      {
-        for (NetworkDataSenderThread thread : networkThreads)
-        {
-          thread.queueData(traceString);
-        }
-      }
-    }
-  }
-
-  /**
    * Write data output to all network data connections.
    * 
    * @param xiTrace
@@ -173,18 +122,6 @@ public class AgentHelper
       }
     }
   }
-
-  private static synchronized void writeFileTrace(String traceString)
-  {
-    PrintWriter outputWriter;
-    outputWriter = outputSettings.getFileTraceWriter();
-    outputWriter.println(traceString);
-    outputWriter.flush();
-  }
-
-  /*
-   * STATIC IMPLEMENTATION OF IOutput
-   */
 
   public static void enter(String className, String methodName, int lineNo)
   {

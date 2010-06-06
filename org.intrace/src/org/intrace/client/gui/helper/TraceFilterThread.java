@@ -69,7 +69,12 @@ public class TraceFilterThread implements Runnable
   /**
    * Flag to signal that trace should be cleared
    */
-  private Pattern tracePattern = NO_PATTERN;
+  private Pattern tracePattern = null;
+
+  /**
+   * System trace is never filtered out
+   */
+  public static final String SYSTEM_TRACE_PREFIX = "***";
 
   /**
    * cTor
@@ -115,9 +120,23 @@ public class TraceFilterThread implements Runnable
       {
         try
         {
+          Pattern pattern = tracePattern;
+          if (pattern != null)
+          {
+            tracePattern = null;
+            applyPattern(pattern);
+          }
+
+          if (clearTrace)
+          {
+            clearTrace = false;
+            traceLines.clear();
+            callback.setText("");
+          }
+
           String newTraceLine = newTraceLines.take();
           traceLines.add(newTraceLine);
-          if (newTraceLine.startsWith("***")
+          if (newTraceLine.startsWith("***") || (tracePattern == null)
               || tracePattern.matcher(newTraceLine).matches())
           {
             callback.appendText(newTraceLine);
@@ -125,20 +144,7 @@ public class TraceFilterThread implements Runnable
         }
         catch (InterruptedException ex)
         {
-          boolean seenPattern = false;
-          Pattern pattern = tracePattern;
-          if (pattern != null)
-          {
-            seenPattern = true;
-            applyPattern(pattern);
-          }
-
-          if (clearTrace)
-          {
-            traceLines.clear();
-            callback.setText("");
-          }
-          else if (!seenPattern)
+          if ((tracePattern == null) && !clearTrace)
           {
             // Time to quit
             break;
@@ -163,8 +169,8 @@ public class TraceFilterThread implements Runnable
     {
       for (String traceLine : traceLines)
       {
-        if (traceLine.startsWith("***") || (pattern == NO_PATTERN)
-            || pattern.matcher(traceLine).matches())
+        if (traceLine.startsWith(SYSTEM_TRACE_PREFIX)
+            || (pattern == NO_PATTERN) || pattern.matcher(traceLine).matches())
         {
           traceText.append(traceLine);
         }

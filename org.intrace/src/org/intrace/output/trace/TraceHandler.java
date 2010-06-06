@@ -2,7 +2,9 @@ package org.intrace.output.trace;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 
 import org.intrace.output.AgentHelper;
@@ -17,7 +19,11 @@ public class TraceHandler implements IInstrumentationHandler
   private boolean branchTrace = false;
   private boolean argTrace = false;
 
-  final TraceSettings traceSettings = new TraceSettings("");
+  private static boolean stdOut = true;
+  private static boolean fileOut = false;
+  private static boolean netOut = false;
+
+  private static final TraceSettings traceSettings = new TraceSettings("");
 
   public String getResponse(String args)
   {
@@ -29,7 +35,13 @@ public class TraceHandler implements IInstrumentationHandler
         || (oldSettings.isBranchTraceEnabled() != traceSettings
                                                                .isBranchTraceEnabled())
         || (oldSettings.isArgTraceEnabled() != traceSettings
-                                                            .isArgTraceEnabled()))
+                                                            .isArgTraceEnabled())
+        || (oldSettings.isStdoutTraceOutputEnabled() != traceSettings
+                                                                     .isStdoutTraceOutputEnabled())
+        || (oldSettings.isFileTraceOutputEnabled() != traceSettings
+                                                                   .isFileTraceOutputEnabled())
+        || (oldSettings.isNetTraceOutputEnabled() != traceSettings
+                                                                  .isNetTraceOutputEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -37,6 +49,10 @@ public class TraceHandler implements IInstrumentationHandler
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
+
+    stdOut = traceSettings.isStdoutTraceOutputEnabled();
+    fileOut = traceSettings.isFileTraceOutputEnabled();
+    netOut = traceSettings.isNetTraceOutputEnabled();
 
     return null;
   }
@@ -51,36 +67,39 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + byteArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + byteArg);
     }
   }
 
-  public void val(String desc, String className, String methodName, byte[] byteArrayArg)
+  public void val(String desc, String className, String methodName,
+                  byte[] byteArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(byteArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(byteArrayArg));
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, short shortArg)
+  public void val(String desc, String className, String methodName,
+                  short shortArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + shortArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + shortArg);
     }
   }
 
-  public void val(String desc, String className, String methodName, short[] shortArrayArg)
+  public void val(String desc, String className, String methodName,
+                  short[] shortArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(shortArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(shortArrayArg));
     }
   }
 
@@ -89,18 +108,19 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper
-                 .writeOutput(className + ":" + methodName + ": " + desc + ": " + intArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + intArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, int[] intArrayArg)
+  public void val(String desc, String className, String methodName,
+                  int[] intArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(intArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(intArrayArg));
     }
   }
 
@@ -109,78 +129,85 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + longArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + longArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, long[] longArrayArg)
+  public void val(String desc, String className, String methodName,
+                  long[] longArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(longArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(longArrayArg));
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float floatArg)
+  public void val(String desc, String className, String methodName,
+                  float floatArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + floatArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + floatArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float[] floatArrayArg)
+  public void val(String desc, String className, String methodName,
+                  float[] floatArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(floatArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(floatArrayArg));
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double doubleArg)
+  public void val(String desc, String className, String methodName,
+                  double doubleArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + doubleArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + doubleArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double[] doubleArrayArg)
+  public void val(String desc, String className, String methodName,
+                  double[] doubleArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(doubleArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(doubleArrayArg));
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean boolArg)
+  public void val(String desc, String className, String methodName,
+                  boolean boolArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + boolArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + boolArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean[] boolArrayArg)
+  public void val(String desc, String className, String methodName,
+                  boolean[] boolArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(boolArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(boolArrayArg));
     }
   }
 
@@ -189,60 +216,67 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + charArg);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + charArg);
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, char[] charArrayArg)
+  public void val(String desc, String className, String methodName,
+                  char[] charArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.toString(charArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.toString(charArrayArg));
     }
   }
 
   @Override
-  public void val(String desc, String className, String methodName, Object objArg)
+  public void val(String desc, String className, String methodName,
+                  Object objArg)
   {
     // Array return values pass through this arm so we must do something
     // a bit special - use Arrays.deepToString and discard the surrounding
     // [] that we add.
     if (argTrace)
     {
-      String objStr = Arrays.deepToString(new Object[] {objArg});
+      String objStr = Arrays.deepToString(new Object[]
+      { objArg });
       objStr = objStr.substring(1, objStr.length() - 1);
-      AgentHelper
-                 .writeOutput(className + ":" + methodName + ": " + desc + ": " + objStr);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + objStr);
     }
   }
 
-  public void val(String desc, String className, String methodName, Object[] objArrayArg)
+  public void val(String desc, String className, String methodName,
+                  Object[] objArrayArg)
   {
     if (argTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": " + desc + ": "
-                              + Arrays.deepToString(objArrayArg));
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+                                    + ": " + Arrays.deepToString(objArrayArg));
     }
   }
-  
+
   @Override
   public void branch(String className, String methodName, int lineNo)
   {
     if (branchTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": /:" + lineNo);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": /:"
+                                    + lineNo);
     }
   }
 
-  public void caught(String className, String methodName, int lineNo, Throwable throwable)
+  public void caught(String className, String methodName, int lineNo,
+                     Throwable throwable)
   {
     if (branchTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ":CaughtException:" + lineNo + ": "
-                              + throwableToString(throwable));
+      TraceHandler.writeTraceOutput(className + ":" + methodName
+                                    + ":CaughtException:" + lineNo + ": "
+                                    + throwableToString(throwable));
     }
   }
 
@@ -268,7 +302,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": {:" + lineNo);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": {:"
+                                    + lineNo);
     }
   }
 
@@ -277,7 +312,48 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      AgentHelper.writeOutput(className + ":" + methodName + ": }:" + lineNo);
+      TraceHandler.writeTraceOutput(className + ":" + methodName + ": }:"
+                                    + lineNo);
     }
+  }
+
+  /**
+   * Write output to zero or more of the following.
+   * <ul>
+   * <li>StdOut
+   * <li>FileOut
+   * <li>NetworkOut
+   * </ul>
+   * 
+   * @param xiOutput
+   */
+  public static void writeTraceOutput(String xiOutput)
+  {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+    long threadID = Thread.currentThread().getId();
+    String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
+                         + "]:" + xiOutput;
+    if (stdOut)
+    {
+      System.out.println(traceString);
+    }
+
+    if (fileOut)
+    {
+      writeFileTrace(traceString);
+    }
+
+    if (netOut)
+    {
+      AgentHelper.writeDataOutput(traceString);
+    }
+  }
+
+  public static synchronized void writeFileTrace(String traceString)
+  {
+    PrintWriter outputWriter;
+    outputWriter = traceSettings.getFileTraceWriter();
+    outputWriter.println(traceString);
+    outputWriter.flush();
   }
 }
