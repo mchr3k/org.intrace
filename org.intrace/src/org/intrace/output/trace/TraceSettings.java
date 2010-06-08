@@ -116,6 +116,7 @@ public class TraceSettings
     }
     else if (arg.equals(TraceConfigConstants.NET_OUT + "false"))
     {
+      System.setProperty("NET", "OFF");
       netTraceOutputEnabled = false;
     }
   }

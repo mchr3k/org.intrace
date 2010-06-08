@@ -11,14 +11,14 @@ public class TraceExample
    */
   public static void main(String[] args) throws Exception
   {
-    otherMain("123");
+    otherMain(args[0]);
   }
 
   public static void otherMain(String arg) throws Exception
   {
     while (true)
     {
-      Thread.sleep(1000 * 5);
+      Thread.sleep(Long.parseLong(arg));
       InnerTestClass.foo();
       workMethod("foobar");
     }
@@ -28,8 +28,8 @@ public class TraceExample
   {
     long currentTime = System.currentTimeMillis();
     System.setProperty("a", foo);
-    System.out.println(exceptionMethod());
-    System.out.println(intArrayMethod(new int[]
+    System.setProperty("foo", exceptionMethod());
+    System.setProperty("foo", ": " + intArrayMethod(new int[]
     { 1, 2, 3 }));
     if ((currentTime % 2) == 0)
     {

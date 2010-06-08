@@ -688,7 +688,7 @@ public class TraceWindow
         {
           if (sWindow.isDisposed())
             return;
-          sWindow.getDisplay().asyncExec(new Runnable()
+          sWindow.getDisplay().syncExec(new Runnable()
           {
             @Override
             public void run()
@@ -703,7 +703,7 @@ public class TraceWindow
         {
           if (sWindow.isDisposed())
             return;
-          sWindow.getDisplay().asyncExec(new Runnable()
+          sWindow.getDisplay().syncExec(new Runnable()
           {
             @Override
             public void run()
@@ -897,8 +897,7 @@ public class TraceWindow
       catch (IOException ex)
       {
         textOutputTab.filterThread
-                                  .addTraceLine(TraceFilterThread.SYSTEM_TRACE_PREFIX
-                                                + " Failed to setup network trace: "
+                                  .addSystemTraceLine("Failed to setup network trace: "
                                                 + ex.toString());
       }
     }
@@ -935,8 +934,7 @@ public class TraceWindow
         if (modifiedClasses.length() <= 2)
         {
           textOutputTab.filterThread
-                                    .addTraceLine(TraceFilterThread.SYSTEM_TRACE_PREFIX
-                                                  + " No modified classes");
+                                    .addSystemTraceLine("No modified classes");
         }
         else
         {
@@ -947,8 +945,7 @@ public class TraceWindow
           if (modifiedClasses.indexOf(",") == -1)
           {
             textOutputTab.filterThread
-                                      .addTraceLine(TraceFilterThread.SYSTEM_TRACE_PREFIX
-                                                    + " Modified: "
+                                      .addSystemTraceLine("Modified: "
                                                     + modifiedClasses);
           }
           else
@@ -957,8 +954,7 @@ public class TraceWindow
             for (String className : classNames)
             {
               textOutputTab.filterThread
-                                        .addTraceLine(TraceFilterThread.SYSTEM_TRACE_PREFIX
-                                                      + " Modified: "
+                                        .addSystemTraceLine("Modified: "
                                                       + (className != null ? className
                                                                                       .trim()
                                                                           : "null"));
@@ -1165,8 +1161,7 @@ public class TraceWindow
         public void run()
         {
           textOutputTab.filterThread
-                                    .addTraceLine(TraceFilterThread.SYSTEM_TRACE_PREFIX
-                                                  + " Latest Settings Received");
+                                    .addSystemTraceLine("Latest Settings Received");
           settingsData = new ParsedSettingsData(settingsMap);
           connectionState = ConnectState.CONNECTED;
           updateUIStateSameThread();

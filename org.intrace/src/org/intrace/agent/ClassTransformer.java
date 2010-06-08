@@ -177,7 +177,8 @@ public class ClassTransformer implements ClassFileTransformer
     }
 
     // Don't modify a class from a JAR file unless this is allowed
-    CodeSource codeSource = protectionDomain.getCodeSource();
+    CodeSource codeSource = ((protectionDomain != null) ? 
+                              protectionDomain.getCodeSource() : null);
     if (!settings.allowJarsToBeTraced() && (codeSource != null)
         && codeSource.getLocation().getPath().endsWith(".jar"))
     {

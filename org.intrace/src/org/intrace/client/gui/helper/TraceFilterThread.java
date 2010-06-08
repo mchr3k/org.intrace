@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
 
 /**
@@ -34,6 +35,11 @@ public class TraceFilterThread implements Runnable
    * Queue of new unprocessed trace lines
    */
   private final BlockingQueue<String> newTraceLines = new LinkedBlockingQueue<String>();
+  
+  /**
+   * Semaphore controlling how many trace line can be added
+   */
+  private final Semaphore traceLineSemaphore = new Semaphore(5);
 
   /**
    * List of trace lines saved by this thread from the newTraceLines
@@ -74,7 +80,7 @@ public class TraceFilterThread implements Runnable
   /**
    * System trace is never filtered out
    */
-  public static final String SYSTEM_TRACE_PREFIX = "***";
+  private static final String SYSTEM_TRACE_PREFIX = "***";
 
   /**
    * cTor
@@ -94,57 +100,103 @@ public class TraceFilterThread implements Runnable
 
   public void addTraceLine(String traceLine)
   {
-    newTraceLines.add(traceLine + "\r\n");
+    try
+    {
+      traceLineSemaphore.acquire();
+      newTraceLines.add(traceLine + "\r\n");
+    } catch (InterruptedException e)
+    {
+      // Throw away
+    }
+    // We don't release the semaphore - the thread does so
+    // once it is happy to allow more trace lines in
+  }
+  
+  public void addSystemTraceLine(String traceLine)
+  {
+    newTraceLines.add(SYSTEM_TRACE_PREFIX + " " + traceLine + "\r\n");
   }
 
   public void applyFilter(Pattern filter,
                           TraceFilterProgressHandler progressCallback)
   {
     this.progressCallback = progressCallback;
-    tracePattern = filter;
+    setTracePattern(filter);
     thisThread.interrupt();
   }
-
+ 
+  private synchronized void setTracePattern(Pattern filter)
+  {
+    tracePattern = filter;
+  }
+  
+  private synchronized Pattern getTracePattern()
+  {
+    return tracePattern;
+  }
+  
   public void clearTrace()
   {
-    clearTrace = true;
+    setClearTrace();
     thisThread.interrupt();
+  }
+  
+  private synchronized void setClearTrace()
+  {
+    clearTrace = true;
+  }
+  
+  private synchronized boolean getClearTrace()
+  {
+    return clearTrace;
   }
 
   @Override
   public void run()
   {
+    boolean doClearTrace = false;
+    Pattern applyPattern = null;
     try
     {
       while (true)
       {
         try
         {
-          Pattern pattern = tracePattern;
-          if (pattern != null)
+          if (applyPattern != null)
           {
+            applyPattern(applyPattern);
+            applyPattern = null;
             tracePattern = null;
-            applyPattern(pattern);
           }
 
-          if (clearTrace)
+          if (doClearTrace)
           {
+            doClearTrace = false;
             clearTrace = false;
             traceLines.clear();
             callback.setText("");
           }
 
           String newTraceLine = newTraceLines.take();
+          
+          if (!newTraceLine.startsWith(SYSTEM_TRACE_PREFIX))
+          {
+            traceLineSemaphore.release();
+          }
+          
           traceLines.add(newTraceLine);
-          if (newTraceLine.startsWith("***") || (tracePattern == null)
-              || tracePattern.matcher(newTraceLine).matches())
+          if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) || 
+              (tracePattern == null) || 
+              tracePattern.matcher(newTraceLine).matches())
           {
             callback.appendText(newTraceLine);
           }
         }
         catch (InterruptedException ex)
         {
-          if ((tracePattern == null) && !clearTrace)
+          doClearTrace = getClearTrace();
+          applyPattern = getTracePattern();
+          if ((applyPattern == null) && !doClearTrace)
           {
             // Time to quit
             break;
@@ -152,10 +204,11 @@ public class TraceFilterThread implements Runnable
         }
       }
     }
-    catch (Exception ex)
+    catch (Throwable ex)
     {
       ex.printStackTrace();
     }
+    System.out.println("Filter thread quitting");
   }
 
   private void applyPattern(Pattern pattern)

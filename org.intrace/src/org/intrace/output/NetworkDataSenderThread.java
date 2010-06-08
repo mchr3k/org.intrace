@@ -11,10 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 public class NetworkDataSenderThread implements Runnable
 {
+  private boolean alive = true;
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(
-                                                                                     100);
+                                                                                     5);
   private Set<NetworkDataSenderThread> set;
 
   public NetworkDataSenderThread(ServerSocket networkSocket)
@@ -28,7 +29,7 @@ public class NetworkDataSenderThread implements Runnable
 
     Thread networkThread = new Thread(this);
     networkThread.setDaemon(true);
-    networkThread.setName("Network Data Sender");
+    networkThread.setName(Thread.currentThread().getName() + " - Network Data Sender");
     networkThread.start();
   }
 
@@ -36,6 +37,7 @@ public class NetworkDataSenderThread implements Runnable
   {
     try
     {
+      alive = false;
       networkSocket.close();
       if (traceSendingSocket != null)
       {
@@ -54,7 +56,10 @@ public class NetworkDataSenderThread implements Runnable
   {
     try
     {
-      outgoingData.put(data);
+      while (alive && !outgoingData.offer(data, 1, TimeUnit.SECONDS))
+      {
+        // Do nothing - work is done above
+      }
     }
     catch (InterruptedException e)
     {

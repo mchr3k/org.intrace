@@ -19,9 +19,9 @@ public class TraceHandler implements IInstrumentationHandler
   private boolean branchTrace = false;
   private boolean argTrace = false;
 
-  private static boolean stdOut = true;
-  private static boolean fileOut = false;
-  private static boolean netOut = false;
+  private boolean stdOut = true;
+  private boolean fileOut = false;
+  private boolean netOut = false;
 
   private static final TraceSettings traceSettings = new TraceSettings("");
 
@@ -67,7 +67,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + byteArg);
     }
   }
@@ -77,7 +77,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(byteArrayArg));
     }
   }
@@ -88,7 +88,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + shortArg);
     }
   }
@@ -98,7 +98,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(shortArrayArg));
     }
   }
@@ -108,7 +108,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + intArg);
     }
   }
@@ -119,7 +119,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(intArrayArg));
     }
   }
@@ -129,7 +129,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + longArg);
     }
   }
@@ -140,7 +140,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(longArrayArg));
     }
   }
@@ -151,7 +151,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + floatArg);
     }
   }
@@ -162,7 +162,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(floatArrayArg));
     }
   }
@@ -173,7 +173,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + doubleArg);
     }
   }
@@ -184,7 +184,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(doubleArrayArg));
     }
   }
@@ -195,7 +195,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + boolArg);
     }
   }
@@ -206,7 +206,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(boolArrayArg));
     }
   }
@@ -216,7 +216,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + charArg);
     }
   }
@@ -227,7 +227,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.toString(charArrayArg));
     }
   }
@@ -244,7 +244,7 @@ public class TraceHandler implements IInstrumentationHandler
       String objStr = Arrays.deepToString(new Object[]
       { objArg });
       objStr = objStr.substring(1, objStr.length() - 1);
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + objStr);
     }
   }
@@ -254,7 +254,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": " + desc
+      writeTraceOutput(className + ":" + methodName + ": " + desc
                                     + ": " + Arrays.deepToString(objArrayArg));
     }
   }
@@ -264,7 +264,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (branchTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": /:"
+      writeTraceOutput(className + ":" + methodName + ": /:"
                                     + lineNo);
     }
   }
@@ -274,7 +274,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (branchTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName
+      writeTraceOutput(className + ":" + methodName
                                     + ":CaughtException:" + lineNo + ": "
                                     + throwableToString(throwable));
     }
@@ -302,7 +302,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": {:"
+      writeTraceOutput(className + ":" + methodName + ": {:"
                                     + lineNo);
     }
   }
@@ -312,7 +312,7 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      TraceHandler.writeTraceOutput(className + ":" + methodName + ": }:"
+      writeTraceOutput(className + ":" + methodName + ": }:"
                                     + lineNo);
     }
   }
@@ -327,7 +327,7 @@ public class TraceHandler implements IInstrumentationHandler
    * 
    * @param xiOutput
    */
-  public static void writeTraceOutput(String xiOutput)
+  public void writeTraceOutput(String xiOutput)
   {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
     long threadID = Thread.currentThread().getId();
@@ -345,11 +345,15 @@ public class TraceHandler implements IInstrumentationHandler
 
     if (netOut)
     {
+      if (System.getProperty("NET") != null)
+      {
+        System.err.println("NETOUT");
+      }
       AgentHelper.writeDataOutput(traceString);
     }
   }
 
-  public static synchronized void writeFileTrace(String traceString)
+  public synchronized void writeFileTrace(String traceString)
   {
     PrintWriter outputWriter;
     outputWriter = traceSettings.getFileTraceWriter();

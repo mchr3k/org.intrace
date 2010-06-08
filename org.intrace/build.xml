@@ -48,7 +48,58 @@
     </javac>
   </target>
 
+  <target name="jar" description="Create Jars" depends="build" >
 
+    <mkdir dir="./build/jars/" />
+
+    <!-- Trace Agent -->
+    <jarjar jarfile="./build/jars/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+      <fileset dir="./build/classes" includes="**/agent/**/*.class" />
+      <fileset dir="./build/classes" includes="**/output/**/*.class" />
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <zipfileset src="./lib/asm-debug-all-3.3.jar"/>
+      <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
+    </jarjar>
+
+    <!-- Test Trace Agent -->
+    <jar destfile="./build/jars/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    </jar>
+
+    <!-- CUI Trace Client -->
+    <jar destfile="./build/jars/cuitraceclient.jar" compress="false">
+      <manifest>
+        <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
+        <attribute name="Class-Path" value="." />
+      </manifest>
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/cui/*.class" />
+    </jar>
+
+    <!-- GUI Trace Client - Windows -->
+    <jar destfile="./build/jars/guitraceclient-win.jar" filesetmanifest="mergewithoutmain">
+      <manifest>
+        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
+        <attribute name="Class-Path" value="." />
+      </manifest>
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/swt-windows-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
+    </jar>
+
+    <!-- GUI Trace Client - Linux -->
+    <jar destfile="./build/jars/guitraceclient-linux.jar" filesetmanifest="mergewithoutmain">
+      <manifest>
+        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
+        <attribute name="Class-Path" value="." />
+      </manifest>
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/swt-linux-3.5.2.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
+    </jar>
+
+  </target>
 
   <target name="test" description="Run Tests" depends="build" >
     <property name="emma.enabled" value="true" />
@@ -122,77 +173,8 @@
     </emma>
   </target>
 
-  <target name="jar" description="Create Jars" depends="build, test, onlyjar" >
-  </target>
 
-  <target name="onlyjar" depends="build" >
-
-    <mkdir dir="./build/jars/" />
-
-    <!-- Trace Agent -->
-    <jarjar jarfile="./build/jars/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
-      <fileset dir="./build/classes" includes="**/agent/**/*.class" />
-      <fileset dir="./build/classes" includes="**/output/**/*.class" />
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <zipfileset src="./lib/asm-3.2.jar"/>
-      <zipfileset src="./lib/asm-commons-3.2.jar"/>
-      <zipfileset src="./lib/asm-util-3.2.jar"/>
-      <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
-    </jarjar>
-
-    <!-- Test Trace Agent -->
-    <jar destfile="./build/jars/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
-    </jar>
-
-    <!-- CUI Trace Client -->
-    <jar destfile="./build/jars/cuitraceclient.jar" compress="false">
-      <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
-        <attribute name="Class-Path" value="." />
-      </manifest>
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/cui/*.class" />
-    </jar>
-
-    <!-- GUI Trace Client - Windows -->
-    <jar destfile="./build/jars/guitraceclient-win.jar" filesetmanifest="mergewithoutmain">
-      <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
-        <attribute name="Class-Path" value="." />
-      </manifest>
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/swt-windows-3.5.2.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
-    </jar>
-
-    <!-- GUI Trace Client - Linux -->
-    <jar destfile="./build/jars/guitraceclient-linux.jar" filesetmanifest="mergewithoutmain">
-      <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
-        <attribute name="Class-Path" value="." />
-      </manifest>
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/swt-linux-3.5.2.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7-swt.jar" />
-    </jar>
-
-  </target>
-
-
-  <target name="example" depends="jar">
-    <java classname="example.TraceExample" fork="true">
-      <arg value="" />
-      <classpath>
-        <pathelement path="./build/test" />
-      </classpath>
-      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
-    </java>
-  </target>
-
-
-  <target name="findbugs" depends="jar">
+  <target name="findbugs" depends="build">
 
     <mkdir dir="./reports/findbugs" />
 
@@ -215,6 +197,30 @@
       <class location="./reports/findbugs/traceagent_findbugs.jar" />
     </findbugs>
 
+  </target>
+
+  <target name="release" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
+  </target>
+
+
+  <target name="example" depends="jar">
+    <java classname="example.TraceExample" fork="true">
+      <arg value="5000" />
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
+    </java>
+  </target>
+
+  <target name="fastexample" depends="jar">
+    <java classname="example.TraceExample" fork="true">
+      <arg value="0" />
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
+    </java>
   </target>
 
 </project>
