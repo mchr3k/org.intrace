@@ -156,16 +156,17 @@ public class TraceFilterThread implements Runnable
   {
     boolean doClearTrace = false;
     Pattern applyPattern = null;
+    boolean newPattern = false;
     try
     {
       while (true)
       {
         try
         {
-          if (applyPattern != null)
+          if (newPattern)
           {
             applyPattern(applyPattern);
-            applyPattern = null;
+            newPattern = false;
             tracePattern = null;
           }
 
@@ -186,8 +187,8 @@ public class TraceFilterThread implements Runnable
           
           traceLines.add(newTraceLine);
           if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) || 
-              (tracePattern == null) || 
-              tracePattern.matcher(newTraceLine).matches())
+              (applyPattern == null) || 
+              applyPattern.matcher(newTraceLine).matches())
           {
             callback.appendText(newTraceLine);
           }
@@ -195,7 +196,12 @@ public class TraceFilterThread implements Runnable
         catch (InterruptedException ex)
         {
           doClearTrace = getClearTrace();
+          Pattern oldPattern = applyPattern;
           applyPattern = getTracePattern();
+          if (oldPattern != applyPattern)
+          {
+            newPattern = true;
+          }
           if ((applyPattern == null) && !doClearTrace)
           {
             // Time to quit

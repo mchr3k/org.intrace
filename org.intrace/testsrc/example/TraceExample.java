@@ -9,9 +9,17 @@ public class TraceExample
    * @param args
    * @throws Exception
    */
-  public static void main(String[] args) throws Exception
+  public static void main(String[] args)
   {
-    otherMain(args[0]);
+    try
+    {
+      otherMain(args[0]);
+    } 
+    catch (Throwable ex)
+    {
+      // TODO Auto-generated catch block
+      ex.printStackTrace();
+    }
   }
 
   public static void otherMain(String arg) throws Exception

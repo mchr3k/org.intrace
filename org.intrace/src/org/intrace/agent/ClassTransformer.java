@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
@@ -105,7 +104,7 @@ public class ClassTransformer implements ClassFileTransformer
           inst.retransformClasses(loadedClass);
         }
       }
-      catch (UnmodifiableClassException e)
+      catch (Throwable e)
       {
         // Write exception to stdout
         System.err.println("Caught exception when modifying Class: " + 
@@ -176,11 +175,21 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
+    // Don't modify a class for which we don't know the protection domain    
+    if (protectionDomain == null)
+    {
+      if (settings.isVerboseMode())
+      {
+        System.out.println("Ignoring class with no protectionDomain: " + className);
+      }
+      return false;
+    }
+    
     // Don't modify a class from a JAR file unless this is allowed
-    CodeSource codeSource = ((protectionDomain != null) ? 
-                              protectionDomain.getCodeSource() : null);
-    if (!settings.allowJarsToBeTraced() && (codeSource != null)
-        && codeSource.getLocation().getPath().endsWith(".jar"))
+    CodeSource codeSource = protectionDomain.getCodeSource();
+    if (!settings.allowJarsToBeTraced() && 
+        (codeSource != null) && 
+        codeSource.getLocation().getPath().endsWith(".jar"))
     {
       if (settings.isVerboseMode())
       {

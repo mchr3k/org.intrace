@@ -334,7 +334,7 @@ public class InstrumentedClassWriter extends ClassWriter
         else if (xiOpCode == Opcodes.LRETURN)
         {
           mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;L)V");
+          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
         }
         else if (xiOpCode == Opcodes.FRETURN)
         {

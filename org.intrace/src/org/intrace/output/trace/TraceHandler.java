@@ -50,11 +50,41 @@ public class TraceHandler implements IInstrumentationHandler
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
 
-    stdOut = traceSettings.isStdoutTraceOutputEnabled();
-    fileOut = traceSettings.isFileTraceOutputEnabled();
-    netOut = traceSettings.isNetTraceOutputEnabled();
+    setStdOut(traceSettings.isStdoutTraceOutputEnabled());
+    setFileOut(traceSettings.isFileTraceOutputEnabled());
+    setNetOut(traceSettings.isNetTraceOutputEnabled());
 
     return null;
+  }
+
+  private synchronized boolean isStdOut()
+  {
+    return stdOut;
+  }
+
+  private synchronized void setStdOut(boolean stdOut)
+  {
+    this.stdOut = stdOut;
+  }
+
+  private synchronized boolean isFileOut()
+  {
+    return fileOut;
+  }
+
+  private synchronized void setFileOut(boolean fileOut)
+  {
+    this.fileOut = fileOut;
+  }
+
+  private synchronized boolean isNetOut()
+  {
+    return netOut;
+  }
+
+  private synchronized void setNetOut(boolean netOut)
+  {
+    this.netOut = netOut;
   }
 
   public Map<String, String> getSettingsMap()
@@ -333,22 +363,18 @@ public class TraceHandler implements IInstrumentationHandler
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
-    if (stdOut)
+    if (isStdOut())
     {
       System.out.println(traceString);
     }
 
-    if (fileOut)
+    if (isFileOut())
     {
       writeFileTrace(traceString);
     }
 
-    if (netOut)
+    if (isNetOut())
     {
-      if (System.getProperty("NET") != null)
-      {
-        System.err.println("NETOUT");
-      }
       AgentHelper.writeDataOutput(traceString);
     }
   }
