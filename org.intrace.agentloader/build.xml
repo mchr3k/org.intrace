@@ -1,20 +1,40 @@
-<project name="TraceAgent" basedir="." default="help">
+<project name="TraceAgentLoader" basedir="." default="help">
+	
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="./lib/ant-contrib-1.0b3.jar" />
+	
   <target name="help">
     <java classname="org.apache.tools.ant.Main">
       <arg value="-projecthelp" />
     </java>
   </target>
 
-  <target name="build" depends="buildClasses, createJar" />
-
-  <target name="buildClasses" description="Comile classes">
+  <target name="build" description="Comile classes">
     <delete dir="./bin"/>
     <mkdir dir="./bin" />
 
     <javac srcdir="./src" destdir="./bin" debug="true" source="1.6" target="1.6" nowarn="true" />
   </target>
+	
+  <target name="getgitdetails" >
+    <exec executable="git" outputproperty="git.tagstring">
+      <arg value="describe"/>
+    </exec>
+    <exec executable="git" outputproperty="git.revision">
+      <arg value="rev-parse"/>
+      <arg value="HEAD"/>
+    </exec>
+    <if>
+      <contains string="${git.tagstring}" substring="cannot"/>
+      <then>
+        <property name="git.tag" value="none"/>
+      </then>
+      <else>
+        <property name="git.tag" value="${git.tagstring}"/>
+      </else>
+    </if>
+  </target>
 
-  <target name="createJar" description="Create the Agent Jar">
+  <target name="jar" description="Create the Agent Jar" depends="build,getgitdetails">
     <mkdir dir="./built/" />
     
     <!-- CUI Agent Loader -->
@@ -22,6 +42,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.agentloader.AgentLoader" />
         <attribute name="Class-Path" value=". ./tools.jar" />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />      	
       </manifest>
       <fileset dir="./bin" includes="**/*.class" />
     </jar>

@@ -2,6 +2,7 @@
 */bin/*
 */reports/*
 */build/*
+*/built/*
 */genbin/*
 asm3.2_*
 asm_patch*
