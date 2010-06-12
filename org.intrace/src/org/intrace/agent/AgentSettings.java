@@ -8,12 +8,13 @@ import org.intrace.shared.AgentConfigConstants;
 
 /**
  * Args Format: "[arg1[arg2[arg3"
- *
+ * 
  * where argx is of the form value-parameter
  */
 public class AgentSettings
 {
   private Pattern classRegex = Pattern.compile(".*");
+  private Pattern excludeClassRegex = Pattern.compile("^$");
   private boolean instruEnabled = false;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
@@ -27,6 +28,7 @@ public class AgentSettings
   public AgentSettings(AgentSettings oldInstance)
   {
     classRegex = oldInstance.getClassRegex();
+    excludeClassRegex = oldInstance.getExcludeClassRegex();
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
@@ -91,11 +93,24 @@ public class AgentSettings
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
       classRegex = Pattern.compile(classRegexStr);
     }
+    else if (arg.startsWith(AgentConfigConstants.EXCLUDE_CLASS_REGEX))
+    {
+      String classExcludeRegexStr = arg
+                                       .replace(
+                                                AgentConfigConstants.EXCLUDE_CLASS_REGEX,
+                                                "");
+      excludeClassRegex = Pattern.compile(classExcludeRegexStr);
+    }
   }
 
   public Pattern getClassRegex()
   {
     return classRegex;
+  }
+
+  public Pattern getExcludeClassRegex()
+  {
+    return excludeClassRegex;
   }
 
   public boolean isInstrumentationEnabled()

@@ -69,15 +69,25 @@ public class ClassTransformer implements ClassFileTransformer
   private byte[] getInstrumentedClassBytes(String xiClassName,
                                            byte[] classfileBuffer)
   {
-    ClassReader cr = new ClassReader(classfileBuffer);
-    ClassAnalysis analysis = new ClassAnalysis();
-    cr.accept(analysis, 0);
+    try
+    {
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassAnalysis analysis = new ClassAnalysis();
+      cr.accept(analysis, 0);
 
-    InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
-                                                                 cr, analysis);
-    cr.accept(writer, 0);
+      InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
+                                                                   cr, analysis);
+      cr.accept(writer, 0);
 
-    return writer.toByteArray();
+      return writer.toByteArray();
+    }
+    catch (Throwable th)
+    {
+      System.err.println("Caught Throwable when trying to instrument: "
+                         + xiClassName);
+      th.printStackTrace();
+      return null;
+    }
   }
 
   /**
@@ -107,8 +117,8 @@ public class ClassTransformer implements ClassFileTransformer
       catch (Throwable e)
       {
         // Write exception to stdout
-        System.err.println("Caught exception when modifying Class: " + 
-                           loadedClass.getCanonicalName());
+        System.err.println("Caught exception when modifying Class: "
+                           + loadedClass.getCanonicalName());
         e.printStackTrace();
       }
     }
@@ -163,6 +173,18 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
+    // Don't modify classes which match the exclude regex
+    if ((settings.getExcludeClassRegex() == null)
+        || !settings.getExcludeClassRegex().matcher(className).matches())
+    {
+      if (settings.isVerboseMode())
+      {
+        System.out.println("Ignoring class matching the active exclude regex: "
+                           + className);
+      }
+      return false;
+    }
+
     // Don't modify classes which fail to match the regex
     if ((settings.getClassRegex() == null)
         || !settings.getClassRegex().matcher(className).matches())
@@ -175,21 +197,21 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
-    // Don't modify a class for which we don't know the protection domain    
+    // Don't modify a class for which we don't know the protection domain
     if (protectionDomain == null)
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class with no protectionDomain: " + className);
+        System.out.println("Ignoring class with no protectionDomain: "
+                           + className);
       }
       return false;
     }
-    
+
     // Don't modify a class from a JAR file unless this is allowed
     CodeSource codeSource = protectionDomain.getCodeSource();
-    if (!settings.allowJarsToBeTraced() && 
-        (codeSource != null) && 
-        codeSource.getLocation().getPath().endsWith(".jar"))
+    if (!settings.allowJarsToBeTraced() && (codeSource != null)
+        && codeSource.getLocation().getPath().endsWith(".jar"))
     {
       if (settings.isVerboseMode())
       {
