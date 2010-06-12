@@ -175,7 +175,7 @@ public class ClassTransformer implements ClassFileTransformer
 
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
-        || !settings.getExcludeClassRegex().matcher(className).matches())
+        || settings.getExcludeClassRegex().matcher(className).matches())
     {
       if (settings.isVerboseMode())
       {

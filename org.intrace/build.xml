@@ -10,6 +10,7 @@
     <fileset dir="./lib/findbugs" includes="*.jar" />
   </path>
 
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="./lib/ant-contrib-1.0b3.jar" />
   <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
     <classpath refid="findbugs.lib"/>
@@ -48,12 +49,41 @@
     </javac>
   </target>
 
-  <target name="jar" description="Create Jars" depends="build" >
+
+
+  <target name="getgitdetails" >
+    <exec executable="git" outputproperty="git.tagstring">
+      <arg value="describe"/>
+    </exec>
+    <exec executable="git" outputproperty="git.revision">
+      <arg value="rev-parse"/>
+      <arg value="HEAD"/>
+    </exec>
+    <if>
+      <contains string="${git.tagstring}" substring="cannot"/>
+      <then>
+        <property name="git.tag" value="none"/>
+      </then>
+      <else>
+        <property name="git.tag" value="${git.tagstring}"/>
+      </else>
+    </if>
+  </target>
+
+
+  <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
     <mkdir dir="./build/jars/" />
 
     <!-- Trace Agent -->
-    <jarjar jarfile="./build/jars/traceagent.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    <jarjar jarfile="./build/jars/traceagent.jar" compress="false">
+      <manifest>
+        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Can-Redefine-Classes" value="true" />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />
+      </manifest>      
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
@@ -62,7 +92,14 @@
     </jarjar>
 
     <!-- Test Trace Agent -->
-    <jar destfile="./build/jars/traceagent_test.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    <jar destfile="./build/jars/traceagent_test.jar" compress="false">
+      <manifest>
+        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Can-Redefine-Classes" value="true" />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />
+      </manifest>     
     </jar>
 
     <!-- CUI Trace Client -->
@@ -70,6 +107,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
         <attribute name="Class-Path" value="." />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/cui/*.class" />
@@ -80,6 +119,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
@@ -92,6 +133,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
+        <attribute name="Git.Revision" value="${git.revision}" />
+        <attribute name="Git.Tag" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
@@ -179,7 +222,7 @@
     <mkdir dir="./reports/findbugs" />
 
     <!-- Build Findbugs Trace Agent (Don't include ASM classes) -->
-    <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false" manifest="conf/META-INF/MANIFEST.MF">
+    <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
