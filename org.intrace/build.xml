@@ -176,7 +176,7 @@
       />
     </emma>
 
-    <junit printsummary="yes" haltonfailure="no">
+    <junit printsummary="yes" haltonfailure="yes">
       <classpath>
         <pathelement location="./build/classes_instr"/>
         <pathelement location="./build/test"/>
@@ -234,8 +234,8 @@
         excludeFilter="./conf/findbugs_exclude.xml"
         jvmargs="-Xmx256m">
       <auxClasspath>
-      <fileset dir="./lib" includes="*.jar" />
-    </auxClasspath>
+        <fileset dir="./lib" includes="*.jar" />
+      </auxClasspath>
       <sourcePath path="./src" />
       <class location="./reports/findbugs/traceagent_findbugs.jar" />
     </findbugs>
