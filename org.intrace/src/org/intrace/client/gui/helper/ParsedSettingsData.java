@@ -9,6 +9,7 @@ import org.intrace.shared.TraceConfigConstants;
 public class ParsedSettingsData
 {
   public final String classRegex;
+  public final String classExcludeRegex;
   public final boolean instrEnabled;
   public final boolean saveTracedClassfiles;
   public final boolean verboseMode;
@@ -28,6 +29,8 @@ public class ParsedSettingsData
     this.settingsMap = settingsMap;
 
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
+    classExcludeRegex = settingsMap
+                                   .get(AgentConfigConstants.EXCLUDE_CLASS_REGEX);
 
     if ("true".equals(settingsMap.get(AgentConfigConstants.INSTRU_ENABLED)))
     {

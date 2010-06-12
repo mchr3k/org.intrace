@@ -50,7 +50,10 @@ public class NetworkDataReceiverThread implements Runnable
           String traceLine = (String) data;
           if (!"NOOP".equals(traceLine))
           {
-            traceThread.addTraceLine(traceLine);
+            if (window.getSettings().netOutEnabled)
+            {
+              traceThread.addTraceLine(traceLine);
+            }
           }
         }
         else if (data instanceof Map<?, ?>)

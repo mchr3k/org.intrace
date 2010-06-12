@@ -11,6 +11,7 @@ public class TraceConfigConstants
   public static final String STD_OUT = "[out-stdout-";
   public static final String FILE_OUT = "[out-file-";
   public static final String NET_OUT = "[out-network-";
+  public static final String NET_FLUSH = "**FLUSH**";
   public static final Set<String> COMMANDS = new HashSet<String>();
   static
   {

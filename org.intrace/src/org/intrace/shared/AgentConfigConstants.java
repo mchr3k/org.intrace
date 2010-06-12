@@ -6,6 +6,7 @@ import java.util.Set;
 public class AgentConfigConstants
 {
   public static final String CLASS_REGEX = "[regex-";
+  public static final String EXCLUDE_CLASS_REGEX = "[exclude-regex-";
   public static final String INSTRU_ENABLED = "[instru-";
   public static final String SAVE_TRACED_CLASSFILES = "[saveinstru-";
   public static final String VERBOSE_MODE = "[verbose-";

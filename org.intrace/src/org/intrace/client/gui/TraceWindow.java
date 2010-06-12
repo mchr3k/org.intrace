@@ -43,6 +43,8 @@ public class TraceWindow
 {
   public void open()
   {
+    placeDialogInCenter(sWindow.getDisplay().getPrimaryMonitor().getBounds(),
+                        sWindow);
     sWindow.open();
     Display display = Display.getDefault();
     while (!sWindow.isDisposed())
@@ -286,15 +288,39 @@ public class TraceWindow
                                                                            helpText,
                                                                            new PatternInputCallback()
                                                                            {
+                                                                             private String includePattern = null;
+                                                                             private String excludePattern = null;
+
                                                                              @Override
-                                                                             public void setPattern(
-                                                                                                    String newPattern)
+                                                                             public void setIncludePattern(
+                                                                                                           String newIncludePattern)
                                                                              {
-                                                                               setRegex(newPattern);
+                                                                               includePattern = newIncludePattern;
+                                                                               savePatterns();
+                                                                             }
+
+                                                                             @Override
+                                                                             public void setExcludePattern(
+                                                                                                           String newExcludePattern)
+                                                                             {
+                                                                               excludePattern = newExcludePattern;
+                                                                               savePatterns();
+                                                                             }
+
+                                                                             private void savePatterns()
+                                                                             {
+                                                                               if ((includePattern != null)
+                                                                                   && (excludePattern != null))
+                                                                               {
+                                                                                 setRegex(
+                                                                                          includePattern,
+                                                                                          excludePattern);
+                                                                               }
                                                                              }
                                                                            },
-                                                                           settingsData.classRegex);
-                    placeDialogInCenter(sWindow, regexInput.sWindow);
+                                                                           settingsData.classRegex,
+                                                                           settingsData.classExcludeRegex);
+                    placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
                   }
                 });
       listClasses
@@ -500,14 +526,24 @@ public class TraceWindow
                                                                                new PatternInputCallback()
                                                                                {
                                                                                  @Override
-                                                                                 public void setPattern(
-                                                                                                        String newPattern)
+                                                                                 public void setIncludePattern(
+                                                                                                               String newPattern)
                                                                                  {
                                                                                    setCallersRegex(newPattern);
                                                                                  }
+
+                                                                                 @Override
+                                                                                 public void setExcludePattern(
+                                                                                                               String newExcludePattern)
+                                                                                 {
+                                                                                   // Do
+                                                                                   // nothing
+                                                                                 }
                                                                                },
-                                                                               "");
-                        placeDialogInCenter(sWindow, regexInput.sWindow);
+                                                                               "",
+                                                                               null);
+                        placeDialogInCenter(sWindow.getBounds(),
+                                            regexInput.sWindow);
                       }
                     });
     }
@@ -527,6 +563,9 @@ public class TraceWindow
   {
     final Text textOutput;
     final TraceFilterThread filterThread;
+    final Button textFilter;
+    final ProgressBar pBar;
+    final Button cancelButton;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
@@ -541,15 +580,15 @@ public class TraceWindow
       clearText.setText(ClientStrings.CLEAR_TEXT);
       clearText.setLayoutData("grow");
 
-      final Button textFilter = new Button(composite, SWT.PUSH);
+      textFilter = new Button(composite, SWT.PUSH);
       textFilter.setText(ClientStrings.FILTER_TEXT);
       textFilter.setLayoutData("grow");
 
-      final ProgressBar pBar = new ProgressBar(composite, SWT.NORMAL);
+      pBar = new ProgressBar(composite, SWT.NORMAL);
       pBar.setLayoutData("grow");
       pBar.setVisible(false);
 
-      final Button cancelButton = new Button(composite, SWT.PUSH);
+      cancelButton = new Button(composite, SWT.PUSH);
       cancelButton.setText(ClientStrings.CANCEL_TEXT);
       cancelButton.setLayoutData("grow,wrap");
       cancelButton.setVisible(false);
@@ -572,7 +611,7 @@ public class TraceWindow
                      @Override
                      public void run()
                      {
-                       filterThread.clearTrace();
+                       filterThread.setClearTrace();
                      }
                    });
                  }
@@ -584,85 +623,29 @@ public class TraceWindow
 
       final PatternInputCallback patternCallback = new PatternInputCallback()
       {
+        private String includePattern = null;
+        private String excludePattern = null;
+
         @Override
-        public void setPattern(String newPattern)
+        public void setIncludePattern(String newIncludePattern)
         {
-          if (newPattern.equals(filterPattern.pattern()))
+          includePattern = newIncludePattern;
+          savePatterns();
+        }
+
+        @Override
+        public void setExcludePattern(String newExcludePattern)
+        {
+          excludePattern = newExcludePattern;
+          savePatterns();
+        }
+
+        private void savePatterns()
+        {
+          if ((includePattern != null) && (excludePattern != null))
           {
-            return;
+            applyPatterns(includePattern, excludePattern);
           }
-          else
-          {
-            oldFilterPattern = filterPattern;
-            if (newPattern.equals(".*") || newPattern.equals(""))
-            {
-              filterPattern = TraceFilterThread.NO_PATTERN;
-            }
-            else
-            {
-              filterPattern = Pattern.compile(newPattern, Pattern.DOTALL);
-            }
-          }
-          if (sWindow.isDisposed())
-            return;
-          sWindow.getDisplay().asyncExec(new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              textFilter.setEnabled(false);
-              pBar.setVisible(true);
-              cancelButton.setVisible(true);
-              final boolean[] filterCancelled = new boolean[]
-              { false };
-
-              final SelectionListener cancelListener = new org.eclipse.swt.events.SelectionAdapter()
-              {
-                @Override
-                public void widgetSelected(SelectionEvent arg0)
-                {
-                  filterCancelled[0] = true;
-                }
-              };
-
-              cancelButton.addSelectionListener(cancelListener);
-
-              final TraceFilterProgressHandler progressHandler = new TraceFilterProgressHandler()
-              {
-                @Override
-                public boolean setProgress(final int percent)
-                {
-                  if (sWindow.isDisposed())
-                    return false;
-                  sWindow.getDisplay().asyncExec(new Runnable()
-                  {
-                    @Override
-                    public void run()
-                    {
-                      if (percent < 100)
-                      {
-                        pBar.setSelection(percent);
-                      }
-                      else
-                      {
-                        pBar.setVisible(false);
-                        cancelButton.setVisible(false);
-                        cancelButton.removeSelectionListener(cancelListener);
-                        textFilter.setEnabled(true);
-                        if (filterCancelled[0])
-                        {
-                          filterPattern = oldFilterPattern;
-                        }
-                      }
-                    }
-                  });
-                  return filterCancelled[0];
-                }
-              };
-
-              filterThread.applyFilter(filterPattern, progressHandler);
-            }
-          });
         }
       };
 
@@ -673,11 +656,15 @@ public class TraceWindow
                   public void widgetSelected(SelectionEvent arg0)
                   {
                     PatternInputWindow regexInput;
-                    regexInput = new PatternInputWindow("Set Text Filter",
+                    regexInput = new PatternInputWindow(
+                                                        "Set Text Filter",
                                                         helpText,
                                                         patternCallback,
-                                                        filterPattern.pattern());
-                    placeDialogInCenter(sWindow, regexInput.sWindow);
+                                                        includeFilterPattern
+                                                                            .pattern(),
+                                                        excludeFilterPattern
+                                                                            .pattern());
+                    placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
                   }
                 });
 
@@ -711,6 +698,119 @@ public class TraceWindow
               textOutput.append(traceText);
             }
           });
+        }
+      });
+    }
+
+    private Pattern getPattern(String patternString)
+    {
+      Pattern retPattern;
+      if (patternString.equals(".*"))
+      {
+        retPattern = TraceFilterThread.MATCH_ALL;
+      }
+      else if (patternString.equals(""))
+      {
+        retPattern = TraceFilterThread.MATCH_NONE;
+      }
+      else
+      {
+        retPattern = Pattern.compile(patternString, Pattern.DOTALL);
+      }
+      return retPattern;
+    }
+
+    private void applyPatterns(String newIncludePattern,
+                               String newExcludePattern)
+    {
+      if (newIncludePattern.equals(includeFilterPattern.pattern())
+          && newExcludePattern.equals(excludeFilterPattern.pattern()))
+      {
+        return;
+      }
+      else
+      {
+        oldIncludeFilterPattern = includeFilterPattern;
+        oldExcludeFilterPattern = excludeFilterPattern;
+
+        includeFilterPattern = getPattern(newIncludePattern);
+        excludeFilterPattern = getPattern(newExcludePattern);
+
+      }
+      if (sWindow.isDisposed())
+        return;
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          textFilter.setEnabled(false);
+          pBar.setVisible(true);
+          cancelButton.setVisible(true);
+          final boolean[] filterCancelled = new boolean[]
+          { false };
+
+          final SelectionListener cancelListener = new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              filterCancelled[0] = true;
+            }
+          };
+
+          cancelButton.addSelectionListener(cancelListener);
+
+          final Pattern newIncludePattern = includeFilterPattern;
+          final Pattern newExcludePattern = excludeFilterPattern;
+
+          final TraceFilterProgressHandler progressHandler = new TraceFilterProgressHandler()
+          {
+            @Override
+            public boolean setProgress(final int percent)
+            {
+              if (sWindow.isDisposed())
+                return false;
+              sWindow.getDisplay().asyncExec(new Runnable()
+              {
+                @Override
+                public void run()
+                {
+                  if (percent < 100)
+                  {
+                    pBar.setSelection(percent);
+                  }
+                  else
+                  {
+                    pBar.setVisible(false);
+                    cancelButton.setVisible(false);
+                    cancelButton.removeSelectionListener(cancelListener);
+                    textFilter.setEnabled(true);
+                    if (filterCancelled[0])
+                    {
+                      includeFilterPattern = oldIncludeFilterPattern;
+                      excludeFilterPattern = oldExcludeFilterPattern;
+                    }
+                  }
+                }
+              });
+              return filterCancelled[0];
+            }
+
+            @Override
+            public Pattern getIncludePattern()
+            {
+              return newIncludePattern;
+            }
+
+            @Override
+            public Pattern getExcludePattern()
+            {
+              return newExcludePattern;
+            }
+          };
+
+          filterThread.applyFilter(progressHandler);
         }
       });
     }
@@ -869,8 +969,10 @@ public class TraceWindow
   // Settings
   private ParsedSettingsData settingsData = new ParsedSettingsData(
                                                                    new HashMap<String, String>());
-  private Pattern filterPattern = TraceFilterThread.NO_PATTERN;
-  private Pattern oldFilterPattern = TraceFilterThread.NO_PATTERN;
+  private Pattern includeFilterPattern = TraceFilterThread.MATCH_ALL;
+  private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
+  private Pattern excludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private Pattern oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
 
   public void setConnectionState(Socket socket)
   {
@@ -898,7 +1000,7 @@ public class TraceWindow
       {
         textOutputTab.filterThread
                                   .addSystemTraceLine("Failed to setup network trace: "
-                                                + ex.toString());
+                                                      + ex.toString());
       }
     }
     else
@@ -906,6 +1008,11 @@ public class TraceWindow
       connectionState = ConnectState.DISCONNECTED_ERR;
     }
     updateUIState();
+  }
+
+  public ParsedSettingsData getSettings()
+  {
+    return settingsData;
   }
 
   public void disconnect()
@@ -933,8 +1040,7 @@ public class TraceWindow
         String modifiedClasses = controlThread.getMessage();
         if (modifiedClasses.length() <= 2)
         {
-          textOutputTab.filterThread
-                                    .addSystemTraceLine("No modified classes");
+          textOutputTab.filterThread.addSystemTraceLine("No modified classes");
         }
         else
         {
@@ -944,9 +1050,8 @@ public class TraceWindow
                                                       modifiedClasses.length() - 1);
           if (modifiedClasses.indexOf(",") == -1)
           {
-            textOutputTab.filterThread
-                                      .addSystemTraceLine("Modified: "
-                                                    + modifiedClasses);
+            textOutputTab.filterThread.addSystemTraceLine("Modified: "
+                                                          + modifiedClasses);
           }
           else
           {
@@ -955,9 +1060,9 @@ public class TraceWindow
             {
               textOutputTab.filterThread
                                         .addSystemTraceLine("Modified: "
-                                                      + (className != null ? className
-                                                                                      .trim()
-                                                                          : "null"));
+                                                            + (className != null ? className
+                                                                                            .trim()
+                                                                                : "null"));
             }
           }
         }
@@ -965,7 +1070,7 @@ public class TraceWindow
     }).start();
   }
 
-  public void setRegex(final String regex)
+  public void setRegex(final String includePattern, final String excludePattern)
   {
     if (!sWindow.isDisposed())
     {
@@ -976,7 +1081,8 @@ public class TraceWindow
         {
           connectionState = ConnectState.CONNECTED_UPDATING;
           updateUIStateSameThread();
-          controlThread.sendMessage("[regex-" + regex);
+          controlThread.sendMessage("[regex-" + includePattern
+                                    + "[excluderegex-" + excludePattern);
           controlThread.sendMessage("getsettings");
         }
       });
@@ -1192,9 +1298,8 @@ public class TraceWindow
     cTab.setData(callersMap);
   }
 
-  private static void placeDialogInCenter(Shell parent, Shell shell)
+  private static void placeDialogInCenter(Rectangle parentSize, Shell shell)
   {
-    Rectangle parentSize = parent.getBounds();
     Rectangle mySize = shell.getBounds();
 
     int locationX, locationY;

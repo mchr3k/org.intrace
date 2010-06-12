@@ -15,7 +15,7 @@ public class NetworkDataSenderThread implements Runnable
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(
-                                                                                     5);
+                                                                                     30);
   private Set<NetworkDataSenderThread> set;
 
   public NetworkDataSenderThread(ServerSocket networkSocket)
@@ -29,7 +29,8 @@ public class NetworkDataSenderThread implements Runnable
 
     Thread networkThread = new Thread(this);
     networkThread.setDaemon(true);
-    networkThread.setName(Thread.currentThread().getName() + " - Network Data Sender");
+    networkThread.setName(Thread.currentThread().getName()
+                          + " - Network Data Sender");
     networkThread.start();
   }
 
