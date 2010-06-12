@@ -152,6 +152,8 @@ public class AgentSettings
     settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,
                     Boolean.toString(instruEnabled));
     settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
+    settingsMap.put(AgentConfigConstants.EXCLUDE_CLASS_REGEX,
+                    excludeClassRegex.pattern());
     settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED,
                     Boolean.toString(allowJarsToBeTraced));
     settingsMap.put(AgentConfigConstants.VERBOSE_MODE,

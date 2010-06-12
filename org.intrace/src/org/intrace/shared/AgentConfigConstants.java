@@ -15,6 +15,7 @@ public class AgentConfigConstants
   static
   {
     COMMANDS.add(CLASS_REGEX + "<regex>");
+    COMMANDS.add(EXCLUDE_CLASS_REGEX + "<regex>");
     COMMANDS.add(INSTRU_ENABLED + "<true/false>");
     COMMANDS.add(SAVE_TRACED_CLASSFILES + "<true/false>");
     COMMANDS.add(VERBOSE_MODE + "<true/false>");

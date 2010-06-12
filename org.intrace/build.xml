@@ -202,8 +202,18 @@
   <target name="release" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
   </target>
 
+  <target name="example_build">
+    <mkdir dir="./build/test" />
+    <javac destdir="./build/test" debug="true" source="1.6" target="1.6">
+      <src path="./testsrc"/>
+      <classpath>
+        <pathelement path="./build/classes" />
+        <fileset dir="./lib" includes="*.jar" />
+      </classpath>
+    </javac>  
+  </target>
 
-  <target name="example" depends="jar">
+  <target name="example" depends="jar,example_build">
     <java classname="example.TraceExample" fork="true">
       <arg value="5000" />
       <classpath>
@@ -213,7 +223,7 @@
     </java>
   </target>
 
-  <target name="fastexample" depends="jar">
+  <target name="fastexample" depends="jar,example_build">  
     <java classname="example.TraceExample" fork="true">
       <arg value="0" />
       <classpath>

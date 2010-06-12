@@ -51,7 +51,7 @@ public class TraceFilterThread implements Runnable
    * Pattern which matches nothing
    */
   public static final Pattern MATCH_NONE = Pattern
-                                                  .compile("$^", Pattern.DOTALL);
+                                                  .compile("^$", Pattern.DOTALL);
 
   /**
    * Queue of filters to apply - this should usually only contain zero or one
