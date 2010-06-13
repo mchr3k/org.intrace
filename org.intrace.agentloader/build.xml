@@ -42,8 +42,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.agentloader.AgentLoader" />
         <attribute name="Class-Path" value=". ./tools.jar" />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />      	
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />      	
       </manifest>
       <fileset dir="./bin" includes="**/*.class" />
     </jar>

@@ -71,6 +71,7 @@
   </target>
 
 
+
   <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
     <mkdir dir="./build/jars/" />
@@ -81,8 +82,8 @@
         <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
         <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
         <attribute name="Can-Redefine-Classes" value="true" />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>      
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
@@ -97,8 +98,8 @@
         <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
         <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
         <attribute name="Can-Redefine-Classes" value="true" />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>     
     </jar>
 
@@ -107,8 +108,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
         <attribute name="Class-Path" value="." />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/cui/*.class" />
@@ -119,8 +120,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
@@ -133,8 +134,8 @@
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
-        <attribute name="Git.Revision" value="${git.revision}" />
-        <attribute name="Git.Tag" value="${git.tag}" />
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
