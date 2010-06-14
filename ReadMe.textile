@@ -1,6 +1,6 @@
 h1. Main Projects
 
-* org.intrace - InTrace
+* org.intrace - InTrace Agent and CUI/GUI
 * org.intrace.agentloader - Command line agent loader for loading an agent into a running JVM process
 
 h2. Scratch Projects
