@@ -308,15 +308,13 @@ public class InstrumentedClassWriter extends ClassWriter
         }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
-      else if ((xiOpCode == Opcodes.IRETURN) ||
-               (xiOpCode == Opcodes.LRETURN) ||
-               (xiOpCode == Opcodes.FRETURN) ||
-               (xiOpCode == Opcodes.DRETURN) ||
+      else if ((xiOpCode == Opcodes.IRETURN) || 
+               (xiOpCode == Opcodes.FRETURN) || 
                (xiOpCode == Opcodes.ARETURN))
       {
         // Duplicate the return value
         mv.visitInsn(Opcodes.DUP);
-        
+
         // Push the callname and methodname while keeping the return value#
         // at the top of the stack
         mv.visitLdcInsn("Return");
@@ -325,32 +323,52 @@ public class InstrumentedClassWriter extends ClassWriter
         mv.visitInsn(Opcodes.SWAP);
         mv.visitLdcInsn(methodName);
         mv.visitInsn(Opcodes.SWAP);
-        
+
         if (xiOpCode == Opcodes.IRETURN)
         {
           mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-        }
-        else if (xiOpCode == Opcodes.LRETURN)
-        {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
         }
         else if (xiOpCode == Opcodes.FRETURN)
         {
           mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;F)V");
-        } 
-        else if (xiOpCode == Opcodes.DRETURN)
-        {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;D)V");
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;F)V");
         }
         else if (xiOpCode == Opcodes.ARETURN)
         {
+          mv
+              .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V");
+        }
+        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
+      }
+      else if ((xiOpCode == Opcodes.LRETURN) || (xiOpCode == Opcodes.DRETURN))
+      {
+        // Duplicate the return value
+        mv.visitInsn(Opcodes.DUP2);
+
+        // Push the callname and methodname while keeping the return value
+        // at the top of the stack
+        mv.visitLdcInsn("Return");
+        mv.visitInsn(Opcodes.DUP_X2);
+        mv.visitInsn(Opcodes.POP);
+        mv.visitLdcInsn(className);
+        mv.visitInsn(Opcodes.DUP_X2);
+        mv.visitInsn(Opcodes.POP);
+        mv.visitLdcInsn(methodName);
+        mv.visitInsn(Opcodes.DUP_X2);
+        mv.visitInsn(Opcodes.POP);
+
+        if (xiOpCode == Opcodes.LRETURN)
+        {
           mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V");
-        }        
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
+        }
+        else if (xiOpCode == Opcodes.DRETURN)
+        {
+          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;D)V");
+        }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
       super.visitInsn(xiOpCode);

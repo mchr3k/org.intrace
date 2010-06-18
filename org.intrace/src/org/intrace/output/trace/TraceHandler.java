@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.intrace.output.AgentHelper;
 import org.intrace.output.IInstrumentationHandler;
-import org.intrace.shared.TraceConfigConstants;
 
 /**
  * Implements Standard Output Tracing
@@ -45,12 +44,6 @@ public class TraceHandler implements IInstrumentationHandler
                                                                   .isNetTraceOutputEnabled()))
     {
       System.out.println("## Trace Settings Changed");
-    }
-
-    if (oldSettings.isNetTraceOutputEnabled()
-        && !traceSettings.isNetTraceOutputEnabled())
-    {
-      AgentHelper.writeDataOutput(TraceConfigConstants.NET_FLUSH);
     }
 
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();

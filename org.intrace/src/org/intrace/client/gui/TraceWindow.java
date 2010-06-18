@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
@@ -561,7 +562,7 @@ public class TraceWindow
 
   private class TextOutputTab
   {
-    final Text textOutput;
+    final StyledText textOutput;
     final TraceFilterThread filterThread;
     final Button textFilter;
     final ProgressBar pBar;
@@ -569,7 +570,7 @@ public class TraceWindow
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[70][70][150][70][grow]",
+      MigLayout windowLayout = new MigLayout("fill", "[70][70][70][150][70][grow]",
                                              "[20][grow]");
 
       final Composite composite = new Composite(tabFolder, SWT.NONE);
@@ -579,6 +580,11 @@ public class TraceWindow
       Button clearText = new Button(composite, SWT.PUSH);
       clearText.setText(ClientStrings.CLEAR_TEXT);
       clearText.setLayoutData("grow");
+      
+      Button autoScrollBtn = new Button(composite, SWT.TOGGLE);
+      autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
+      autoScrollBtn.setLayoutData("grow");
+      autoScrollBtn.setSelection(autoScroll);
 
       textFilter = new Button(composite, SWT.PUSH);
       textFilter.setText(ClientStrings.FILTER_TEXT);
@@ -593,7 +599,7 @@ public class TraceWindow
       cancelButton.setLayoutData("grow,wrap");
       cancelButton.setVisible(false);
 
-      textOutput = new Text(composite, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL
+      textOutput = new StyledText(composite, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL
                                        | SWT.BORDER);
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow");
@@ -616,6 +622,16 @@ public class TraceWindow
                    });
                  }
                });
+      
+      autoScrollBtn
+      .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          autoScroll = !autoScroll;
+        }
+      });
 
       final String helpText = "Enter pattern in the form "
                               + "\"text\" or using wildcards "
@@ -680,7 +696,13 @@ public class TraceWindow
             @Override
             public void run()
             {
+              textOutput.setRedraw(false);
               textOutput.setText(traceText);
+              if (autoScroll)
+              {
+                textOutput.setTopIndex(Integer.MAX_VALUE);
+              }
+              textOutput.setRedraw(true);
             }
           });
         }
@@ -696,6 +718,10 @@ public class TraceWindow
             public void run()
             {
               textOutput.append(traceText);
+              if (autoScroll)
+              {
+                textOutput.setTopIndex(Integer.MAX_VALUE);
+              }
             }
           });
         }
@@ -973,6 +999,7 @@ public class TraceWindow
   private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   private Pattern excludeFilterPattern = TraceFilterThread.MATCH_NONE;
   private Pattern oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private boolean autoScroll = true;
 
   public void setConnectionState(Socket socket)
   {

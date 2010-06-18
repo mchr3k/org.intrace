@@ -231,7 +231,7 @@ public class TraceFilterThread implements Runnable
         }
         handledLines++;
 
-        if ((handledLines % 1000) == 0)
+        if ((handledLines % 10000) == 0)
         {
           double unroundedPercentage = ((double) handledLines)
                                        / ((double) numLines);
@@ -242,10 +242,13 @@ public class TraceFilterThread implements Runnable
           {
             cancelled = progressCallback
                                         .setProgress((int) (100 * roundedPercantage));
-
             if (cancelled)
             {
               break;
+            }
+            else
+            {
+              callback.setText(traceText.toString());
             }
           }
           lastPercentage = roundedPercantage;
