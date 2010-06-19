@@ -62,7 +62,7 @@ public class TraceWindow
 
   public TraceWindow()
   {
-    MigLayout windowLayout = new MigLayout("fill", "", "[150][grow]");
+    MigLayout windowLayout = new MigLayout("fill", "", "[180][grow]");
 
     sWindow = new Shell();
     sWindow.setText("Trace Window");
@@ -72,7 +72,7 @@ public class TraceWindow
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     outputTabs = new TabFolder(sWindow, SWT.NONE);
-    buttonTabs.setLayoutData("grow,wrap,wmin 0");
+    buttonTabs.setLayoutData("grow,wrap,wmin 0,hmin 0");
     outputTabs.setLayoutData("grow");
 
     fillButtonTabs(buttonTabs);
@@ -221,13 +221,12 @@ public class TraceWindow
     final Button togJars;
     final Button togSaveClasses;
     final Button togVerbose;
-    final Label instrStatusLabel;
-    final ProgressBar pBar;
+    final Label instrStatusLabel;    
 
     private InstruTab(TabFolder tabFolder, TabItem instrTab)
     {
       MigLayout windowLayout = new MigLayout("fill", "[][grow][][]",
-                                             "[grow][20]");
+                                             "[][20]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -238,21 +237,21 @@ public class TraceWindow
                                                        "[100][100][100]");
       mainControlGroup.setLayout(mainControlGroupLayout);
       mainControlGroup.setText("Control");
-      mainControlGroup.setLayoutData("grow");
+      mainControlGroup.setLayoutData("grow,hmin 0");
 
       togInstru = new Button(mainControlGroup, SWT.TOGGLE);
       togInstru.setText(ClientStrings.ENABLE_INSTR);
       togInstru.setAlignment(SWT.CENTER);
-      togInstru.setLayoutData("spany,grow");
+      togInstru.setLayoutData("grow");
 
       classRegex = new Button(mainControlGroup, SWT.PUSH);
       classRegex.setText(ClientStrings.SET_CLASSREGEX);
-      classRegex.setLayoutData("gapx 10px,spany,grow");
+      classRegex.setLayoutData("gapx 10px,grow");
 
       listClasses = new Button(mainControlGroup, SWT.PUSH);
       listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
       listClasses.setAlignment(SWT.CENTER);
-      listClasses.setLayoutData("spany,grow");
+      listClasses.setLayoutData("grow");
 
       Group settingsGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout settingsGroupLayout = new MigLayout("fill", "[100]");
@@ -282,7 +281,7 @@ public class TraceWindow
       togVerbose.setLayoutData("growx,aligny top");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_IN);
-      MigLayout statusGroupLayout = new MigLayout("fill", "[100][100]");
+      MigLayout statusGroupLayout = new MigLayout("fill");
       statusGroup.setLayout(statusGroupLayout);
       statusGroup.setText("Status");
       statusGroup.setLayoutData("grow");
@@ -292,10 +291,6 @@ public class TraceWindow
       instrStatusLabel.setAlignment(SWT.LEFT);
       instrStatusLabel.setLayoutData("grow,wmin 0");
       setStatus(0, 0);
-
-      pBar = new ProgressBar(statusGroup, SWT.NORMAL);
-      pBar.setLayoutData("grow");
-      pBar.setVisible(false);
 
       togInstru
                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
