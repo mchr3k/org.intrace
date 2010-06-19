@@ -11,11 +11,13 @@ import java.lang.instrument.Instrumentation;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
@@ -93,40 +95,6 @@ public class ClassTransformer implements ClassFileTransformer
                          + xiClassName);
       th.printStackTrace();
       return null;
-    }
-  }
-
-  /**
-   * Retransform all modified classes.
-   * <p>
-   * Iterates over all loaded classes and retransforms those which we know we
-   * have modified.
-   * 
-   * @param xiInst
-   */
-  private void retransformModifiedClasses()
-  {
-    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
-    for (Class<?> loadedClass : loadedClasses)
-    {
-      try
-      {
-        if (modifiedClasses.contains(loadedClass.getName()))
-        {
-          if (settings.isVerboseMode())
-          {
-            System.out.println("Retransform class: " + loadedClass.getName());
-          }
-          inst.retransformClasses(loadedClass);
-        }
-      }
-      catch (Throwable e)
-      {
-        // Write exception to stdout
-        System.err.println("Caught exception when modifying Class: "
-                           + loadedClass.getCanonicalName());
-        e.printStackTrace();
-      }
     }
   }
 
@@ -343,80 +311,22 @@ public class ClassTransformer implements ClassFileTransformer
   }
 
   /**
-   * Consider loaded classes for transformation. Any of the following reasons
-   * would prevent a loaded class from being eligible for instrumentation.
-   * <ul>
-   * <li>Class is an annotation
-   * <li>Class is synthetic
-   * <li>Class is not modifiable
-   * <li>Class is rejected by
-   * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
-   * </ul>
-   */
-  public void instrumentLoadedClasses()
-  {
-    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
-    for (Class<?> loadedClass : loadedClasses)
-    {
-      if (loadedClass.isAnnotation())
-      {
-        if (settings.isVerboseMode())
-        {
-          System.out.println("Ignoring annotation class: "
-                             + loadedClass.getCanonicalName());
-        }
-      }
-      else if (loadedClass.isSynthetic())
-      {
-        if (settings.isVerboseMode())
-        {
-          System.out.println("Ignoring synthetic class: "
-                             + loadedClass.getCanonicalName());
-        }
-      }
-      else if (!inst.isModifiableClass(loadedClass))
-      {
-        if (settings.isVerboseMode())
-        {
-          System.out.println("Ignoring unmodifiable class: "
-                             + loadedClass.getCanonicalName());
-        }
-      }
-      else if (isToBeConsideredForInstrumentation(
-                                                  loadedClass.getName(),
-                                                  loadedClass
-                                                             .getProtectionDomain()))
-      {
-        try
-        {
-          // System.out.println("ReTransform: " + loadedClass.getName());
-          inst.retransformClasses(loadedClass);
-        }
-        catch (Throwable e)
-        {
-          // Write exception to stdout
-          System.out.println(loadedClass.getName());
-          e.printStackTrace();
-        }
-      }
-    }
-  }
-
-  /**
    * Toggle whether instrumentation is enabled
    * 
    * @param xiTracingEnabled
    */
   public void setInstrumentationEnabled(boolean xiInstrumentationEnabled)
   {
+    Set<ClassContainer> klasses;
     if (xiInstrumentationEnabled)
     {
-      instrumentLoadedClasses();
+      klasses = getLoadedClassesForModification();
     }
-    else if (!xiInstrumentationEnabled)
+    else
     {
-      retransformModifiedClasses();
+      klasses = getModifiedClasses();
     }
+    instrumentKlasses(klasses);
   }
 
   /**
@@ -459,22 +369,25 @@ public class ClassTransformer implements ClassFileTransformer
                          .equals(settings.getClassRegex().pattern()))
     {
       System.out.println("## Settings Changed");
-      retransformModifiedClasses();
-      instrumentLoadedClasses();
+      Set<ClassContainer> klasses = getModifiedClasses();
+      klasses.addAll(getLoadedClassesForModification());
+      instrumentKlasses(klasses);
     }
     else if (oldSettings.allowJarsToBeTraced() != settings
                                                           .allowJarsToBeTraced())
     {
       System.out.println("## Settings Changed");
-      retransformModifiedClasses();
-      instrumentLoadedClasses();
+      Set<ClassContainer> klasses = getModifiedClasses();
+      klasses.addAll(getLoadedClassesForModification());
+      instrumentKlasses(klasses);
     }
     else if (oldSettings.saveTracedClassfiles() != settings
                                                            .saveTracedClassfiles())
     {
       System.out.println("## Settings Changed");
-      retransformModifiedClasses();
-      instrumentLoadedClasses();
+      Set<ClassContainer> klasses = getModifiedClasses();
+      klasses.addAll(getLoadedClassesForModification());
+      instrumentKlasses(klasses);
     }
     else if (message.equals("[listmodifiedclasses"))
     {
@@ -484,5 +397,158 @@ public class ClassTransformer implements ClassFileTransformer
     responses.addAll(AgentHelper.getResponses(message));
 
     return responses;
+  }
+
+  /**
+   * Retransform all modified classes.
+   * <p>
+   * Iterates over all loaded classes and retransforms those which we know we
+   * have modified.
+   * 
+   * @param xiInst
+   */
+  private Set<ClassContainer> getModifiedClasses()
+  {
+    Set<ClassContainer> modifiedKlasses = new ConcurrentSkipListSet<ClassContainer>();
+    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
+    for (Class<?> loadedClass : loadedClasses)
+    {
+      if (modifiedClasses.contains(loadedClass.getName()))
+      {
+        modifiedKlasses.add(new ClassContainer(loadedClass));
+      }
+    }
+    return modifiedKlasses;
+  }
+
+  /**
+   * Consider loaded classes for transformation. Any of the following reasons
+   * would prevent a loaded class from being eligible for instrumentation.
+   * <ul>
+   * <li>Class is an annotation
+   * <li>Class is synthetic
+   * <li>Class is not modifiable
+   * <li>Class is rejected by
+   * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
+   * </ul>
+   */
+  public Set<ClassContainer> getLoadedClassesForModification()
+  {
+    Set<ClassContainer> unmodifiedKlasses = new ConcurrentSkipListSet<ClassContainer>();
+
+    Class<?>[] loadedClasses = inst.getAllLoadedClasses();
+    for (Class<?> loadedClass : loadedClasses)
+    {
+      if (loadedClass.isAnnotation())
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring annotation class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (loadedClass.isSynthetic())
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring synthetic class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (!inst.isModifiableClass(loadedClass))
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Ignoring unmodifiable class: "
+                             + loadedClass.getCanonicalName());
+        }
+      }
+      else if (isToBeConsideredForInstrumentation(
+                                                  loadedClass.getName(),
+                                                  loadedClass
+                                                             .getProtectionDomain()))
+      {
+        unmodifiedKlasses.add(new ClassContainer(loadedClass));
+      }
+    }
+    return unmodifiedKlasses;
+  }
+
+  public void instrumentKlasses(Set<ClassContainer> klasses)
+  {
+    int countNumClasses = 0;
+    int totalNumClasses = klasses.size();
+    broadcastProgress(countNumClasses, totalNumClasses);
+    for (ClassContainer klass : klasses)
+    {
+      try
+      {
+        if (settings.isVerboseMode())
+        {
+          System.out.println("Transform class: "
+                             + klass.containedClass.getName());
+        }
+        inst.retransformClasses(klass.containedClass);
+
+        countNumClasses++;
+        if ((countNumClasses % 100) == 0)
+        {
+          broadcastProgress(totalNumClasses, totalNumClasses);
+        }
+      }
+      catch (Throwable e)
+      {
+        // Write exception to stdout
+        System.out.println(klass.containedClass.getName());
+        e.printStackTrace();
+      }
+    }
+    broadcastProgress(totalNumClasses, totalNumClasses);
+  }
+
+  private void broadcastProgress(int count, int total)
+  {
+    Map<String, String> progressMap = new HashMap<String, String>();
+    progressMap.put(AgentConfigConstants.NUM_PROGRESS_ID,
+                    AgentConfigConstants.NUM_PROGRESS_ID);
+    progressMap.put(AgentConfigConstants.NUM_PROGRESS_COUNT,
+                    Integer.toString(count));
+    progressMap.put(AgentConfigConstants.NUM_PROGRESS_TOTAL,
+                    Integer.toString(total));
+    try
+    {
+      AgentServer.broadcastMessage(null, progressMap);
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Container for a Class to make it comparable
+   */
+  private static class ClassContainer implements Comparable<ClassContainer>
+  {
+    public final Class<?> containedClass;
+
+    /**
+     * cTor
+     * 
+     * @param containedClass
+     */
+    public ClassContainer(Class<?> containedClass)
+    {
+      this.containedClass = containedClass;
+    }
+
+    @Override
+    public int compareTo(ClassContainer other)
+    {
+      String thisName = containedClass.getName();
+      String otherName = other.containedClass.getName();
+      return thisName.compareTo(otherName);
+    }
+
   }
 }

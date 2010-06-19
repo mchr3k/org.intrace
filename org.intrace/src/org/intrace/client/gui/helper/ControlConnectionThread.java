@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.intrace.client.gui.TraceWindow;
+import org.intrace.shared.AgentConfigConstants;
 
 public class ControlConnectionThread implements Runnable
 {
@@ -64,7 +65,14 @@ public class ControlConnectionThread implements Runnable
         if (receivedMessage instanceof Map<?, ?>)
         {
           Map<String, String> settingsMap = (Map<String, String>) receivedMessage;
-          window.setConfig(settingsMap);
+          if (settingsMap.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
+          {
+            window.setProgress(settingsMap);
+          }
+          else
+          {
+            window.setConfig(settingsMap);
+          }
         }
         else
         {
@@ -76,8 +84,9 @@ public class ControlConnectionThread implements Runnable
         }
       }
     }
-    catch (Exception e)
+    catch (Exception ex)
     {
+      ex.printStackTrace();
       window.disconnect();
     }
   }

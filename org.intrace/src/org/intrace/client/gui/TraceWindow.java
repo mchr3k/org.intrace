@@ -38,6 +38,7 @@ import org.intrace.client.gui.helper.StatusUpdater;
 import org.intrace.client.gui.helper.TraceFilterThread;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
+import org.intrace.shared.AgentConfigConstants;
 import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow
@@ -407,6 +408,12 @@ public class TraceWindow
       instrStatusLabel.setText("Instru'd: " + instruClasses + "/"
                                + totalClasses);
     }
+
+    private void setProgress(int progressClasses, int totalClasses)
+    {
+      instrStatusLabel.setText("Progress: " + progressClasses + "/"
+                               + totalClasses);
+    }
   }
 
   private class TraceTab
@@ -552,7 +559,7 @@ public class TraceWindow
       Group callersTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout callersTypesGroupLayout = new MigLayout("fill", "[100]");
       callersTypesGroup.setLayout(callersTypesGroupLayout);
-      callersTypesGroup.setText("");
+      callersTypesGroup.setText("Start Capture");
       callersTypesGroup.setLayoutData("spany,grow");
 
       callersCapture = new Button(callersTypesGroup, SWT.PUSH);
@@ -1310,6 +1317,28 @@ public class TraceWindow
 
         callSettingsTab.callersCapture.setEnabled(false);
       }
+    }
+  }
+
+  public void setProgress(final Map<String, String> progressMap)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          instruTab
+                   .setProgress(
+                                Integer
+                                       .parseInt(progressMap
+                                                            .get(AgentConfigConstants.NUM_PROGRESS_COUNT)),
+                                Integer
+                                       .parseInt(progressMap
+                                                            .get(AgentConfigConstants.NUM_PROGRESS_TOTAL)));
+        }
+      });
     }
   }
 

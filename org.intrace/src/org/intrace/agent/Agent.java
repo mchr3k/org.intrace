@@ -65,7 +65,7 @@ public class Agent
     inst.addTransformer(t, true);
 
     // Ensure loaded classes are traced
-    t.instrumentLoadedClasses();
+    t.instrumentKlasses(t.getLoadedClassesForModification());
 
     // Start Server thread
     new AgentServer(t).start();
