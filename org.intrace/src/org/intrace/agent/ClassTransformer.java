@@ -550,5 +550,19 @@ public class ClassTransformer implements ClassFileTransformer
       return thisName.compareTo(otherName);
     }
 
+    @Override
+    public boolean equals(Object obj)
+    {
+      if (obj instanceof ClassContainer)
+      {
+        ClassContainer objContainer = (ClassContainer) obj;
+        return objContainer.containedClass.equals(containedClass);
+      }
+      else
+      {
+        return super.equals(obj);
+      }
+    }
+
   }
 }

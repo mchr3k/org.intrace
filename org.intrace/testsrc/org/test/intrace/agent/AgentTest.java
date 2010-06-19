@@ -674,6 +674,14 @@ public class AgentTest extends TestCase
         {
           ObjectInputStream objIn = new ObjectInputStream(inputStream);
           Object receivedMessage = objIn.readObject();
+          if (receivedMessage instanceof Map<?, ?>)
+          {
+            Map<?, ?> receivedMap = (Map<?, ?>) receivedMessage;
+            if (receivedMap.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
+            {
+              continue;
+            }
+          }
           incomingMessages.put(receivedMessage);
         }
       }
