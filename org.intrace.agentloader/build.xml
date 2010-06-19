@@ -8,7 +8,7 @@
     </java>
   </target>
 
-  <target name="build" description="Comile classes">
+  <target name="build" description="Compile classes">
     <delete dir="./bin"/>
     <mkdir dir="./bin" />
 
