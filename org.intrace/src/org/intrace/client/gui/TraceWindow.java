@@ -116,14 +116,14 @@ public class TraceWindow
 
     private ConnectionTab(TabFolder tabFolder, TabItem connTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[350][grow][100]");
+      MigLayout windowLayout = new MigLayout("fill", "[380][grow][100]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       connTab.setControl(composite);
 
       Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout connGroupLayout = new MigLayout("fill", "[80][40][grow]");
+      MigLayout connGroupLayout = new MigLayout("fill", "[100][40][grow]");
       connectionGroup.setLayout(connGroupLayout);
       connectionGroup.setText("Details");
       connectionGroup.setLayoutData("spany,grow,wmin 300");
@@ -286,10 +286,9 @@ public class TraceWindow
       statusGroup.setText("Status");
       statusGroup.setLayoutData("growx");
 
-      instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.SHADOW_IN
-                                                | SWT.VERTICAL);
+      instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.VERTICAL);
       instrStatusLabel.setAlignment(SWT.LEFT);
-      instrStatusLabel.setLayoutData("wmin 0,hmin 0,growx");
+      instrStatusLabel.setLayoutData("hmin 0,growx");
       setStatus(0, 0);
 
       togInstru
