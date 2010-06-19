@@ -14,7 +14,7 @@ public class TraceExample
     try
     {
       otherMain(args[0]);
-    }
+    } 
     catch (Throwable ex)
     {
       ex.printStackTrace();
@@ -26,6 +26,7 @@ public class TraceExample
     while (true)
     {
       Thread.sleep(Long.parseLong(arg));
+      InnerTestClass.foo();
       workMethod("foobar");
     }
   }
@@ -59,7 +60,7 @@ public class TraceExample
     }
     catch (Exception ex)
     {
-      return "seen exception";
+      return "seen exception";      
     }
     return "no exception";
   }
@@ -69,4 +70,13 @@ public class TraceExample
     System.setProperty("a", Arrays.toString(intArg));
     return 123;
   }
+
+  private static class InnerTestClass
+  {
+    private static void foo()
+    {
+      System.setProperty("a", "bar");
+    }
+  }
+
 }
