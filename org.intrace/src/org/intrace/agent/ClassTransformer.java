@@ -493,7 +493,7 @@ public class ClassTransformer implements ClassFileTransformer
         countNumClasses++;
         if ((countNumClasses % 100) == 0)
         {
-          broadcastProgress(totalNumClasses, totalNumClasses);
+          broadcastProgress(countNumClasses, totalNumClasses);
         }
       }
       catch (Throwable e)

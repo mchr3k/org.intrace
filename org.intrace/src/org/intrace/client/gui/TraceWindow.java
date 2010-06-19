@@ -72,8 +72,8 @@ public class TraceWindow
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     buttonTabs.setLayoutData("growx,wrap,wmin 0,hmin 0");
-    
-    outputTabs = new TabFolder(sWindow, SWT.NONE);    
+
+    outputTabs = new TabFolder(sWindow, SWT.NONE);
     outputTabs.setLayoutData("grow");
 
     fillButtonTabs(buttonTabs);
@@ -116,7 +116,7 @@ public class TraceWindow
 
     private ConnectionTab(TabFolder tabFolder, TabItem connTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[300][grow][100]");
+      MigLayout windowLayout = new MigLayout("fill", "[350][grow][100]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -135,17 +135,17 @@ public class TraceWindow
 
       Label addressLabel = new Label(connectionGroup, SWT.NONE);
       addressLabel.setText(ClientStrings.CONN_ADDRESS);
-      addressLabel.setLayoutData("right");
+      addressLabel.setLayoutData("gapx 5px,right");
       addressInput = new Text(connectionGroup, SWT.BORDER);
       addressInput.setText("localhost");
-      addressInput.setLayoutData("grow,gapy 8px,wrap");
+      addressInput.setLayoutData("growx,gapy 8px,wrap");
 
       Label portLabel = new Label(connectionGroup, SWT.NONE);
       portLabel.setText(ClientStrings.CONN_PORT);
-      portLabel.setLayoutData("right");
+      portLabel.setLayoutData("gapx 5px,right");
       portInput = new Text(connectionGroup, SWT.BORDER);
       portInput.setText("9123");
-      portInput.setLayoutData("grow,wrap");
+      portInput.setLayoutData("growx,wrap");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       statusGroup.setLayoutData("spany,grow,wmin 0");
@@ -234,8 +234,7 @@ public class TraceWindow
       composite.setLayoutData("hmin 0");
 
       Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout mainControlGroupLayout = new MigLayout("",
-                                                       "[100][100][100]");
+      MigLayout mainControlGroupLayout = new MigLayout("", "[100][100][100]");
       mainControlGroup.setLayout(mainControlGroupLayout);
       mainControlGroup.setText("Control");
       mainControlGroup.setLayoutData("hmin 0");
@@ -290,7 +289,7 @@ public class TraceWindow
       instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.SHADOW_IN
                                                 | SWT.VERTICAL);
       instrStatusLabel.setAlignment(SWT.LEFT);
-      instrStatusLabel.setLayoutData("wmin 0,hmin 0");
+      instrStatusLabel.setLayoutData("wmin 0,hmin 0,growx");
       setStatus(0, 0);
 
       togInstru
