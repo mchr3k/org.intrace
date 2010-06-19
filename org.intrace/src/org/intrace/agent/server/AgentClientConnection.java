@@ -24,7 +24,6 @@ public class AgentClientConnection implements Runnable
 {
   private final Socket connectedClient;
   private final ClassTransformer transformer;
-  private final AgentServer serverRef;
 
   /**
    * cTor
@@ -33,11 +32,10 @@ public class AgentClientConnection implements Runnable
    * @param xiConnectedClient
    * @param xiTransformer
    */
-  public AgentClientConnection(AgentServer agentServer,
-      Socket xiConnectedClient, ClassTransformer xiTransformer)
+  public AgentClientConnection(Socket xiConnectedClient,
+      ClassTransformer xiTransformer)
   {
     super();
-    serverRef = agentServer;
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
     System.out.println("## Connected to: " + xiConnectedClient.getPort());
@@ -70,7 +68,7 @@ public class AgentClientConnection implements Runnable
             Map<String, String> settingsMap = new HashMap<String, String>();
             settingsMap.putAll(transformer.getSettings());
             settingsMap.putAll(AgentHelper.getSettings());
-            serverRef.broadcastMessage(this, settingsMap);
+            AgentServer.broadcastMessage(this, settingsMap);
           }
           else if (message.equals("help"))
           {
@@ -109,7 +107,7 @@ public class AgentClientConnection implements Runnable
     }
     finally
     {
-      serverRef.removeClientConnection(this);
+      AgentServer.removeClientConnection(this);
     }
   }
 
@@ -125,7 +123,9 @@ public class AgentClientConnection implements Runnable
     ObjectInputStream objIn = new ObjectInputStream(in);
     try
     {
-      return (String) objIn.readObject();
+      String lRet = (String) objIn.readObject();
+      System.out.println("Received Message: " + lRet);
+      return lRet;
     }
     catch (ClassNotFoundException e)
     {

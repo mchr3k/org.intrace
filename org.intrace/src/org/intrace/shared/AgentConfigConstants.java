@@ -5,6 +5,9 @@ import java.util.Set;
 
 public class AgentConfigConstants
 {
+  public static final String NUM_TOTAL_CLASSES = "NUM_TOTAL_CLASSES";
+  public static final String NUM_INSTR_CLASSES = "NUM_INSTR_CLASSES";
+
   public static final String CLASS_REGEX = "[regex-";
   public static final String EXCLUDE_CLASS_REGEX = "[exclude-regex-";
   public static final String INSTRU_ENABLED = "[instru-";

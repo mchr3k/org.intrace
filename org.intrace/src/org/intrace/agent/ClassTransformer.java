@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.intrace.output.AgentHelper;
+import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
 
 /**
@@ -25,9 +26,14 @@ import org.objectweb.asm.ClassReader;
 public class ClassTransformer implements ClassFileTransformer
 {
   /**
-   * Map of modified class names to their original bytes
+   * Set of modified class names
    */
   private final Set<String> modifiedClasses = new ConcurrentSkipListSet<String>();
+
+  /**
+   * Map of all seen class names
+   */
+  private final Set<String> allClasses = new ConcurrentSkipListSet<String>();
 
   /**
    * Instrumentation interface.
@@ -173,6 +179,32 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
+    // Don't modify a class for which we don't know the protection domain
+    if (protectionDomain == null)
+    {
+      if (settings.isVerboseMode())
+      {
+        System.out.println("Ignoring class with no protectionDomain: "
+                           + className);
+      }
+      return false;
+    }
+
+    // Don't modify a class from a JAR file unless this is allowed
+    CodeSource codeSource = protectionDomain.getCodeSource();
+    if (!settings.allowJarsToBeTraced() && (codeSource != null)
+        && codeSource.getLocation().getPath().endsWith(".jar"))
+    {
+      if (settings.isVerboseMode())
+      {
+        System.out.println("Ignoring class in a JAR: " + className);
+      }
+      return false;
+    }
+
+    // Record all class names which get this far
+    allClasses.add(className);
+
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
         || settings.getExcludeClassRegex().matcher(className).matches())
@@ -197,29 +229,6 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
-    // Don't modify a class for which we don't know the protection domain
-    if (protectionDomain == null)
-    {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("Ignoring class with no protectionDomain: "
-                           + className);
-      }
-      return false;
-    }
-
-    // Don't modify a class from a JAR file unless this is allowed
-    CodeSource codeSource = protectionDomain.getCodeSource();
-    if (!settings.allowJarsToBeTraced() && (codeSource != null)
-        && codeSource.getLocation().getPath().endsWith(".jar"))
-    {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("Ignoring class in a JAR: " + className);
-      }
-      return false;
-    }
-
     // All checks passed - class can be instrumented
     return true;
   }
@@ -239,6 +248,7 @@ public class ClassTransformer implements ClassFileTransformer
       throws IllegalClassFormatException
   {
     String className = internalClassName.replace('/', '.');
+
     if (isToBeConsideredForInstrumentation(className, protectionDomain))
     {
       if (settings.isVerboseMode())
@@ -414,7 +424,12 @@ public class ClassTransformer implements ClassFileTransformer
    */
   public Map<String, String> getSettings()
   {
-    return settings.getSettingsMap();
+    Map<String, String> settingsMap = settings.getSettingsMap();
+    settingsMap.put(AgentConfigConstants.NUM_TOTAL_CLASSES,
+                    Integer.toString(allClasses.size()));
+    settingsMap.put(AgentConfigConstants.NUM_INSTR_CLASSES,
+                    Integer.toString(modifiedClasses.size()));
+    return settingsMap;
   }
 
   /**

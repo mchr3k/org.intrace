@@ -8,19 +8,22 @@ import org.intrace.shared.TraceConfigConstants;
 
 public class ParsedSettingsData
 {
-  public final String classRegex;
-  public final String classExcludeRegex;
-  public final boolean instrEnabled;
-  public final boolean saveTracedClassfiles;
-  public final boolean verboseMode;
-  public final boolean allowJarsToBeTraced;
+  public String classRegex;
+  public String classExcludeRegex;
+  public boolean instrEnabled;
+  public boolean saveTracedClassfiles;
+  public boolean verboseMode;
+  public boolean allowJarsToBeTraced;
 
-  public final boolean entryExitEnabled;
-  public final boolean branchEnabled;
-  public final boolean argsEnabled;
-  public final boolean stdOutEnabled;
-  public final boolean fileOutEnabled;
-  public final boolean netOutEnabled;
+  public boolean entryExitEnabled;
+  public boolean branchEnabled;
+  public boolean argsEnabled;
+  public boolean stdOutEnabled;
+  public boolean fileOutEnabled;
+  public boolean netOutEnabled;
+
+  public final int instruClasses;
+  public final int totalClasses;
 
   private final Map<String, String> settingsMap;
 
@@ -124,6 +127,28 @@ public class ParsedSettingsData
     else
     {
       netOutEnabled = false;
+    }
+
+    String numInstrStr = settingsMap
+                                    .get(AgentConfigConstants.NUM_INSTR_CLASSES);
+    if (numInstrStr != null)
+    {
+      instruClasses = Integer.parseInt(numInstrStr);
+    }
+    else
+    {
+      instruClasses = 0;
+    }
+
+    String numTotalStr = settingsMap
+                                    .get(AgentConfigConstants.NUM_TOTAL_CLASSES);
+    if (numTotalStr != null)
+    {
+      totalClasses = Integer.parseInt(numTotalStr);
+    }
+    else
+    {
+      totalClasses = 0;
     }
   }
 

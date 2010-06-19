@@ -18,7 +18,7 @@ public class AgentServer implements Runnable
   private final ClassTransformer transformer;
 
   // Map of client connections
-  private final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
+  private static final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
 
   /**
    * cTor s
@@ -34,7 +34,16 @@ public class AgentServer implements Runnable
    * @param connection
    *          Remove this connection.
    */
-  public void removeClientConnection(AgentClientConnection connection)
+  public static void addClientConnection(AgentClientConnection connection)
+  {
+    clientConnections.put(connection, new Object());
+  }
+
+  /**
+   * @param connection
+   *          Remove this connection.
+   */
+  public static void removeClientConnection(AgentClientConnection connection)
   {
     clientConnections.remove(connection);
   }
@@ -46,8 +55,8 @@ public class AgentServer implements Runnable
    * @param message
    * @throws IOException
    */
-  public void broadcastMessage(AgentClientConnection requestingConn,
-                               Object message) throws IOException
+  public static void broadcastMessage(AgentClientConnection requestingConn,
+                                      Object message) throws IOException
   {
     IOException ex = null;
     for (AgentClientConnection clientConn : clientConnections.keySet())
@@ -101,10 +110,9 @@ public class AgentServer implements Runnable
         {
           Socket connectedClient = serversock.accept();
           AgentClientConnection clientConnection = new AgentClientConnection(
-                                                                             this,
                                                                              connectedClient,
                                                                              transformer);
-          clientConnections.put(clientConnection, new Object());
+          addClientConnection(clientConnection);
           clientConnection.start(clientNum);
           clientNum++;
         }

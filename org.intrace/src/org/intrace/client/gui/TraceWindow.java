@@ -61,7 +61,7 @@ public class TraceWindow
 
   public TraceWindow()
   {
-    MigLayout windowLayout = new MigLayout("fill", "", "[130][grow]");
+    MigLayout windowLayout = new MigLayout("fill", "", "[150][grow]");
 
     sWindow = new Shell();
     sWindow.setText("Trace Window");
@@ -168,13 +168,13 @@ public class TraceWindow
         {
           handleSelection();
         }
-        
+
         @Override
         public void widgetDefaultSelected(SelectionEvent arg0)
         {
           handleSelection();
         }
-        
+
         private void handleSelection()
         {
           if ((connectionState == ConnectState.DISCONNECTED)
@@ -220,10 +220,13 @@ public class TraceWindow
     final Button togJars;
     final Button togSaveClasses;
     final Button togVerbose;
+    final Label instrStatusLabel;
+    final ProgressBar pBar;
 
     private InstruTab(TabFolder tabFolder, TabItem instrTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]",
+                                             "[grow][20]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -233,8 +236,8 @@ public class TraceWindow
       MigLayout mainControlGroupLayout = new MigLayout("fill",
                                                        "[100][100][100]");
       mainControlGroup.setLayout(mainControlGroupLayout);
-      mainControlGroup.setText("");
-      mainControlGroup.setLayoutData("spany,grow");
+      mainControlGroup.setText("Control");
+      mainControlGroup.setLayoutData("grow");
 
       togInstru = new Button(mainControlGroup, SWT.TOGGLE);
       togInstru.setText(ClientStrings.ENABLE_INSTR);
@@ -254,28 +257,44 @@ public class TraceWindow
       MigLayout settingsGroupLayout = new MigLayout("fill", "[100]");
       settingsGroup.setLayout(settingsGroupLayout);
       settingsGroup.setText("Settings");
-      settingsGroup.setLayoutData("spany,grow,skip");
+      settingsGroup.setLayoutData("grow,skip,spany");
 
       togJars = new Button(settingsGroup, SWT.TOGGLE);
       togJars.setText(ClientStrings.ENABLE_ALLOWJARS);
       togJars.setAlignment(SWT.CENTER);
-      togJars.setLayoutData("growx,wrap");
+      togJars.setLayoutData("growx,wrap,aligny top");
 
       Group debugGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout debugGroupLayout = new MigLayout("fill", "[100]");
       debugGroup.setLayout(debugGroupLayout);
       debugGroup.setText("Debug");
-      debugGroup.setLayoutData("spany,grow,skip");
+      debugGroup.setLayoutData("grow,skip,spany,wrap");
 
       togSaveClasses = new Button(debugGroup, SWT.TOGGLE);
       togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
       togSaveClasses.setAlignment(SWT.CENTER);
-      togSaveClasses.setLayoutData("growx,wrap");
+      togSaveClasses.setLayoutData("growx,wrap,aligny top");
 
       togVerbose = new Button(debugGroup, SWT.TOGGLE);
       togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
       togVerbose.setAlignment(SWT.CENTER);
-      togVerbose.setLayoutData("growx");
+      togVerbose.setLayoutData("growx,aligny top");
+
+      Group statusGroup = new Group(composite, SWT.SHADOW_IN);
+      MigLayout statusGroupLayout = new MigLayout("fill", "[100][100]");
+      statusGroup.setLayout(statusGroupLayout);
+      statusGroup.setText("Status");
+      statusGroup.setLayoutData("grow");
+
+      instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.SHADOW_IN
+                                                | SWT.VERTICAL);
+      instrStatusLabel.setAlignment(SWT.LEFT);
+      instrStatusLabel.setLayoutData("grow,wmin 0");
+      setStatus(0, 0);
+
+      pBar = new ProgressBar(statusGroup, SWT.NORMAL);
+      pBar.setLayoutData("grow");
+      pBar.setVisible(false);
 
       togInstru
                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -285,6 +304,7 @@ public class TraceWindow
                  {
                    toggleSetting(settingsData.instrEnabled, "[instru-true",
                                  "[instru-false");
+                   settingsData.instrEnabled = !settingsData.instrEnabled;
                  }
                });
 
@@ -354,6 +374,7 @@ public class TraceWindow
                {
                  toggleSetting(settingsData.allowJarsToBeTraced,
                                "[instrujars-true", "[instrujars-false");
+                 settingsData.allowJarsToBeTraced = !settingsData.allowJarsToBeTraced;
                }
              });
       togSaveClasses
@@ -364,6 +385,7 @@ public class TraceWindow
                       {
                         toggleSetting(settingsData.saveTracedClassfiles,
                                       "[saveinstru-true", "[saveinstru-false");
+                        settingsData.saveTracedClassfiles = !settingsData.saveTracedClassfiles;
                       }
                     });
       togVerbose
@@ -374,9 +396,16 @@ public class TraceWindow
                   {
                     toggleSetting(settingsData.verboseMode, "[verbose-true",
                                   "[verbose-false");
+                    settingsData.verboseMode = !settingsData.verboseMode;
                   }
                 });
 
+    }
+
+    private void setStatus(int instruClasses, int totalClasses)
+    {
+      instrStatusLabel.setText("Instru'd: " + instruClasses + "/"
+                               + totalClasses);
     }
   }
 
@@ -446,6 +475,7 @@ public class TraceWindow
                       {
                         toggleSetting(settingsData.entryExitEnabled,
                                       "[trace-ee-true", "[trace-ee-false");
+                        settingsData.entryExitEnabled = !settingsData.entryExitEnabled;
                       }
                     });
       branchTrace
@@ -456,6 +486,7 @@ public class TraceWindow
                    {
                      toggleSetting(settingsData.branchEnabled,
                                    "[trace-branch-true", "[trace-branch-false");
+                     settingsData.branchEnabled = !settingsData.branchEnabled;
                    }
                  });
       argsTrace
@@ -466,6 +497,7 @@ public class TraceWindow
                  {
                    toggleSetting(settingsData.argsEnabled, "[trace-args-true",
                                  "[trace-args-false");
+                   settingsData.argsEnabled = !settingsData.argsEnabled;
                  }
                });
 
@@ -477,6 +509,7 @@ public class TraceWindow
                     {
                       toggleSetting(settingsData.stdOutEnabled,
                                     "[out-stdout-true", "[out-stdout-false");
+                      settingsData.stdOutEnabled = !settingsData.stdOutEnabled;
                     }
                   });
       fileOutput
@@ -487,6 +520,7 @@ public class TraceWindow
                   {
                     toggleSetting(settingsData.fileOutEnabled,
                                   "[out-file-true", "[out-file-false");
+                    settingsData.fileOutEnabled = !settingsData.fileOutEnabled;
                   }
                 });
       networkOutput
@@ -497,6 +531,7 @@ public class TraceWindow
                      {
                        toggleSetting(settingsData.netOutEnabled,
                                      "[out-network-true", "[out-network-false");
+                       settingsData.netOutEnabled = !settingsData.netOutEnabled;
                      }
                    });
     }
@@ -995,7 +1030,7 @@ public class TraceWindow
   // State
   private enum ConnectState
   {
-    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED, CONNECTED_UPDATING
+    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
   }
 
   private ConnectState connectionState = ConnectState.DISCONNECTED;
@@ -1121,8 +1156,8 @@ public class TraceWindow
         @Override
         public void run()
         {
-          connectionState = ConnectState.CONNECTED_UPDATING;
-          updateUIStateSameThread();
+          settingsData.classRegex = includePattern;
+          settingsData.classExcludeRegex = excludePattern;
           controlThread.sendMessage("[regex-" + includePattern
                                     + "[excluderegex-" + excludePattern);
           controlThread.sendMessage("getsettings");
@@ -1147,8 +1182,6 @@ public class TraceWindow
         @Override
         public void run()
         {
-          connectionState = ConnectState.CONNECTED_UPDATING;
-          updateUIStateSameThread();
           if (settingValue)
           {
             controlThread.sendMessage(disableCommand);
@@ -1241,29 +1274,10 @@ public class TraceWindow
         traceTab.fileOutput.setSelection(settingsData.fileOutEnabled);
         traceTab.networkOutput.setSelection(settingsData.netOutEnabled);
         traceTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
-      }
 
-      if (connectionState == ConnectState.CONNECTED_UPDATING)
-      {
-        connTab.addressInput.setEnabled(true);
-        connTab.portInput.setEnabled(true);
-        connTab.printSettings.setEnabled(false);
-
-        instruTab.classRegex.setEnabled(false);
-        instruTab.listClasses.setEnabled(false);
-        instruTab.togInstru.setEnabled(false);
-        instruTab.togJars.setEnabled(false);
-        instruTab.togSaveClasses.setEnabled(false);
-        instruTab.togVerbose.setEnabled(false);
-
-        traceTab.argsTrace.setEnabled(false);
-        traceTab.branchTrace.setEnabled(false);
-        traceTab.entryExitTrace.setEnabled(false);
-        traceTab.fileOutput.setEnabled(false);
-        traceTab.networkOutput.setEnabled(false);
-        traceTab.stdOutOutput.setEnabled(false);
-
-        callSettingsTab.callersCapture.setEnabled(false);
+        // Update number of classes
+        instruTab.setStatus(settingsData.instruClasses,
+                            settingsData.totalClasses);
       }
 
       // Only reset status text if we didn't hit an error
