@@ -62,7 +62,7 @@ public class TraceWindow
 
   public TraceWindow()
   {
-    MigLayout windowLayout = new MigLayout("fill", "", "[180][grow]");
+    MigLayout windowLayout = new MigLayout("fill", "", "[][grow]");
 
     sWindow = new Shell();
     sWindow.setText("Trace Window");
@@ -72,7 +72,7 @@ public class TraceWindow
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     outputTabs = new TabFolder(sWindow, SWT.NONE);
-    buttonTabs.setLayoutData("grow,wrap,wmin 0,hmin 0");
+    buttonTabs.setLayoutData("growx,wrap,wmin 0,hmin 0");
     outputTabs.setLayoutData("grow");
 
     fillButtonTabs(buttonTabs);
@@ -221,12 +221,11 @@ public class TraceWindow
     final Button togJars;
     final Button togSaveClasses;
     final Button togVerbose;
-    final Label instrStatusLabel;    
+    final Label instrStatusLabel;
 
     private InstruTab(TabFolder tabFolder, TabItem instrTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]",
-                                             "[][20]");
+      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]", "[][20]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);

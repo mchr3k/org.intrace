@@ -564,5 +564,10 @@ public class ClassTransformer implements ClassFileTransformer
       }
     }
 
+    @Override
+    public int hashCode()
+    {
+      return containedClass.hashCode();
+    }
   }
 }
