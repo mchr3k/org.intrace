@@ -43,6 +43,11 @@ public class TraceFilterThread implements Runnable
   private static final String SYSTEM_TRACE_PREFIX = "***";
 
   /**
+   * Low memory warning
+   */
+  private static final String LOW_MEMORY = "Warning: Low memory - dropping trace.";
+
+  /**
    * Pattern which matches anything
    */
   public static final Pattern MATCH_ALL = Pattern.compile(".*", Pattern.DOTALL);
@@ -147,7 +152,13 @@ public class TraceFilterThread implements Runnable
   @Override
   public void run()
   {
+    long maxMemory = Runtime.getRuntime().maxMemory();
+    long memLimit = (long) Math.max(maxMemory - (10 * 1000 * 1000), // Maxmemory
+                                    // - 10mb
+                                    0.9 * maxMemory); // 90% of Maxmemory
+    long numChars = 0;
     boolean doClearTrace = false;
+    boolean lowMemorySignalled = false;
     TraceFilterProgressHandler patternProgress = null;
     Pattern activeIncludePattern = MATCH_ALL;
     Pattern activeExcludePattern = MATCH_NONE;
@@ -170,6 +181,7 @@ public class TraceFilterThread implements Runnable
             doClearTrace = false;
             traceLines.clear();
             callback.setText("");
+            numChars = 0;
           }
 
           String newTraceLine = newTraceLines.take();
@@ -179,14 +191,31 @@ public class TraceFilterThread implements Runnable
             traceLineSemaphore.release();
           }
 
-          traceLines.add(newTraceLine);
-          if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX)
-              || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
-                                                                                               .matcher(
-                                                                                                        newTraceLine)
-                                                                                               .matches()))
+          if (numChars < memLimit)
           {
-            callback.appendText(newTraceLine);
+            lowMemorySignalled = false;
+
+            // I expected a factor of 2 due to trace strings being held by this
+            // thread along with another copy held by the UI. However, profiling
+            // shows a factor of 8 is necessary. I don't know why yet.
+            numChars += (8 * newTraceLine.length());
+
+            traceLines.add(newTraceLine);
+            if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX)
+                || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
+                                                                                                 .matcher(
+                                                                                                          newTraceLine)
+                                                                                                 .matches()))
+            {
+              callback.appendText(newTraceLine);
+            }
+          }
+          else if (!lowMemorySignalled)
+          {
+            lowMemorySignalled = true;
+            String memWarning = SYSTEM_TRACE_PREFIX + " " + LOW_MEMORY;
+            traceLines.add(memWarning);
+            callback.appendText(memWarning);
           }
         }
         catch (InterruptedException ex)
@@ -217,6 +246,7 @@ public class TraceFilterThread implements Runnable
     double lastPercentage = 0;
     StringBuilder traceText = new StringBuilder();
     boolean cancelled = progressCallback.setProgress(0);
+    boolean firstUpdate = true;
     if (!cancelled)
     {
       for (String traceLine : traceLines)
@@ -248,7 +278,16 @@ public class TraceFilterThread implements Runnable
             }
             else
             {
-              callback.setText(traceText.toString());
+              if (firstUpdate)
+              {
+                callback.setText(traceText.toString());
+                traceText = new StringBuilder();
+              }
+              else
+              {
+                firstUpdate = false;
+                callback.appendText(traceText.toString());
+              }
             }
           }
           lastPercentage = roundedPercantage;
@@ -258,7 +297,14 @@ public class TraceFilterThread implements Runnable
     progressCallback.setProgress(100);
     if (!cancelled)
     {
-      callback.setText(traceText.toString());
+      if (firstUpdate)
+      {
+        callback.setText(traceText.toString());
+      }
+      else
+      {
+        callback.appendText(traceText.toString());
+      }
     }
   }
 

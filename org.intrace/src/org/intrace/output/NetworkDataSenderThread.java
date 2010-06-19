@@ -89,6 +89,8 @@ public class NetworkDataSenderThread implements Runnable
         {
           traceWriter.writeObject("NOOP");
         }
+        traceWriter.flush();
+        traceWriter.reset();
       }
     }
     catch (InterruptedException ex)

@@ -22,7 +22,7 @@ public class CallersHandler extends IInstrumentationHandlerAdapter
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg("[" + seperateArgs[ii].toLowerCase());
+      parseArg("[" + seperateArgs[ii]);
     }
 
     return null;

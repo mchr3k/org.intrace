@@ -161,28 +161,41 @@ public class TraceWindow
       printSettings.setAlignment(SWT.CENTER);
       printSettings.setLayoutData("gap 10px 0px 5px,spany,grow,wrap");
 
-      connectButton
-                   .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                   {
-                     @Override
-                     public void widgetSelected(SelectionEvent arg0)
-                     {
-                       if ((connectionState == ConnectState.DISCONNECTED)
-                           || (connectionState == ConnectState.DISCONNECTED_ERR))
-                       {
-                         connectionState = ConnectState.CONNECTING;
-                         updateUIStateSameThread();
-                         Connection.connectToAgent(traceDialogRef, sWindow,
-                                                   addressInput.getText(),
-                                                   portInput.getText(),
-                                                   connectStatus);
-                       }
-                       else if (connectionState == ConnectState.CONNECTED)
-                       {
-                         disconnect();
-                       }
-                     }
-                   });
+      SelectionListener connectListen = new org.eclipse.swt.events.SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent selectionevent)
+        {
+          handleSelection();
+        }
+        
+        @Override
+        public void widgetDefaultSelected(SelectionEvent arg0)
+        {
+          handleSelection();
+        }
+        
+        private void handleSelection()
+        {
+          if ((connectionState == ConnectState.DISCONNECTED)
+              || (connectionState == ConnectState.DISCONNECTED_ERR))
+          {
+            connectionState = ConnectState.CONNECTING;
+            updateUIStateSameThread();
+            Connection.connectToAgent(traceDialogRef, sWindow,
+                                      addressInput.getText(),
+                                      portInput.getText(), connectStatus);
+          }
+          else if (connectionState == ConnectState.CONNECTED)
+          {
+            disconnect();
+          }
+        }
+      };
+
+      addressInput.addSelectionListener(connectListen);
+      portInput.addSelectionListener(connectListen);
+      connectButton.addSelectionListener(connectListen);
 
       printSettings
                    .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -570,7 +583,8 @@ public class TraceWindow
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[70][70][70][150][70][grow]",
+      MigLayout windowLayout = new MigLayout("fill",
+                                             "[70][70][70][150][70][grow]",
                                              "[20][grow]");
 
       final Composite composite = new Composite(tabFolder, SWT.NONE);
@@ -580,7 +594,7 @@ public class TraceWindow
       Button clearText = new Button(composite, SWT.PUSH);
       clearText.setText(ClientStrings.CLEAR_TEXT);
       clearText.setLayoutData("grow");
-      
+
       Button autoScrollBtn = new Button(composite, SWT.TOGGLE);
       autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
       autoScrollBtn.setLayoutData("grow");
@@ -599,8 +613,8 @@ public class TraceWindow
       cancelButton.setLayoutData("grow,wrap");
       cancelButton.setVisible(false);
 
-      textOutput = new StyledText(composite, SWT.MULTI | SWT.WRAP | SWT.V_SCROLL
-                                       | SWT.BORDER);
+      textOutput = new StyledText(composite, SWT.MULTI | SWT.WRAP
+                                             | SWT.V_SCROLL | SWT.BORDER);
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow");
       textOutput.setBackground(Display.getCurrent()
@@ -622,16 +636,16 @@ public class TraceWindow
                    });
                  }
                });
-      
+
       autoScrollBtn
-      .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-      {
-        @Override
-        public void widgetSelected(SelectionEvent arg0)
-        {
-          autoScroll = !autoScroll;
-        }
-      });
+                   .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+                   {
+                     @Override
+                     public void widgetSelected(SelectionEvent arg0)
+                     {
+                       autoScroll = !autoScroll;
+                     }
+                   });
 
       final String helpText = "Enter pattern in the form "
                               + "\"text\" or using wildcards "
@@ -918,7 +932,8 @@ public class TraceWindow
         @Override
         public void run()
         {
-          String newRootText = "Callers: " + callersRegex;
+          String newRootText = "Callers: "
+                               + callersRegex.toString().replace(".*", "*");
           String currentRootText = callersTreeRoot.getText();
           if (!currentRootText.equals(newRootText))
           {
