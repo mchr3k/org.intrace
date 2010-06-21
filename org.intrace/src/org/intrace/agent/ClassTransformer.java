@@ -317,7 +317,7 @@ public class ClassTransformer implements ClassFileTransformer
    */
   public void setInstrumentationEnabled(boolean xiInstrumentationEnabled)
   {
-    Set<ClassContainer> klasses;
+    Set<ComparableClass> klasses;
     if (xiInstrumentationEnabled)
     {
       klasses = getLoadedClassesForModification();
@@ -369,7 +369,7 @@ public class ClassTransformer implements ClassFileTransformer
                          .equals(settings.getClassRegex().pattern()))
     {
       System.out.println("## Settings Changed");
-      Set<ClassContainer> klasses = getModifiedClasses();
+      Set<ComparableClass> klasses = getModifiedClasses();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
     }
@@ -377,7 +377,7 @@ public class ClassTransformer implements ClassFileTransformer
                                                           .allowJarsToBeTraced())
     {
       System.out.println("## Settings Changed");
-      Set<ClassContainer> klasses = getModifiedClasses();
+      Set<ComparableClass> klasses = getModifiedClasses();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
     }
@@ -385,7 +385,7 @@ public class ClassTransformer implements ClassFileTransformer
                                                            .saveTracedClassfiles())
     {
       System.out.println("## Settings Changed");
-      Set<ClassContainer> klasses = getModifiedClasses();
+      Set<ComparableClass> klasses = getModifiedClasses();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
     }
@@ -407,15 +407,15 @@ public class ClassTransformer implements ClassFileTransformer
    * 
    * @param xiInst
    */
-  private Set<ClassContainer> getModifiedClasses()
+  private Set<ComparableClass> getModifiedClasses()
   {
-    Set<ClassContainer> modifiedKlasses = new ConcurrentSkipListSet<ClassContainer>();
+    Set<ComparableClass> modifiedKlasses = new ConcurrentSkipListSet<ComparableClass>();
     Class<?>[] loadedClasses = inst.getAllLoadedClasses();
     for (Class<?> loadedClass : loadedClasses)
     {
       if (modifiedClasses.contains(loadedClass.getName()))
       {
-        modifiedKlasses.add(new ClassContainer(loadedClass));
+        modifiedKlasses.add(new ComparableClass(loadedClass));
       }
     }
     return modifiedKlasses;
@@ -432,9 +432,9 @@ public class ClassTransformer implements ClassFileTransformer
    * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
    * </ul>
    */
-  public Set<ClassContainer> getLoadedClassesForModification()
+  public Set<ComparableClass> getLoadedClassesForModification()
   {
-    Set<ClassContainer> unmodifiedKlasses = new ConcurrentSkipListSet<ClassContainer>();
+    Set<ComparableClass> unmodifiedKlasses = new ConcurrentSkipListSet<ComparableClass>();
 
     Class<?>[] loadedClasses = inst.getAllLoadedClasses();
     for (Class<?> loadedClass : loadedClasses)
@@ -468,27 +468,27 @@ public class ClassTransformer implements ClassFileTransformer
                                                   loadedClass
                                                              .getProtectionDomain()))
       {
-        unmodifiedKlasses.add(new ClassContainer(loadedClass));
+        unmodifiedKlasses.add(new ComparableClass(loadedClass));
       }
     }
     return unmodifiedKlasses;
   }
 
-  public void instrumentKlasses(Set<ClassContainer> klasses)
+  public void instrumentKlasses(Set<ComparableClass> klasses)
   {
     int countNumClasses = 0;
     int totalNumClasses = klasses.size();
     broadcastProgress(countNumClasses, totalNumClasses);
-    for (ClassContainer klass : klasses)
+    for (ComparableClass klass : klasses)
     {
       try
       {
         if (settings.isVerboseMode())
         {
           System.out.println("Transform class: "
-                             + klass.containedClass.getName());
+                             + klass.klass.getName());
         }
-        inst.retransformClasses(klass.containedClass);
+        inst.retransformClasses(klass.klass);
 
         countNumClasses++;
         if ((countNumClasses % 100) == 0)
@@ -499,7 +499,7 @@ public class ClassTransformer implements ClassFileTransformer
       catch (Throwable e)
       {
         // Write exception to stdout
-        System.out.println(klass.containedClass.getName());
+        System.out.println(klass.klass.getName());
         e.printStackTrace();
       }
     }
@@ -528,35 +528,53 @@ public class ClassTransformer implements ClassFileTransformer
   /**
    * Container for a Class to make it comparable
    */
-  private static class ClassContainer implements Comparable<ClassContainer>
+  private static class ComparableClass implements Comparable<ComparableClass>
   {
-    public final Class<?> containedClass;
+    public final Class<?> klass;
+    public final ClassLoader klassloader;
 
     /**
      * cTor
      * 
-     * @param containedClass
+     * @param klass
      */
-    public ClassContainer(Class<?> containedClass)
+    public ComparableClass(Class<?> klass)
     {
-      this.containedClass = containedClass;
+      this.klass = klass;
+      this.klassloader = klass.getClassLoader();
     }
 
     @Override
-    public int compareTo(ClassContainer other)
+    public int compareTo(ComparableClass other)
     {
-      String thisName = containedClass.getName();
-      String otherName = other.containedClass.getName();
-      return thisName.compareTo(otherName);
+      if (other.klassloader != this.klassloader)
+      {
+        // klasses loaded by different classloaders are never equal. Compare the
+        // hashcodes to come up with a number which satisfies the requirement of 
+        // compareTo:
+        // sgn(x.compareTo(y)) == -sgn(y.compareTo(x))
+        //
+        // Note that this approach is not guaranteed to work as the hashCode is
+        // allowed to be the same for different objects.
+        return klass.hashCode() - other.klass.hashCode();
+      }
+      else
+      {
+        // klasses loaded by the same classloader can be compared by name. This
+        // allows us to use the String compareTo method.
+        String thisName = klass.getName();
+        String otherName = other.klass.getName();
+        return thisName.compareTo(otherName);
+      }
     }
 
     @Override
     public boolean equals(Object obj)
     {
-      if (obj instanceof ClassContainer)
+      if (obj instanceof ComparableClass)
       {
-        ClassContainer objContainer = (ClassContainer) obj;
-        return objContainer.containedClass.equals(containedClass);
+        ComparableClass objContainer = (ComparableClass) obj;
+        return objContainer.klass.equals(klass);
       }
       else
       {
@@ -567,7 +585,7 @@ public class ClassTransformer implements ClassFileTransformer
     @Override
     public int hashCode()
     {
-      return containedClass.hashCode();
+      return klass.hashCode();
     }
   }
 }
