@@ -71,10 +71,10 @@ public class TraceWindow
     sWindow.setMinimumSize(new Point(800, 480));
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
-    buttonTabs.setLayoutData("growx,wrap,wmin 0,hmin 0");
+    buttonTabs.setLayoutData("grow,wrap,wmin 0");
 
     outputTabs = new TabFolder(sWindow, SWT.NONE);
-    outputTabs.setLayoutData("grow");
+    outputTabs.setLayoutData("grow,wmin 0,hmin 0");
 
     fillButtonTabs(buttonTabs);
     fillOutputTabs(outputTabs);
@@ -618,7 +618,7 @@ public class TraceWindow
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
-      MigLayout windowLayout = new MigLayout("fill",
+      MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
                                              "[70][70][70][150][70][grow]",
                                              "[20][grow]");
 
@@ -651,7 +651,7 @@ public class TraceWindow
       textOutput = new StyledText(composite, SWT.MULTI | SWT.WRAP
                                              | SWT.V_SCROLL | SWT.BORDER);
       textOutput.setEditable(false);
-      textOutput.setLayoutData("spanx,grow");
+      textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
       textOutput.setBackground(Display.getCurrent()
                                       .getSystemColor(SWT.COLOR_WHITE));
 
