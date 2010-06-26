@@ -30,12 +30,12 @@ public class ClassTransformer implements ClassFileTransformer
   /**
    * Set of modified class names
    */
-  private final Set<ComparableClass> modifiedClasses = new ConcurrentSkipListSet<ComparableClass>();
+  private final Set<ComparableClassName> modifiedClasses = new ConcurrentSkipListSet<ComparableClassName>();
 
   /**
    * Map of all seen class names
    */
-  private final Set<ComparableClass> allClasses = new ConcurrentSkipListSet<ComparableClass>();
+  private final Set<ComparableClassName> allClasses = new ConcurrentSkipListSet<ComparableClassName>();
 
   /**
    * Instrumentation interface.
@@ -111,16 +111,18 @@ public class ClassTransformer implements ClassFileTransformer
    * </ul>
    * 
    * @param klass
+   * @param className
    * @param protectionDomain
    * @return True if the Class with name className should be instrumented.
    */
   private boolean isToBeConsideredForInstrumentation(
                                                      Class<?> klass,
+                                                     ClassLoader klassloader,
+                                                     String className,
                                                      ProtectionDomain protectionDomain)
   {
-
-    String className = klass.getName();
-    ComparableClass compklass = new ComparableClass(klass);
+    ComparableClassName compklass = new ComparableClassName(className,
+                                                            klassloader);
 
     // Don't modify anything if tracing is disabled
     if (!settings.isInstrumentationEnabled())
@@ -219,11 +221,11 @@ public class ClassTransformer implements ClassFileTransformer
                           byte[] originalClassfile)
       throws IllegalClassFormatException
   {
-    String className = classBeingRedefined.getName();
-    ComparableClass compclass = new ComparableClass(classBeingRedefined);
+    String className = internalClassName.replace('/', '.');
+    ComparableClassName compclass = new ComparableClassName(className, loader);
 
-    if (isToBeConsideredForInstrumentation(classBeingRedefined,
-                                           protectionDomain))
+    if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
+                                           className, protectionDomain))
     {
       if (settings.isVerboseMode())
       {
@@ -419,10 +421,14 @@ public class ClassTransformer implements ClassFileTransformer
     Class<?>[] loadedClasses = inst.getAllLoadedClasses();
     for (Class<?> loadedClass : loadedClasses)
     {
-      ComparableClass compclass = new ComparableClass(loadedClass);
+      ComparableClassName compclass = new ComparableClassName(
+                                                              loadedClass
+                                                                         .getName(),
+                                                              loadedClass
+                                                                         .getClassLoader());
       if (modifiedClasses.contains(compclass))
       {
-        modifiedKlasses.add(compclass);
+        modifiedKlasses.add(new ComparableClass(loadedClass));
       }
     }
     return modifiedKlasses;
@@ -472,10 +478,13 @@ public class ClassTransformer implements ClassFileTransformer
       }
       else if (isToBeConsideredForInstrumentation(
                                                   loadedClass,
+                                                  loadedClass.getClassLoader(),
+                                                  loadedClass.getName(),
                                                   loadedClass
                                                              .getProtectionDomain()))
       {
-        unmodifiedKlasses.add(new ComparableClass(loadedClass));
+        ComparableClass loadedKlass = new ComparableClass(loadedClass);
+        unmodifiedKlasses.add(loadedKlass);
       }
     }
     return unmodifiedKlasses;
@@ -528,7 +537,84 @@ public class ClassTransformer implements ClassFileTransformer
   }
 
   /**
-   * Container for a Class to make it comparable
+   * Container for a Class Name to make it comparable. This is used when
+   * collecting together a Set of which classes are already instrumented. We
+   * cannot refer to the corresponding Class object as we need to construct
+   * these objects before the corresponding Class object has been created by the
+   * JVM.
+   */
+  private static class ComparableClassName implements
+      Comparable<ComparableClassName>
+  {
+    public final String klassName;
+    public final ClassLoader klassloader;
+
+    /**
+     * cTor
+     * 
+     * @param klassName
+     *          , ClassLoader klassloader
+     */
+    public ComparableClassName(String klassName, ClassLoader klassloader)
+    {
+      this.klassName = klassName;
+      this.klassloader = klassloader;
+    }
+
+    @Override
+    public int compareTo(ComparableClassName other)
+    {
+      if (other.klassloader != this.klassloader)
+      {
+        // klasses loaded by different classloaders are never equal. Compare the
+        // hashcodes of the names to come up with a number which satisfies the
+        // requirement of
+        // compareTo:
+        // sgn(x.compareTo(y)) == -sgn(y.compareTo(x))
+        //
+        // Note that this approach is not guaranteed to work as the hashCode is
+        // allowed to be the same for different objects.
+        return this.klassName.hashCode() - other.klassName.hashCode();
+      }
+      else
+      {
+        // klasses loaded by the same classloader can be compared by name. This
+        // allows us to use the String compareTo method.
+        return this.klassName.compareTo(other.klassName);
+      }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+      if (obj instanceof ComparableClassName)
+      {
+        ComparableClassName compClass = (ComparableClassName) obj;
+        return compClass.klassName.equals(this.klassName);
+      }
+      else
+      {
+        return super.equals(obj);
+      }
+    }
+
+    @Override
+    public int hashCode()
+    {
+      return klassName.hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+      return (klassloader != null ? klassloader.toString() + ":"
+                                 : "") + klassName;
+    }
+  }
+
+  /**
+   * Container for a Class to make it comparable. This is used when collecting
+   * together a Set of Class objects for reinstrumentation.
    */
   private static class ComparableClass implements Comparable<ComparableClass>
   {
@@ -575,8 +661,8 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (obj instanceof ComparableClass)
       {
-        ComparableClass compClass = (ComparableClass) obj;
-        return compClass.klass.equals(this.klass);
+        ComparableClass objContainer = (ComparableClass) obj;
+        return objContainer.klass.equals(this.klass);
       }
       else
       {
@@ -593,8 +679,7 @@ public class ClassTransformer implements ClassFileTransformer
     @Override
     public String toString()
     {
-      return (klassloader != null ? klassloader.toString() + ":"
-                                 : "") + klass.getName();
+      return klass.getName();
     }
   }
 }
