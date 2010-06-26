@@ -165,7 +165,7 @@ public class AgentTest extends TestCase
       public Object answer() throws Throwable
       {
         Object[] args = EasyMock.getCurrentArguments();
-        capturedTrace.add("CaughtEx:##:" + Arrays.toString(args));
+        capturedTrace.add("Throwable:##:" + Arrays.toString(args));
         return null;
       }
     };
@@ -187,8 +187,8 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().andAnswer(branchTraceWriter).anyTimes();
     testHandler.exit(isA(String.class), isA(String.class), EasyMock.anyInt());
     EasyMock.expectLastCall().andAnswer(exitTraceWriter).anyTimes();
-    testHandler.caught(isA(String.class), isA(String.class), EasyMock.anyInt(),
-                       isA(Throwable.class));
+    testHandler.val(isA(String.class), isA(String.class), isA(String.class),
+                    EasyMock.anyInt(), isA(Throwable.class));
     EasyMock.expectLastCall().andAnswer(caughtTraceWriter).anyTimes();
 
     testHandler.val(isA(String.class), isA(String.class), isA(String.class),
@@ -494,7 +494,15 @@ public class AgentTest extends TestCase
     String traceLineData = traceParts[1];
     traceLineData = traceLineData.substring(1, traceLineData.length() - 1);
     String[] dataParts = traceLineData.split(",");
-    String methodSig = dataParts[1].trim();
+    String methodSig;
+    if (traceType.equals("Throwable"))
+    {
+      methodSig = dataParts[2].trim();
+    }
+    else
+    {
+      methodSig = dataParts[1].trim();
+    }
 
     TraceData traceData = parsedTraceData.get(methodSig);
     if (traceData == null)
@@ -515,9 +523,12 @@ public class AgentTest extends TestCase
     {
       traceData.branchLines.add(Integer.parseInt(dataParts[2].trim()));
     }
-    else if (traceType.equals("CaughtEx"))
+    else if (traceType.equals("Throwable"))
     {
-      traceData.caughtLines.add(Integer.parseInt(dataParts[2].trim()));
+      if (traceLine.contains("Caught"))
+      {
+        traceData.caughtLines.add(Integer.parseInt(dataParts[3].trim()));
+      }
     }
     else if (traceType.equals("Arg"))
     {

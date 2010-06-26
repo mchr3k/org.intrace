@@ -24,22 +24,27 @@ public class ArgCapture implements IInstrumentationHandler
   @Override
   public void val(String desc, String className, String methodName, byte byteArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + byteArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + byteArg
+           + "]");
   }
 
-  public void val(String desc, String className, String methodName, byte[] byteArrayArg)
+  public void val(String desc, String className, String methodName,
+                  byte[] byteArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(byteArrayArg) + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, short shortArg)
+  public void val(String desc, String className, String methodName,
+                  short shortArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + shortArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + shortArg
+           + "]");
   }
 
-  public void val(String desc, String className, String methodName, short[] shortArrayArg)
+  public void val(String desc, String className, String methodName,
+                  short[] shortArrayArg)
   {
 
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
@@ -53,7 +58,8 @@ public class ArgCapture implements IInstrumentationHandler
   }
 
   @Override
-  public void val(String desc, String className, String methodName, int[] intArrayArg)
+  public void val(String desc, String className, String methodName,
+                  int[] intArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(intArrayArg) + "]");
@@ -62,50 +68,61 @@ public class ArgCapture implements IInstrumentationHandler
   @Override
   public void val(String desc, String className, String methodName, long longArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + longArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + longArg
+           + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, long[] longArrayArg)
+  public void val(String desc, String className, String methodName,
+                  long[] longArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(longArrayArg) + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float floatArg)
+  public void val(String desc, String className, String methodName,
+                  float floatArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + floatArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + floatArg
+           + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float[] floatArrayArg)
+  public void val(String desc, String className, String methodName,
+                  float[] floatArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(floatArrayArg) + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double doubleArg)
+  public void val(String desc, String className, String methodName,
+                  double doubleArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + doubleArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + doubleArg
+           + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double[] doubleArrayArg)
+  public void val(String desc, String className, String methodName,
+                  double[] doubleArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(doubleArrayArg) + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean boolArg)
+  public void val(String desc, String className, String methodName,
+                  boolean boolArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + boolArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + boolArg
+           + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean[] boolArrayArg)
+  public void val(String desc, String className, String methodName,
+                  boolean[] boolArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(boolArrayArg) + "]");
@@ -114,29 +131,34 @@ public class ArgCapture implements IInstrumentationHandler
   @Override
   public void val(String desc, String className, String methodName, char charArg)
   {
-    addArg(desc + ":##:[" + className + ", " + methodName + ", " + charArg + "]");
+    addArg(desc + ":##:[" + className + ", " + methodName + ", " + charArg
+           + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, char[] charArrayArg)
+  public void val(String desc, String className, String methodName,
+                  char[] charArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.toString(charArrayArg) + "]");
   }
 
   @Override
-  public void val(String desc, String className, String methodName, Object objArg)
+  public void val(String desc, String className, String methodName,
+                  Object objArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", " + objArg + "]");
   }
 
-  public void val(String desc, String className, String methodName, Object[] objArrayArg)
+  public void val(String desc, String className, String methodName,
+                  Object[] objArrayArg)
   {
     addArg(desc + ":##:[" + className + ", " + methodName + ", "
            + Arrays.deepToString(objArrayArg) + "]");
   }
-  
-  public void caught(String className, String methodName, int lineNo, Throwable th)
+
+  public void val(String desc, String className, String methodName, int lineNo,
+                  Throwable th)
   {
     // Do nothing
   }

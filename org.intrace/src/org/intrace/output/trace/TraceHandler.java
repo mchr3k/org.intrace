@@ -298,12 +298,12 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
-  public void caught(String className, String methodName, int lineNo,
-                     Throwable throwable)
+  public void val(String desc, String className, String methodName, int lineNo,
+                  Throwable throwable)
   {
     if (branchTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ":CaughtException:"
+      writeTraceOutput(className + ":" + methodName + ": " + desc + ":"
                        + lineNo + ": " + throwableToString(throwable));
     }
   }

@@ -312,13 +312,13 @@ public class AgentHelper
     }
   }
 
-  public static void caught(String className, String methodName, int lineNo,
-                            Throwable throwable)
+  public static void val(String desc, String className, String methodName,
+                         int lineNo, Throwable throwable)
   {
     for (IInstrumentationHandler outputHandler : instrumentationHandlers
                                                                         .keySet())
     {
-      outputHandler.caught(className, methodName, lineNo, throwable);
+      outputHandler.val(desc, className, methodName, lineNo, throwable);
     }
   }
 

@@ -71,7 +71,7 @@ public class InstrumentedClassWriter extends ClassWriter
     // Final method fields
     private final String methodName;
     private final String methodDescriptor;
-    private final int methodAccess;    
+    private final int methodAccess;
 
     // Analysis data
     private final Set<Integer> reverseGOTOLines;
@@ -133,7 +133,8 @@ public class InstrumentedClassWriter extends ClassWriter
     private void addEntryCalls()
     {
       generateCallToAgentHelper(InstrumentationType.ENTER,
-                                ((entryLine != null ? entryLine : -1)));
+                                ((entryLine != null ? entryLine
+                                                   : -1)));
       traceMethodArgs();
     }
 
@@ -144,7 +145,8 @@ public class InstrumentedClassWriter extends ClassWriter
     {
       Type[] argTypes = Type.getArgumentTypes(methodDescriptor);
       boolean isStaticAccess = ((methodAccess & Opcodes.ACC_STATIC) > 0);
-      int offset = (isStaticAccess ? 0 : 1);
+      int offset = (isStaticAccess ? 0
+                                  : 1);
 
       for (int ii = 0; ii < argTypes.length; ii++)
       {
@@ -243,26 +245,33 @@ public class InstrumentedClassWriter extends ClassWriter
           {
             if (exceptionHandlerLabels.contains(label))
             {
-              // Top of the stack contains an exception - generate code to trace it
+              // Top of the stack contains an exception - generate code to trace
+              // it
               // Duplicate the exception
               mv.visitInsn(Opcodes.DUP);
-              
+
               // Load args
+              mv.visitLdcInsn("Caught");
+              mv.visitInsn(Opcodes.SWAP);
               mv.visitLdcInsn(className);
               mv.visitInsn(Opcodes.SWAP);
               mv.visitLdcInsn(methodName);
               mv.visitInsn(Opcodes.SWAP);
               mv.visitLdcInsn(lineNumber);
               mv.visitInsn(Opcodes.SWAP);
-              
+
               // Generate call to trace exception
-              mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "caught",
-              "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V");
+              mv
+                .visitMethodInsn(
+                                 INVOKESTATIC,
+                                 HELPER_CLASS,
+                                 "val",
+                                 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V");
             }
             else
             {
               generateCallToAgentHelper(InstrumentationType.BRANCH, lineNumber);
-            }            
+            }
           }
           writeTraceLine = false;
         }
@@ -301,16 +310,15 @@ public class InstrumentedClassWriter extends ClassWriter
       {
         // Ensure that cTor entry call gets written even if the cTor is
         // implicit and therefore has only a single line number.
-        if (ctorEntryState == CTorEntryState.SEEN_SPECIAL) 
+        if (ctorEntryState == CTorEntryState.SEEN_SPECIAL)
         {
           addEntryCalls();
           ctorEntryState = CTorEntryState.ENTRY_WRITTEN;
         }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
-      else if ((xiOpCode == Opcodes.IRETURN) || 
-               (xiOpCode == Opcodes.FRETURN) || 
-               (xiOpCode == Opcodes.ARETURN))
+      else if ((xiOpCode == Opcodes.IRETURN) || (xiOpCode == Opcodes.FRETURN)
+               || (xiOpCode == Opcodes.ARETURN))
       {
         // Duplicate the return value
         mv.visitInsn(Opcodes.DUP);
@@ -326,19 +334,21 @@ public class InstrumentedClassWriter extends ClassWriter
 
         if (xiOpCode == Opcodes.IRETURN)
         {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+          mv
+            .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                             "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
         }
         else if (xiOpCode == Opcodes.FRETURN)
         {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;F)V");
+          mv
+            .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                             "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;F)V");
         }
         else if (xiOpCode == Opcodes.ARETURN)
         {
           mv
-              .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-                  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V");
+            .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                             "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V");
         }
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
@@ -361,14 +371,43 @@ public class InstrumentedClassWriter extends ClassWriter
 
         if (xiOpCode == Opcodes.LRETURN)
         {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
+          mv
+            .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                             "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;J)V");
         }
         else if (xiOpCode == Opcodes.DRETURN)
         {
-          mv.visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
-              "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;D)V");
+          mv
+            .visitMethodInsn(INVOKESTATIC, HELPER_CLASS, "val",
+                             "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;D)V");
         }
+        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
+      }
+      else if (xiOpCode == Opcodes.ATHROW)
+      {
+        // Top of the stack contains an exception - generate code to trace
+        // it - Duplicate the exception
+        mv.visitInsn(Opcodes.DUP);
+
+        // Load args
+        mv.visitLdcInsn("Throw");
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(className);
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(methodName);
+        mv.visitInsn(Opcodes.SWAP);
+        mv.visitLdcInsn(lineNumber);
+        mv.visitInsn(Opcodes.SWAP);
+
+        // Generate call to trace exception
+        mv
+          .visitMethodInsn(
+                           INVOKESTATIC,
+                           HELPER_CLASS,
+                           "val",
+                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V");
+
+        // Also write exit trace
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
       super.visitInsn(xiOpCode);
@@ -392,10 +431,11 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
-     * For all forward branch instructions we trace the next line we see as we know it is 
-     * optional.
+     * For all forward branch instructions we trace the next line we see as we
+     * know it is optional.
      * <p>
-     * We don't mark the target label as we don't know whether it is optional code. 
+     * We don't mark the target label as we don't know whether it is optional
+     * code.
      */
     @Override
     public void visitJumpInsn(int xiOpCode, Label xiBranchLabel)
@@ -406,11 +446,11 @@ public class InstrumentedClassWriter extends ClassWriter
       }
       else
       {
-    	  ternState = TernaryState.BASE;
+        ternState = TernaryState.BASE;
       }
 
       numBranchesOnLine++;
-      
+
       Integer lineNo = labelLineNos.get(xiBranchLabel);
       if (lineNo == null)
       {
@@ -451,12 +491,12 @@ public class InstrumentedClassWriter extends ClassWriter
       }
       super.visitTableSwitchInsn(min, max, dflt, labels);
     }
-    
+
     /**
      * Lookup switch block - mark all labels for tracing
      */
     @Override
-    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) 
+    public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels)
     {
       traceLabels.add(dflt);
       for (Label label : labels)
@@ -513,19 +553,21 @@ public class InstrumentedClassWriter extends ClassWriter
   }
 
   /**
-   * Type used to suppress trace in the case where the following instruction sequence is seen.
+   * Type used to suppress trace in the case where the following instruction
+   * sequence is seen.
    * <ul>
-   * <li> ...
-   * <li> DUP
-   * <li> BRANCH
-   * <li> POP
-   * <li> ...
+   * <li>...
+   * <li>DUP
+   * <li>BRANCH
+   * <li>POP
+   * <li>...
    * </ul>
-   * This sequence is used in ternary if statements of the form (cond(x) ? x : Y). This agent currently does not
-   * support adding trace into these constructs.
+   * This sequence is used in ternary if statements of the form (cond(x) ? x :
+   * Y). This agent currently does not support adding trace into these
+   * constructs.
    * <p>
-   * MCHR: This should either be fixed or strengthened to ensure it covers all ternary statements. Does numBranchesOnLine
-   * already strengthen this?
+   * MCHR: This should either be fixed or strengthened to ensure it covers all
+   * ternary statements. Does numBranchesOnLine already strengthen this?
    */
   private enum TernaryState
   {
@@ -538,15 +580,17 @@ public class InstrumentedClassWriter extends ClassWriter
    * <p>
    * Normal methods are assigned NORMALMETHOD.
    * <p>
-   * cTors are assigned ISCTOR and then SEEN_SPECIAL once the superclass constructor call is issued.
-   * This allows us to avoid writing entry trace before the superclass constructor call.
+   * cTors are assigned ISCTOR and then SEEN_SPECIAL once the superclass
+   * constructor call is issued. This allows us to avoid writing entry trace
+   * before the superclass constructor call.
    * <p>
-   * ENTRY_WRITTEN is set if a line number is processed such that we write entry trace. Otherwise we
-   * know to write entry trace before exit trace when we visit a return instruction. This is mostly 
-   * only useful for processing implicit constructors.
+   * ENTRY_WRITTEN is set if a line number is processed such that we write entry
+   * trace. Otherwise we know to write entry trace before exit trace when we
+   * visit a return instruction. This is mostly only useful for processing
+   * implicit constructors.
    * <p>
-   * MCHR: Ensure this all works in the case of a constructor calling through to another constructor
-   * in the same class.  
+   * MCHR: Ensure this all works in the case of a constructor calling through to
+   * another constructor in the same class.
    */
   private enum CTorEntryState
   {

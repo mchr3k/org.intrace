@@ -13,19 +13,22 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   }
 
   @Override
-  public void val(String desc, String className, String methodName, byte[] byteArrayArg)
+  public void val(String desc, String className, String methodName,
+                  byte[] byteArrayArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, short shortArg)
+  public void val(String desc, String className, String methodName,
+                  short shortArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, short[] shortArrayArg)
+  public void val(String desc, String className, String methodName,
+                  short[] shortArrayArg)
   {
     // Do nothing
   }
@@ -37,7 +40,8 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   }
 
   @Override
-  public void val(String desc, String className, String methodName, int[] intArrayArg)
+  public void val(String desc, String className, String methodName,
+                  int[] intArrayArg)
   {
     // Do nothing
   }
@@ -49,43 +53,50 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   }
 
   @Override
-  public void val(String desc, String className, String methodName, long[] longArrayArg)
+  public void val(String desc, String className, String methodName,
+                  long[] longArrayArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float floatArg)
+  public void val(String desc, String className, String methodName,
+                  float floatArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, float[] floatArrayArg)
+  public void val(String desc, String className, String methodName,
+                  float[] floatArrayArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double doubleArg)
+  public void val(String desc, String className, String methodName,
+                  double doubleArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, double[] doubleArrayArg)
+  public void val(String desc, String className, String methodName,
+                  double[] doubleArrayArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean boolArg)
+  public void val(String desc, String className, String methodName,
+                  boolean boolArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, boolean[] boolArrayArg)
+  public void val(String desc, String className, String methodName,
+                  boolean[] boolArrayArg)
   {
     // Do nothing
   }
@@ -97,25 +108,29 @@ public class IInstrumentationHandlerAdapter implements IInstrumentationHandler
   }
 
   @Override
-  public void val(String desc, String className, String methodName, char[] charArrayArg)
+  public void val(String desc, String className, String methodName,
+                  char[] charArrayArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, Object objArg)
+  public void val(String desc, String className, String methodName,
+                  Object objArg)
   {
     // Do nothing
   }
 
   @Override
-  public void val(String desc, String className, String methodName, Object[] objArrayArg)
+  public void val(String desc, String className, String methodName,
+                  Object[] objArrayArg)
   {
     // Do nothing
   }
-  
+
   @Override
-  public void caught(String className, String methodName, int lineNo, Throwable throwable)
+  public void val(String desc, String className, String methodName, int lineNo,
+                  Throwable throwable)
   {
     // Do nothing
   }
