@@ -30,12 +30,12 @@ public class ClassTransformer implements ClassFileTransformer
   /**
    * Set of modified class names
    */
-  private final Set<String> modifiedClasses = new ConcurrentSkipListSet<String>();
+  private final Set<ComparableClass> modifiedClasses = new ConcurrentSkipListSet<ComparableClass>();
 
   /**
    * Map of all seen class names
    */
-  private final Set<String> allClasses = new ConcurrentSkipListSet<String>();
+  private final Set<ComparableClass> allClasses = new ConcurrentSkipListSet<ComparableClass>();
 
   /**
    * Instrumentation interface.
@@ -110,14 +110,18 @@ public class ClassTransformer implements ClassFileTransformer
    * <li>Class is in a JAR and JAR instrumention is disabled
    * </ul>
    * 
-   * @param className
+   * @param klass
    * @param protectionDomain
    * @return True if the Class with name className should be instrumented.
    */
   private boolean isToBeConsideredForInstrumentation(
-                                                     String className,
+                                                     Class<?> klass,
                                                      ProtectionDomain protectionDomain)
   {
+
+    String className = klass.getName();
+    ComparableClass compklass = new ComparableClass(klass);
+
     // Don't modify anything if tracing is disabled
     if (!settings.isInstrumentationEnabled())
     {
@@ -138,7 +142,7 @@ public class ClassTransformer implements ClassFileTransformer
     }
 
     // Don't modify a class which is already modified
-    if (modifiedClasses.contains(className))
+    if (modifiedClasses.contains(compklass))
     {
       if (settings.isVerboseMode())
       {
@@ -171,7 +175,7 @@ public class ClassTransformer implements ClassFileTransformer
     }
 
     // Record all class names which get this far
-    allClasses.add(className);
+    allClasses.add(compklass);
 
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
@@ -215,9 +219,11 @@ public class ClassTransformer implements ClassFileTransformer
                           byte[] originalClassfile)
       throws IllegalClassFormatException
   {
-    String className = internalClassName.replace('/', '.');
+    String className = classBeingRedefined.getName();
+    ComparableClass compclass = new ComparableClass(classBeingRedefined);
 
-    if (isToBeConsideredForInstrumentation(className, protectionDomain))
+    if (isToBeConsideredForInstrumentation(classBeingRedefined,
+                                           protectionDomain))
     {
       if (settings.isVerboseMode())
       {
@@ -252,12 +258,12 @@ public class ClassTransformer implements ClassFileTransformer
         writeClassBytes(newBytes, internalClassName + "_gen.class");
       }
 
-      modifiedClasses.add(className);
+      modifiedClasses.add(compclass);
       return newBytes;
     }
     else
     {
-      modifiedClasses.remove(className);
+      modifiedClasses.remove(compclass);
       return null;
     }
   }
@@ -413,9 +419,10 @@ public class ClassTransformer implements ClassFileTransformer
     Class<?>[] loadedClasses = inst.getAllLoadedClasses();
     for (Class<?> loadedClass : loadedClasses)
     {
-      if (modifiedClasses.contains(loadedClass.getName()))
+      ComparableClass compclass = new ComparableClass(loadedClass);
+      if (modifiedClasses.contains(compclass))
       {
-        modifiedKlasses.add(new ComparableClass(loadedClass));
+        modifiedKlasses.add(compclass);
       }
     }
     return modifiedKlasses;
@@ -464,7 +471,7 @@ public class ClassTransformer implements ClassFileTransformer
         }
       }
       else if (isToBeConsideredForInstrumentation(
-                                                  loadedClass.getName(),
+                                                  loadedClass,
                                                   loadedClass
                                                              .getProtectionDomain()))
       {
@@ -483,11 +490,6 @@ public class ClassTransformer implements ClassFileTransformer
     {
       try
       {
-        if (settings.isVerboseMode())
-        {
-          System.out.println("Transform class: "
-                             + klass.klass.getName());
-        }
         inst.retransformClasses(klass.klass);
 
         countNumClasses++;
@@ -550,19 +552,19 @@ public class ClassTransformer implements ClassFileTransformer
       if (other.klassloader != this.klassloader)
       {
         // klasses loaded by different classloaders are never equal. Compare the
-        // hashcodes to come up with a number which satisfies the requirement of 
+        // hashcodes to come up with a number which satisfies the requirement of
         // compareTo:
         // sgn(x.compareTo(y)) == -sgn(y.compareTo(x))
         //
         // Note that this approach is not guaranteed to work as the hashCode is
         // allowed to be the same for different objects.
-        return klass.hashCode() - other.klass.hashCode();
+        return this.klass.hashCode() - other.klass.hashCode();
       }
       else
       {
         // klasses loaded by the same classloader can be compared by name. This
         // allows us to use the String compareTo method.
-        String thisName = klass.getName();
+        String thisName = this.klass.getName();
         String otherName = other.klass.getName();
         return thisName.compareTo(otherName);
       }
@@ -573,8 +575,8 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (obj instanceof ComparableClass)
       {
-        ComparableClass objContainer = (ComparableClass) obj;
-        return objContainer.klass.equals(klass);
+        ComparableClass compClass = (ComparableClass) obj;
+        return compClass.klass.equals(this.klass);
       }
       else
       {
@@ -586,6 +588,13 @@ public class ClassTransformer implements ClassFileTransformer
     public int hashCode()
     {
       return klass.hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+      return (klassloader != null ? klassloader.toString() + ":"
+                                 : "") + klass.getName();
     }
   }
 }
