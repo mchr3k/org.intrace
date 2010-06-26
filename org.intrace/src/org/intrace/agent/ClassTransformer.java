@@ -8,10 +8,13 @@ import java.io.OutputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,7 +151,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class already modified: " + className);
+        System.out.println("Ignoring class already modified: " + compklass);
       }
       return false;
     }
@@ -229,7 +232,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("!! Instrumenting class: " + className);
+        System.out.println("!! Instrumenting class: " + compclass);
       }
 
       if (settings.saveTracedClassfiles())
@@ -502,7 +505,7 @@ public class ClassTransformer implements ClassFileTransformer
         inst.retransformClasses(klass.klass);
 
         countNumClasses++;
-        if ((countNumClasses % 100) == 0)
+        if ((countNumClasses % 10) == 0)
         {
           broadcastProgress(countNumClasses, totalNumClasses);
         }
@@ -574,7 +577,7 @@ public class ClassTransformer implements ClassFileTransformer
         //
         // Note that this approach is not guaranteed to work as the hashCode is
         // allowed to be the same for different objects.
-        return this.klassName.hashCode() - other.klassName.hashCode();
+        return this.toRegularString().compareTo(other.toRegularString());
       }
       else
       {
@@ -590,7 +593,8 @@ public class ClassTransformer implements ClassFileTransformer
       if (obj instanceof ComparableClassName)
       {
         ComparableClassName compClass = (ComparableClassName) obj;
-        return compClass.klassName.equals(this.klassName);
+        return (compClass.klassloader == this.klassloader)
+               && compClass.klassName.equals(this.klassName);
       }
       else
       {
@@ -604,11 +608,77 @@ public class ClassTransformer implements ClassFileTransformer
       return klassName.hashCode();
     }
 
+    protected String toRegularString()
+    {
+      String klassloaderStr = "";
+      if (klassloader != null)
+      {
+        klassloaderStr = klassloader.getClass().getName() + '@'
+                         + Integer.toHexString(klassloader.hashCode()) + ":";
+      }
+      return klassloaderStr + klassName;
+    }
+
     @Override
     public String toString()
     {
-      return (klassloader != null ? klassloader.toString() + ":"
-                                 : "") + klassName;
+      String klassLoaderName = "";
+      if (klassloader != null)
+      {
+        if (klassloader.getClass().getName()
+                       .equals("org.apache.catalina.loader.WebappClassLoader"))
+        {
+          klassLoaderName = klassloader.getClass().getName() + '@'
+                            + Integer.toHexString(klassloader.hashCode());
+
+          try
+          {
+            Method klassLoaderJarPath = klassloader.getClass()
+                                                   .getMethod("getURLs");
+            URL[] classURLs = (URL[]) klassLoaderJarPath
+                                                        .invoke(klassloader,
+                                                                (Object[]) null);
+            if (classURLs != null && classURLs.length > 0
+                && classURLs[0] != null)
+            {
+              Set<String> urlSet = new HashSet<String>();
+              for (URL classURL : classURLs)
+              {
+                if (classURL != null)
+                {
+                  String urlPath = classURL.getPath();
+                  urlPath = urlPath
+                                   .substring(
+                                              0,
+                                              urlPath
+                                                     .lastIndexOf(File.separator) + 1);
+                  urlSet.add(urlPath);
+                }
+              }
+              if (urlSet.size() > 0)
+              {
+                klassLoaderName += "\nClasspaths:\n";
+                StringBuilder classUrlStr = new StringBuilder();
+                for (String classURLStr : urlSet)
+                {
+                  classUrlStr.append(classURLStr).append("\n");
+                }
+                klassLoaderName += classUrlStr.toString();
+              }
+            }
+          }
+          catch (Throwable th)
+          {
+            // Discard
+          }
+        }
+        else
+        {
+          klassLoaderName = klassloader.toString();
+        }
+        klassLoaderName += ":";
+      }
+      return klassLoaderName + klassName;
     }
   }
 
@@ -644,7 +714,7 @@ public class ClassTransformer implements ClassFileTransformer
         //
         // Note that this approach is not guaranteed to work as the hashCode is
         // allowed to be the same for different objects.
-        return this.klass.hashCode() - other.klass.hashCode();
+        return this.toString().compareTo(other.toString());
       }
       else
       {
@@ -661,8 +731,9 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (obj instanceof ComparableClass)
       {
-        ComparableClass objContainer = (ComparableClass) obj;
-        return objContainer.klass.equals(this.klass);
+        ComparableClass compClass = (ComparableClass) obj;
+        return (compClass.klassloader == this.klassloader)
+               && compClass.klass.equals(this.klass);
       }
       else
       {
@@ -679,7 +750,13 @@ public class ClassTransformer implements ClassFileTransformer
     @Override
     public String toString()
     {
-      return klass.getName();
+      String klassloaderStr = "";
+      if (klassloader != null)
+      {
+        klassloaderStr = klassloader.getClass().getName() + '@'
+                         + Integer.toHexString(klassloader.hashCode()) + ":";
+      }
+      return klassloaderStr + klass.getName();
     }
   }
 }
