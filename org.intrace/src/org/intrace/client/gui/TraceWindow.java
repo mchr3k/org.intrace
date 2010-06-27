@@ -648,8 +648,8 @@ public class TraceWindow
       cancelButton.setLayoutData("grow,wrap");
       cancelButton.setVisible(false);
 
-      textOutput = new StyledText(composite, SWT.MULTI | SWT.WRAP
-                                             | SWT.V_SCROLL | SWT.BORDER);
+      textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
+                                             | SWT.H_SCROLL | SWT.BORDER);
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
       textOutput.setBackground(Display.getCurrent()
