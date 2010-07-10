@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Stack;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -13,6 +15,9 @@ import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
@@ -22,6 +27,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
@@ -43,6 +50,8 @@ import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow
 {
+  public static String NEWLINE = System.getProperty("line.separator");
+
   public void open()
   {
     placeDialogInCenter(sWindow.getDisplay().getPrimaryMonitor().getBounds(),
@@ -58,6 +67,7 @@ public class TraceWindow
   }
 
   private Shell sWindow = null;
+  private Clipboard sClipboard = null;
   final TabFolder outputTabs;
 
   public TraceWindow()
@@ -69,6 +79,8 @@ public class TraceWindow
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(800, 800));
     sWindow.setMinimumSize(new Point(800, 480));
+
+    sClipboard = new Clipboard(sWindow.getDisplay());
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     buttonTabs.setLayoutData("grow,wrap,wmin 0");
@@ -897,6 +909,8 @@ public class TraceWindow
     final TreeItem callersTreeRoot;
     final TabFolder tabFolder;
     private final Object tabCallersId;
+    private Map<String, Object> currentCallersMap;
+    private String currentCallersRegex;
 
     private CallersTab(TabFolder tabFolder, Object callersId)
     {
@@ -925,6 +939,21 @@ public class TraceWindow
       callersTree.setLayoutData("grow, spanx");
       callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
       callersTreeRoot.setText("Callers");
+
+      Menu treeContextMenu = new Menu(sWindow, SWT.POP_UP);
+      MenuItem copyItem = new MenuItem(treeContextMenu, SWT.PUSH);
+      copyItem.setText("Copy");
+      callersTree.setMenu(treeContextMenu);
+
+      copyItem
+              .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+              {
+                @Override
+                public void widgetSelected(SelectionEvent arg0)
+                {
+                  copyCallersTree();
+                }
+              });
 
       endCapture
                 .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -956,11 +985,60 @@ public class TraceWindow
                   });
     }
 
+    @SuppressWarnings("unchecked")
+    private void copyCallersTree()
+    {
+      StringBuilder treeCopy = new StringBuilder(currentCallersRegex + NEWLINE);
+      Iterator<Entry<String, Object>> currentIter = currentCallersMap
+                                                                     .entrySet()
+                                                                     .iterator();
+      Stack<Iterator<Entry<String, Object>>> mapStack = new Stack<Iterator<Entry<String, Object>>>();
+
+      // Keep looping while we have more entries at this level or higher levels
+      // still to check
+      while (currentIter.hasNext() || mapStack.size() > 0)
+      {
+        // No more entries at the current level - look at higher levels
+        while (!currentIter.hasNext() && (mapStack.size() > 0))
+        {
+          currentIter = mapStack.pop();
+        }
+
+        // No more entries at any level
+        if (!currentIter.hasNext())
+        {
+          break;
+        }
+
+        Entry<String, Object> callersEntry = currentIter.next();
+        for (int ii = 0; ii < (mapStack.size() + 1); ii++)
+        {
+          treeCopy.append("-");
+        }
+        treeCopy.append(callersEntry.getKey()).append(NEWLINE);
+        Object callersEntryVal = callersEntry.getValue();
+        if ((callersEntryVal != null) && (callersEntryVal instanceof Map<?, ?>))
+        {
+          mapStack.push(currentIter);
+          currentIter = ((Map<String, Object>) callersEntryVal).entrySet()
+                                                               .iterator();
+        }
+      }
+      sClipboard.setContents(new Object[]
+      { treeCopy.toString() }, new Transfer[]
+      { TextTransfer.getInstance() });
+    }
+
     public void setData(final Map<String, Object> callersMap)
     {
       final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
-      final Object callersRegex = callersMap
-                                            .remove(CallersConfigConstants.PATTERN);
+      Object callersRegexObj = callersMap
+                                         .remove(CallersConfigConstants.PATTERN);
+      final String callersRegex = "Callers: "
+                                  + callersRegexObj.toString().replace(".*",
+                                                                       "*");
+      currentCallersRegex = callersRegex;
+      currentCallersMap = callersMap;
 
       sWindow.getDisplay().asyncExec(new Runnable()
       {
