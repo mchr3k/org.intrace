@@ -133,15 +133,12 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
-    // Don't modify self
-    if (className.startsWith("org.intrace")
-        || className.contains("objectweb.asm"))
+    // Don't sensitive classes
+    if (isSensitiveClass(className))
     {
       if (settings.isVerboseMode())
       {
-        System.out
-                  .println("Ignoring class in org.intrace or objectweb.asm package: "
-                           + className);
+        System.out.println("Ignoring sensitive class: " + className);
       }
       return false;
     }
@@ -170,6 +167,8 @@ public class ClassTransformer implements ClassFileTransformer
     // Don't modify a class from a JAR file unless this is allowed
     CodeSource codeSource = protectionDomain.getCodeSource();
     if (!settings.allowJarsToBeTraced() && (codeSource != null)
+        && (codeSource.getLocation() != null)
+        && (codeSource.getLocation().getPath() != null)
         && codeSource.getLocation().getPath().endsWith(".jar"))
     {
       if (settings.isVerboseMode())
@@ -210,6 +209,14 @@ public class ClassTransformer implements ClassFileTransformer
     return true;
   }
 
+  private boolean isSensitiveClass(String className)
+  {
+    return className.contains("intrace") || className.contains("objectweb.asm")
+           || className.startsWith("sun")
+           || className.startsWith("org.openide")
+           || className.startsWith("com.sun") || className.startsWith("java");
+  }
+
   /**
    * java.lang.instrument Entry Point
    * <p>
@@ -230,10 +237,7 @@ public class ClassTransformer implements ClassFileTransformer
     if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
                                            className, protectionDomain))
     {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("!! Instrumenting class: " + compclass);
-      }
+      System.out.println("!! Instrumenting class: " + compclass);
 
       if (settings.saveTracedClassfiles())
       {

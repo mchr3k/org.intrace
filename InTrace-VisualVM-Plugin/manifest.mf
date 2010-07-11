@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.intrace.visualvm
+OpenIDE-Module-Install: org/intrace/visualvm/Installer.class
+OpenIDE-Module-Layer: org/intrace/visualvm/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/intrace/visualvm/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

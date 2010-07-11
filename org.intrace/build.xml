@@ -1,4 +1,4 @@
-<project name="TraceAgent" basedir="." default="help">
+<project name="InTrace" basedir="." default="help">
 
   <!-- directory that contains emma.jar and emma_ant.jar: -->
   <path id="emma.lib" >
@@ -77,7 +77,7 @@
     <mkdir dir="./build/jars/" />
 
     <!-- Trace Agent -->
-    <jarjar jarfile="./build/jars/traceagent.jar" compress="false">
+    <jarjar jarfile="./build/jars/intrace-agent.jar" compress="false">
       <manifest>
         <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
         <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
@@ -93,7 +93,7 @@
     </jarjar>
 
     <!-- Test Trace Agent -->
-    <jar destfile="./build/jars/traceagent_test.jar" compress="false">
+    <jar destfile="./build/jars/intrace-agent-test.jar" compress="false">
       <manifest>
         <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
         <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
@@ -104,7 +104,7 @@
     </jar>
 
     <!-- CUI Trace Client -->
-    <jar destfile="./build/jars/cuitraceclient.jar" compress="false">
+    <jar destfile="./build/jars/intrace-client-cui.jar" compress="false">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
         <attribute name="Class-Path" value="." />
@@ -116,7 +116,7 @@
     </jar>
 
     <!-- GUI Trace Client - Windows -->
-    <jar destfile="./build/jars/guitraceclient-win.jar" filesetmanifest="mergewithoutmain">
+    <jar destfile="./build/jars/intrace-client-gui-win.jar" filesetmanifest="mergewithoutmain">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
@@ -130,7 +130,7 @@
     </jar>
 
     <!-- GUI Trace Client - Linux -->
-    <jar destfile="./build/jars/guitraceclient-linux.jar" filesetmanifest="mergewithoutmain">
+    <jar destfile="./build/jars/intrace-client-gui-linux.jar" filesetmanifest="mergewithoutmain">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
         <attribute name="Class-Path" value="." />
@@ -186,7 +186,7 @@
       </classpath>
       <jvmarg value="-Demma.coverage.out.file=./reports/emma/metadata/coverage.emma" />
       <jvmarg value="-Demma.coverage.out.merge=true" />
-      <jvmarg value="-javaagent:lib/traceagent_test.jar"/>
+      <jvmarg value="-javaagent:lib/intrace-agent-test.jar"/>
 
       <formatter type="xml"/>
       <formatter type="plain"/>
@@ -223,7 +223,7 @@
     <mkdir dir="./reports/findbugs" />
 
     <!-- Build Findbugs Trace Agent (Don't include ASM classes) -->
-    <jar destfile="./reports/findbugs/traceagent_findbugs.jar" compress="false">
+    <jar destfile="./reports/findbugs/intrace-agent-findbugs.jar" compress="false">
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
@@ -231,14 +231,14 @@
 
     <findbugs home="${findbugs.home}"
               output="xml"
-              outputFile="./reports/findbugs/traceagent-fb.xml"
+              outputFile="./reports/findbugs/intrace-agent-findbugs-results.xml"
         excludeFilter="./conf/findbugs_exclude.xml"
         jvmargs="-Xmx256m">
       <auxClasspath>
         <fileset dir="./lib" includes="*.jar" />
       </auxClasspath>
       <sourcePath path="./src" />
-      <class location="./reports/findbugs/traceagent_findbugs.jar" />
+      <class location="./reports/findbugs/intrace-agent-findbugs.jar" />
     </findbugs>
 
   </target>
@@ -263,7 +263,7 @@
       <classpath>
         <pathelement path="./build/test" />
       </classpath>
-      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
+      <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
     </java>
   </target>
 
@@ -273,7 +273,7 @@
       <classpath>
         <pathelement path="./build/test" />
       </classpath>
-      <jvmarg value="-javaagent:build/jars/traceagent.jar=[instru-true" />
+      <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
     </java>
   </target>
 

@@ -38,7 +38,7 @@
     <mkdir dir="./built/" />
     
     <!-- CUI Agent Loader -->
-    <jar destfile="./built/cuiagentloader.jar" compress="false">
+    <jar destfile="./built/agentloader-cui.jar" compress="false">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.agentloader.AgentLoader" />
         <attribute name="Class-Path" value=". ./tools.jar" />
