@@ -16,8 +16,5 @@ public class Installer extends ModuleInstall {
     @Override
     public void restored() {
         InTraceViewProvider.initialize();
-        System.out.println(Locator.agentPath);
-        System.out.println(Locator.winClientPath);
-        System.out.println(Locator.linuxClientPath);
     }
 }

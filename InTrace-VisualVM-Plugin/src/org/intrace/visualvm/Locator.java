@@ -16,49 +16,35 @@ import org.openide.modules.InstalledFileLocator;
 public class Locator {
 
     public static final String agentPath;
-    public static final URL linuxClientPath;
-    public static final URL winClientPath;
+    public static final String clientPath;
 
     static {
-        File locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-agent.jar", "com.sun.btrace", false); // NOI18N
+        File locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-agent.jar", null, false); // NOI18N
         if (locatedFile != null) {
             agentPath = locatedFile.getAbsolutePath();
         } else {
             agentPath = null;
         }
 
-        locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-client-gui-win.jar", "com.sun.btrace", false); // NOI18N
-        if (locatedFile != null) {
-            URL lWinClientPath = null;
-            try {
-                lWinClientPath = locatedFile.toURI().toURL();
-            } catch (MalformedURLException ex) {
-                //
-            }
-            if (lWinClientPath != null) {
-                winClientPath = lWinClientPath;
+        String osName = System.getProperty("os.name", "unknown");
+        if (osName.contains("Windows")) {
+            locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-client-gui-win.jar", null, false); // NOI18N
+            if (locatedFile != null) {
+                clientPath = locatedFile.getAbsolutePath();
             } else {
-                winClientPath = null;
+                clientPath = null;
             }
-        } else {
-            winClientPath = null;
         }
-
-        locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-client-gui-linux.jar", "com.sun.btrace", false); // NOI18N
-        if (locatedFile != null) {
-            URL lLinuxClientPath = null;
-            try {
-                lLinuxClientPath = locatedFile.toURI().toURL();
-            } catch (MalformedURLException ex) {
-                //
-            }
-            if (lLinuxClientPath != null) {
-                linuxClientPath = lLinuxClientPath;
+        else if (osName.contains("Linux")) {
+            locatedFile = InstalledFileLocator.getDefault().locate("modules/ext/intrace-client-gui-linux.jar", null, false); // NOI18N
+            if (locatedFile != null) {
+                clientPath = locatedFile.getAbsolutePath();
             } else {
-                linuxClientPath = null;
+                clientPath = null;
             }
-        } else {
-            linuxClientPath = null;
+        }
+        else {
+            clientPath = null;
         }
     }
 }
