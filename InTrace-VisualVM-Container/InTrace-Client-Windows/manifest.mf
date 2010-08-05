@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.intrace.client
+OpenIDE-Module-Localizing-Bundle: org/intrace/client/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
