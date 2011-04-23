@@ -18,7 +18,6 @@ public class AgentSettings
   private boolean instruEnabled = false;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
-  private boolean allowJarsToBeTraced = false;
 
   public AgentSettings(String args)
   {
@@ -32,7 +31,6 @@ public class AgentSettings
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
-    allowJarsToBeTraced = oldInstance.allowJarsToBeTraced();
   }
 
   public void parseArgs(String args)
@@ -78,16 +76,6 @@ public class AgentSettings
     {
       saveTracedClassfiles = false;
     }
-    else if (arg.toLowerCase()
-                .equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "true"))
-    {
-      allowJarsToBeTraced = true;
-    }
-    else if (arg.toLowerCase()
-                .equals(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED + "false"))
-    {
-      allowJarsToBeTraced = false;
-    }
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
@@ -128,11 +116,6 @@ public class AgentSettings
     return verboseMode;
   }
 
-  public boolean allowJarsToBeTraced()
-  {
-    return allowJarsToBeTraced;
-  }
-
   @Override
   public String toString()
   {
@@ -140,8 +123,6 @@ public class AgentSettings
     currentSettings += "Class Regex                : " + classRegex + "\n";
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
     currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles
-                       + "\n";
-    currentSettings += "Trace Classes in JAR Files : " + allowJarsToBeTraced
                        + "\n";
     return currentSettings;
   }
@@ -154,8 +135,6 @@ public class AgentSettings
     settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
     settingsMap.put(AgentConfigConstants.EXCLUDE_CLASS_REGEX,
                     excludeClassRegex.pattern());
-    settingsMap.put(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED,
-                    Boolean.toString(allowJarsToBeTraced));
     settingsMap.put(AgentConfigConstants.VERBOSE_MODE,
                     Boolean.toString(verboseMode));
     settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,

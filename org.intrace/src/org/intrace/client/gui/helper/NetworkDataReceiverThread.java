@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Map;
 
 import org.intrace.client.gui.TraceWindow;
 
@@ -33,7 +32,6 @@ public class NetworkDataReceiverThread implements Runnable
     t.start();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void run()
   {
@@ -55,11 +53,6 @@ public class NetworkDataReceiverThread implements Runnable
               traceThread.addTraceLine(traceLine);
             }
           }
-        }
-        else if (data instanceof Map<?, ?>)
-        {
-          Map<String, Object> callersMap = (Map<String, Object>) data;
-          window.setCallers(callersMap);
         }
       }
     }

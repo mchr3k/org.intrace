@@ -12,9 +12,7 @@ public class AgentSettingsTest extends TestCase
   public void testAgentSettings()
   {
     AgentSettings as = new AgentSettings(
-                                         AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED
-                                             + "true"
-                                             + AgentConfigConstants.CLASS_REGEX
+                                         AgentConfigConstants.CLASS_REGEX
                                              + ".*"
                                              + AgentConfigConstants.INSTRU_ENABLED
                                              + "true"
@@ -22,14 +20,12 @@ public class AgentSettingsTest extends TestCase
                                              + "true"
                                              + AgentConfigConstants.VERBOSE_MODE
                                              + "true");
-    assertEquals(as.allowJarsToBeTraced(), true);
     assertEquals(as.getClassRegex().pattern(), ".*");
     assertEquals(as.isInstrumentationEnabled(), true);
     assertEquals(as.saveTracedClassfiles(), true);
     assertEquals(as.isVerboseMode(), true);
 
     as = new AgentSettings(as);
-    assertEquals(as.allowJarsToBeTraced(), true);
     assertEquals(as.getClassRegex().pattern(), ".*");
     assertEquals(as.isInstrumentationEnabled(), true);
     assertEquals(as.saveTracedClassfiles(), true);
@@ -39,8 +35,6 @@ public class AgentSettingsTest extends TestCase
     assertNotNull(toString);
 
     Map<String, String> settingsMap = as.getSettingsMap();
-    assertEquals(settingsMap.get(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED),
-                 "true");
     assertEquals(settingsMap.get(AgentConfigConstants.CLASS_REGEX), ".*");
     assertEquals(settingsMap.get(AgentConfigConstants.INSTRU_ENABLED), "true");
     assertEquals(settingsMap.get(AgentConfigConstants.SAVE_TRACED_CLASSFILES),

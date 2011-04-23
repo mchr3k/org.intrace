@@ -110,8 +110,6 @@ public class AgentTest extends TestCase
   public void testSettings() throws Exception
   {
     // Boolean settings
-    testSetting(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, "true");
-    testSetting(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, "false");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
@@ -121,7 +119,6 @@ public class AgentTest extends TestCase
 
     // Regex (Test in verbose mode to exercise the verbose code
     testSetting(AgentConfigConstants.CLASS_REGEX, "foo.*");
-    testSetting(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "true");
     testSetting(AgentConfigConstants.CLASS_REGEX, ".*");
@@ -208,7 +205,6 @@ public class AgentTest extends TestCase
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, ".*BranchPatterns.*");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
-    testSetting(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
 
@@ -324,7 +320,6 @@ public class AgentTest extends TestCase
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, ".*ArgumentTypes.*");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
-    testSetting(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
 

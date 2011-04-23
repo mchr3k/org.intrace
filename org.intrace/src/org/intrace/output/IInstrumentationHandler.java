@@ -2,7 +2,6 @@ package org.intrace.output;
 
 import java.util.Map;
 
-import org.intrace.output.callers.CallersHandler;
 import org.intrace.output.trace.TraceHandler;
 
 /**
@@ -11,7 +10,6 @@ import org.intrace.output.trace.TraceHandler;
  * See the following classes for example implementations.
  * <ul>
  * <li>{@link TraceHandler}
- * <li>{@link CallersHandler}
  * </ul>
  */
 public interface IInstrumentationHandler

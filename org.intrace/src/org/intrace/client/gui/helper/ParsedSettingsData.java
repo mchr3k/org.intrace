@@ -13,7 +13,6 @@ public class ParsedSettingsData
   public boolean instrEnabled;
   public boolean saveTracedClassfiles;
   public boolean verboseMode;
-  public boolean allowJarsToBeTraced;
 
   public boolean entryExitEnabled;
   public boolean branchEnabled;
@@ -62,17 +61,6 @@ public class ParsedSettingsData
     else
     {
       verboseMode = false;
-    }
-
-    if ("true"
-              .equals(settingsMap
-                                 .get(AgentConfigConstants.ALLOW_JARS_TO_BE_TRACED)))
-    {
-      allowJarsToBeTraced = true;
-    }
-    else
-    {
-      allowJarsToBeTraced = false;
     }
 
     if ("true".equals(settingsMap.get(TraceConfigConstants.ENTRY_EXIT)))

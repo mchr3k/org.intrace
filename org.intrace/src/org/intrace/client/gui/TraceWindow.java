@@ -4,20 +4,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Stack;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
@@ -27,15 +20,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 import org.intrace.client.gui.PatternInputWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.Connection;
 import org.intrace.client.gui.helper.ControlConnectionThread;
@@ -46,7 +35,6 @@ import org.intrace.client.gui.helper.TraceFilterThread;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.CallersConfigConstants;
 
 public class TraceWindow
 {
@@ -55,7 +43,7 @@ public class TraceWindow
   public void open()
   {
     placeDialogInCenter(sWindow.getDisplay().getPrimaryMonitor().getBounds(),
-                        sWindow);
+        sWindow);
     sWindow.open();
     Display display = Display.getDefault();
     while (!sWindow.isDisposed())
@@ -67,7 +55,6 @@ public class TraceWindow
   }
 
   private Shell sWindow = null;
-  private Clipboard sClipboard = null;
   final TabFolder outputTabs;
 
   public TraceWindow()
@@ -79,8 +66,6 @@ public class TraceWindow
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(800, 800));
     sWindow.setMinimumSize(new Point(800, 480));
-
-    sClipboard = new Clipboard(sWindow.getDisplay());
 
     TabFolder buttonTabs = new TabFolder(sWindow, SWT.NONE);
     buttonTabs.setLayoutData("grow,wrap,wmin 0");
@@ -97,7 +82,7 @@ public class TraceWindow
   private ConnectionTab connTab;
   private InstruTab instruTab;
   private TraceTab traceTab;
-  private CallersSettingsTab callSettingsTab;
+  private ExtrasTab extraTab;
 
   private void fillButtonTabs(TabFolder tabFolder)
   {
@@ -113,9 +98,9 @@ public class TraceWindow
     traceTabItem.setText("Trace");
     traceTab = new TraceTab(tabFolder, traceTabItem);
 
-    TabItem callersTabItem = new TabItem(tabFolder, SWT.NONE);
-    callersTabItem.setText("Callers");
-    callSettingsTab = new CallersSettingsTab(tabFolder, callersTabItem);
+    TabItem extraTabItem = new TabItem(tabFolder, SWT.NONE);
+    extraTabItem.setText("Advanced");
+    extraTab = new ExtrasTab(tabFolder, extraTabItem);
   }
 
   private class ConnectionTab
@@ -124,40 +109,39 @@ public class TraceWindow
     final Text addressInput;
     final Text portInput;
     final StatusUpdater connectStatus;
-    final Button printSettings;
 
     private ConnectionTab(TabFolder tabFolder, TabItem connTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[380][grow][100]");
+      MigLayout windowLayout = new MigLayout("fill", "[380][grow]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
       connTab.setControl(composite);
 
       Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout connGroupLayout = new MigLayout("fill", "[100][40][grow]");
+      MigLayout connGroupLayout = new MigLayout("fill", "[40][200][grow]");
       connectionGroup.setLayout(connGroupLayout);
       connectionGroup.setText("Details");
       connectionGroup.setLayoutData("spany,grow,wmin 300");
-
-      connectButton = new Button(connectionGroup, SWT.LEFT);
-      connectButton.setText(ClientStrings.CONNECT);
-      connectButton.setAlignment(SWT.CENTER);
-      connectButton.setLayoutData("spany,grow");
 
       Label addressLabel = new Label(connectionGroup, SWT.NONE);
       addressLabel.setText(ClientStrings.CONN_ADDRESS);
       addressLabel.setLayoutData("gapx 5px,right");
       addressInput = new Text(connectionGroup, SWT.BORDER);
       addressInput.setText("localhost");
-      addressInput.setLayoutData("growx,gapy 8px,wrap");
+      addressInput.setLayoutData("growx,gapy 8px");
+
+      connectButton = new Button(connectionGroup, SWT.LEFT);
+      connectButton.setText(ClientStrings.CONNECT);
+      connectButton.setAlignment(SWT.CENTER);
+      connectButton.setLayoutData("gapx 5px,spany,grow,wrap");
 
       Label portLabel = new Label(connectionGroup, SWT.NONE);
       portLabel.setText(ClientStrings.CONN_PORT);
       portLabel.setLayoutData("gapx 5px,right");
       portInput = new Text(connectionGroup, SWT.BORDER);
       portInput.setText("9123");
-      portInput.setLayoutData("growx,wrap");
+      portInput.setLayoutData("growx");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       statusGroup.setLayoutData("spany,grow,wmin 0");
@@ -169,11 +153,6 @@ public class TraceWindow
       statusLabel.setAlignment(SWT.CENTER);
       statusLabel.setLayoutData("grow,wmin 0");
       connectStatus = new StatusUpdater(sWindow, statusLabel);
-
-      printSettings = new Button(composite, SWT.PUSH);
-      printSettings.setText(ClientStrings.DUMP_SETTINGS);
-      printSettings.setAlignment(SWT.CENTER);
-      printSettings.setLayoutData("gap 10px 0px 5px,spany,grow,wrap");
 
       SelectionListener connectListen = new org.eclipse.swt.events.SelectionAdapter()
       {
@@ -196,11 +175,9 @@ public class TraceWindow
           {
             connectionState = ConnectState.CONNECTING;
             updateUIStateSameThread();
-            Connection.connectToAgent(traceDialogRef, sWindow,
-                                      addressInput.getText(),
-                                      portInput.getText(), connectStatus);
-          }
-          else if (connectionState == ConnectState.CONNECTED)
+            Connection.connectToAgent(traceDialogRef, sWindow, addressInput
+                .getText(), portInput.getText(), connectStatus);
+          } else if (connectionState == ConnectState.CONNECTED)
           {
             disconnect();
           }
@@ -210,19 +187,6 @@ public class TraceWindow
       addressInput.addSelectionListener(connectListen);
       portInput.addSelectionListener(connectListen);
       connectButton.addSelectionListener(connectListen);
-
-      printSettings
-                   .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                   {
-                     @Override
-                     public void widgetSelected(SelectionEvent arg0)
-                     {
-                       textOutputTab.filterThread
-                                                 .addTraceLine("Settings:"
-                                                               + settingsData
-                                                                             .toString());
-                     }
-                   });
     }
   }
 
@@ -231,14 +195,11 @@ public class TraceWindow
     final Button togInstru;
     final Button classRegex;
     final Button listClasses;
-    final Button togJars;
-    final Button togSaveClasses;
-    final Button togVerbose;
     final Label instrStatusLabel;
 
     private InstruTab(TabFolder tabFolder, TabItem instrTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[][grow][][]", "[][]");
+      MigLayout windowLayout = new MigLayout("fill", "[][300][grow]", "[]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -246,178 +207,130 @@ public class TraceWindow
       composite.setLayoutData("hmin 0");
 
       Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout mainControlGroupLayout = new MigLayout("", "[100][100][100]");
+      MigLayout mainControlGroupLayout = new MigLayout("filly", "[150][150]");
       mainControlGroup.setLayout(mainControlGroupLayout);
       mainControlGroup.setText("Control");
-      mainControlGroup.setLayoutData("hmin 0");
-
-      togInstru = new Button(mainControlGroup, SWT.TOGGLE);
-      togInstru.setText(ClientStrings.ENABLE_INSTR);
-      togInstru.setAlignment(SWT.CENTER);
-      togInstru.setLayoutData("");
+      mainControlGroup.setLayoutData("hmin 0, grow");
 
       classRegex = new Button(mainControlGroup, SWT.PUSH);
       classRegex.setText(ClientStrings.SET_CLASSREGEX);
-      classRegex.setLayoutData("gapx 10px");
+      classRegex.setLayoutData("grow");
 
-      listClasses = new Button(mainControlGroup, SWT.PUSH);
-      listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
-      listClasses.setAlignment(SWT.CENTER);
-      listClasses.setLayoutData("");
-
-      Group settingsGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout settingsGroupLayout = new MigLayout("fill", "[100]");
-      settingsGroup.setLayout(settingsGroupLayout);
-      settingsGroup.setText("Settings");
-      settingsGroup.setLayoutData("grow,skip,spany");
-
-      togJars = new Button(settingsGroup, SWT.TOGGLE);
-      togJars.setText(ClientStrings.ENABLE_ALLOWJARS);
-      togJars.setAlignment(SWT.CENTER);
-      togJars.setLayoutData("growx,wrap,aligny top");
-
-      Group debugGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout debugGroupLayout = new MigLayout("fill", "[100]");
-      debugGroup.setLayout(debugGroupLayout);
-      debugGroup.setText("Debug");
-      debugGroup.setLayoutData("grow,skip,spany,wrap");
-
-      togSaveClasses = new Button(debugGroup, SWT.TOGGLE);
-      togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
-      togSaveClasses.setAlignment(SWT.CENTER);
-      togSaveClasses.setLayoutData("growx,wrap,aligny top");
-
-      togVerbose = new Button(debugGroup, SWT.TOGGLE);
-      togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
-      togVerbose.setAlignment(SWT.CENTER);
-      togVerbose.setLayoutData("growx,aligny top");
+      togInstru = new Button(mainControlGroup, SWT.PUSH);
+      togInstru.setText(ClientStrings.ENABLE_INSTR);
+      togInstru.setAlignment(SWT.CENTER);
+      togInstru.setLayoutData("grow");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_IN);
-      MigLayout statusGroupLayout = new MigLayout("fillx");
+      MigLayout statusGroupLayout = new MigLayout("fillx", "[][]");
       statusGroup.setLayout(statusGroupLayout);
       statusGroup.setText("Status");
-      statusGroup.setLayoutData("growx");
+      statusGroup.setLayoutData("grow");
 
       instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.VERTICAL);
       instrStatusLabel.setAlignment(SWT.LEFT);
-      instrStatusLabel.setLayoutData("hmin 0,growx");
+      instrStatusLabel.setLayoutData("hmin 0,growx,wrap");
       setStatus(0, 0);
 
+      listClasses = new Button(statusGroup, SWT.PUSH);
+      listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
+      listClasses.setAlignment(SWT.CENTER);
+      listClasses.setLayoutData("gapy 5px");
+
       togInstru
-               .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-               {
-                 @Override
-                 public void widgetSelected(SelectionEvent arg0)
-                 {
-                   toggleSetting(settingsData.instrEnabled, "[instru-true",
-                                 "[instru-false");
-                   settingsData.instrEnabled = !settingsData.instrEnabled;
-                 }
-               });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              if (!settingsData.instrEnabled)
+              {
+                togInstru.setText(ClientStrings.ENABLING_INSTR);
+              }
+              else
+              {
+                togInstru.setText(ClientStrings.DISABLE_INSTR);
+              }
+              togInstru.setEnabled(false);
+              toggleSetting(settingsData.instrEnabled, "[instru-true",
+                  "[instru-false");
+              settingsData.instrEnabled = !settingsData.instrEnabled;
+            }
+          });
 
       final String helpText = "Enter pattern in the form "
-                              + "\"mypack.mysubpack.MyClass\" or using wildcards "
-                              + "\"mypack.*.MyClass\" or \"*MyClass\" etc";
+          + "\"mypack.mysubpack.MyClass\" or using wildcards "
+          + "\"mypack.*.MyClass\" or \"*MyClass\" etc";
       classRegex
-                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                {
-                  @Override
-                  public void widgetSelected(SelectionEvent arg0)
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              PatternInputWindow regexInput = new PatternInputWindow(
+                  "Set Class Regex", helpText, new PatternInputCallback()
                   {
-                    PatternInputWindow regexInput = new PatternInputWindow(
-                                                                           "Set Class Regex",
-                                                                           helpText,
-                                                                           new PatternInputCallback()
-                                                                           {
-                                                                             private String includePattern = null;
-                                                                             private String excludePattern = null;
+                    private String includePattern = null;
+                    private String excludePattern = null;
 
-                                                                             @Override
-                                                                             public void setIncludePattern(
-                                                                                                           String newIncludePattern)
-                                                                             {
-                                                                               includePattern = newIncludePattern;
-                                                                               savePatterns();
-                                                                             }
-
-                                                                             @Override
-                                                                             public void setExcludePattern(
-                                                                                                           String newExcludePattern)
-                                                                             {
-                                                                               excludePattern = newExcludePattern;
-                                                                               savePatterns();
-                                                                             }
-
-                                                                             private void savePatterns()
-                                                                             {
-                                                                               if ((includePattern != null)
-                                                                                   && (excludePattern != null))
-                                                                               {
-                                                                                 setRegex(
-                                                                                          includePattern,
-                                                                                          excludePattern);
-                                                                               }
-                                                                             }
-                                                                           },
-                                                                           settingsData.classRegex,
-                                                                           settingsData.classExcludeRegex);
-                    placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
-                  }
-                });
-      listClasses
-                 .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                 {
-                   @Override
-                   public void widgetSelected(SelectionEvent arg0)
-                   {
-                     getModifiedClasses();
-                   }
-                 });
-      togJars
-             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-             {
-               @Override
-               public void widgetSelected(SelectionEvent arg0)
-               {
-                 toggleSetting(settingsData.allowJarsToBeTraced,
-                               "[instrujars-true", "[instrujars-false");
-                 settingsData.allowJarsToBeTraced = !settingsData.allowJarsToBeTraced;
-               }
-             });
-      togSaveClasses
-                    .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+                    @Override
+                    public void setIncludePattern(String newIncludePattern)
                     {
-                      @Override
-                      public void widgetSelected(SelectionEvent arg0)
+                      includePattern = newIncludePattern;
+                      savePatterns();
+                    }
+
+                    @Override
+                    public void setExcludePattern(String newExcludePattern)
+                    {
+                      excludePattern = newExcludePattern;
+                      savePatterns();
+                    }
+
+                    private void savePatterns()
+                    {
+                      if ((includePattern != null) && (excludePattern != null))
                       {
-                        toggleSetting(settingsData.saveTracedClassfiles,
-                                      "[saveinstru-true", "[saveinstru-false");
-                        settingsData.saveTracedClassfiles = !settingsData.saveTracedClassfiles;
+                        setRegex(includePattern, excludePattern);
                       }
-                    });
-      togVerbose
-                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                {
-                  @Override
-                  public void widgetSelected(SelectionEvent arg0)
-                  {
-                    toggleSetting(settingsData.verboseMode, "[verbose-true",
-                                  "[verbose-false");
-                    settingsData.verboseMode = !settingsData.verboseMode;
-                  }
-                });
+                    }
+                  }, settingsData.classRegex, settingsData.classExcludeRegex);
+              placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
+            }
+          });
+      listClasses
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              getModifiedClasses();
+            }
+          });
+
     }
 
     private void setStatus(int instruClasses, int totalClasses)
     {
-      instrStatusLabel.setText("Instru'd: " + instruClasses + "/"
-                               + totalClasses);
+      instrStatusLabel.setText("Instrumented/Total Loaded Classes: " + instruClasses + "/"
+          + totalClasses);
     }
 
-    private void setProgress(int progressClasses, int totalClasses)
+    private void setProgress(int progressClasses, int totalClasses, boolean done)
     {
       instrStatusLabel.setText("Progress: " + progressClasses + "/"
-                               + totalClasses);
+          + totalClasses);
+      if (done)
+      {
+        if (settingsData.instrEnabled)
+        {
+          togInstru.setText(ClientStrings.DISABLE_INSTR);
+        } else
+        {
+          togInstru.setText(ClientStrings.ENABLE_INSTR);
+        }
+        togInstru.setEnabled(true);
+      }
     }
   }
 
@@ -429,7 +342,6 @@ public class TraceWindow
 
     final Button stdOutOutput;
     final Button fileOutput;
-    final Button networkOutput;
 
     private TraceTab(TabFolder tabFolder, TabItem traceTab)
     {
@@ -440,178 +352,163 @@ public class TraceWindow
       traceTab.setControl(composite);
 
       Group traceTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout traceTypesGroupLayout = new MigLayout("fill", "[80][80][80]");
+      MigLayout traceTypesGroupLayout = new MigLayout("fill", "[150]");
       traceTypesGroup.setLayout(traceTypesGroupLayout);
       traceTypesGroup.setText("Trace Settings");
       traceTypesGroup.setLayoutData("spany,grow");
 
-      entryExitTrace = new Button(traceTypesGroup, SWT.TOGGLE);
+      entryExitTrace = new Button(traceTypesGroup, SWT.CHECK);
       entryExitTrace.setText(ClientStrings.ENABLE_EE_TRACE);
-      entryExitTrace.setLayoutData("spany,grow");
+      entryExitTrace.setLayoutData("wrap");
 
-      branchTrace = new Button(traceTypesGroup, SWT.TOGGLE);
+      branchTrace = new Button(traceTypesGroup, SWT.CHECK);
       branchTrace.setText(ClientStrings.ENABLE_BRANCH_TRACE);
       branchTrace.setAlignment(SWT.CENTER);
-      branchTrace.setLayoutData("spany,grow");
+      branchTrace.setLayoutData("wrap");
 
-      argsTrace = new Button(traceTypesGroup, SWT.TOGGLE);
+      argsTrace = new Button(traceTypesGroup, SWT.CHECK);
       argsTrace.setText(ClientStrings.ENABLE_ARGS_TRACE);
       argsTrace.setAlignment(SWT.CENTER);
-      argsTrace.setLayoutData("spany,grow");
 
       Group outputTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout outputTypesGroupLayout = new MigLayout("fill", "[80][80][80]");
+      MigLayout outputTypesGroupLayout = new MigLayout("fill", "[150]");
       outputTypesGroup.setLayout(outputTypesGroupLayout);
       outputTypesGroup.setText("Output Settings");
       outputTypesGroup.setLayoutData("spany,grow");
 
-      stdOutOutput = new Button(outputTypesGroup, SWT.TOGGLE);
+      stdOutOutput = new Button(outputTypesGroup, SWT.CHECK);
       stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
-      stdOutOutput.setLayoutData("spany,grow");
+      stdOutOutput.setLayoutData("wrap");
 
-      fileOutput = new Button(outputTypesGroup, SWT.TOGGLE);
+      fileOutput = new Button(outputTypesGroup, SWT.CHECK);
       fileOutput.setText(ClientStrings.ENABLE_FILE_OUTPUT);
       fileOutput.setAlignment(SWT.CENTER);
-      fileOutput.setLayoutData("spany,grow");
-
-      networkOutput = new Button(outputTypesGroup, SWT.TOGGLE);
-      networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
-      networkOutput.setAlignment(SWT.CENTER);
-      networkOutput.setLayoutData("spany,grow");
+      fileOutput.setLayoutData("wrap");
 
       entryExitTrace
-                    .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                    {
-                      @Override
-                      public void widgetSelected(SelectionEvent arg0)
-                      {
-                        toggleSetting(settingsData.entryExitEnabled,
-                                      "[trace-ee-true", "[trace-ee-false");
-                        settingsData.entryExitEnabled = !settingsData.entryExitEnabled;
-                      }
-                    });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.entryExitEnabled, "[trace-ee-true",
+                  "[trace-ee-false");
+              settingsData.entryExitEnabled = !settingsData.entryExitEnabled;
+            }
+          });
       branchTrace
-                 .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                 {
-                   @Override
-                   public void widgetSelected(SelectionEvent arg0)
-                   {
-                     toggleSetting(settingsData.branchEnabled,
-                                   "[trace-branch-true", "[trace-branch-false");
-                     settingsData.branchEnabled = !settingsData.branchEnabled;
-                   }
-                 });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.branchEnabled, "[trace-branch-true",
+                  "[trace-branch-false");
+              settingsData.branchEnabled = !settingsData.branchEnabled;
+            }
+          });
       argsTrace
-               .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-               {
-                 @Override
-                 public void widgetSelected(SelectionEvent arg0)
-                 {
-                   toggleSetting(settingsData.argsEnabled, "[trace-args-true",
-                                 "[trace-args-false");
-                   settingsData.argsEnabled = !settingsData.argsEnabled;
-                 }
-               });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.argsEnabled, "[trace-args-true",
+                  "[trace-args-false");
+              settingsData.argsEnabled = !settingsData.argsEnabled;
+            }
+          });
 
       stdOutOutput
-                  .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                  {
-                    @Override
-                    public void widgetSelected(SelectionEvent arg0)
-                    {
-                      toggleSetting(settingsData.stdOutEnabled,
-                                    "[out-stdout-true", "[out-stdout-false");
-                      settingsData.stdOutEnabled = !settingsData.stdOutEnabled;
-                    }
-                  });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.stdOutEnabled, "[out-stdout-true",
+                  "[out-stdout-false");
+              settingsData.stdOutEnabled = !settingsData.stdOutEnabled;
+            }
+          });
       fileOutput
-                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                {
-                  @Override
-                  public void widgetSelected(SelectionEvent arg0)
-                  {
-                    toggleSetting(settingsData.fileOutEnabled,
-                                  "[out-file-true", "[out-file-false");
-                    settingsData.fileOutEnabled = !settingsData.fileOutEnabled;
-                  }
-                });
-      networkOutput
-                   .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                   {
-                     @Override
-                     public void widgetSelected(SelectionEvent arg0)
-                     {
-                       toggleSetting(settingsData.netOutEnabled,
-                                     "[out-network-true", "[out-network-false");
-                       settingsData.netOutEnabled = !settingsData.netOutEnabled;
-                     }
-                   });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.fileOutEnabled, "[out-file-true",
+                  "[out-file-false");
+              settingsData.fileOutEnabled = !settingsData.fileOutEnabled;
+            }
+          });
     }
   }
 
-  private class CallersSettingsTab
+  private class ExtrasTab
   {
-    final Button callersCapture;
+    private Button togSaveClasses;
+    private Button togVerbose;
+    private Button printSettings;
 
-    private CallersSettingsTab(TabFolder tabFolder, TabItem callersTab)
+    private ExtrasTab(TabFolder tabFolder, TabItem traceTab)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[200][grow]");
 
       Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
-      callersTab.setControl(composite);
+      traceTab.setControl(composite);
 
-      Group callersTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout callersTypesGroupLayout = new MigLayout("fill", "[100]");
-      callersTypesGroup.setLayout(callersTypesGroupLayout);
-      callersTypesGroup.setText("Start Capture");
-      callersTypesGroup.setLayoutData("spany,grow");
+      togSaveClasses = new Button(composite, SWT.CHECK);
+      togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
+      togSaveClasses.setAlignment(SWT.LEFT);
+      togSaveClasses.setLayoutData("growx,wrap");
 
-      callersCapture = new Button(callersTypesGroup, SWT.PUSH);
-      callersCapture.setText(ClientStrings.BEGIN_CAPTURE_CALLERS);
-      callersCapture.setLayoutData("spany,grow");
+      togVerbose = new Button(composite, SWT.CHECK);
+      togVerbose.setText(ClientStrings.ENABLE_VERBOSEMODE);
+      togVerbose.setAlignment(SWT.LEFT);
+      togVerbose.setLayoutData("growx,wrap");
 
-      final String helpText = "Enter pattern in the form "
-                              + "\"functionName\" or using wildcards "
-                              + "\"functionN*\" or \"*tionName\" etc";
+      printSettings = new Button(composite, SWT.PUSH);
+      printSettings.setText(ClientStrings.DUMP_SETTINGS);
+      printSettings.setAlignment(SWT.CENTER);
+      printSettings.setLayoutData("growx");
 
-      callersCapture
-                    .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                    {
-                      @Override
-                      public void widgetSelected(SelectionEvent arg0)
-                      {
-                        PatternInputWindow regexInput = new PatternInputWindow(
-                                                                               "Enter Method Regex",
-                                                                               helpText,
-                                                                               new PatternInputCallback()
-                                                                               {
-                                                                                 @Override
-                                                                                 public void setIncludePattern(
-                                                                                                               String newPattern)
-                                                                                 {
-                                                                                   setCallersRegex(newPattern);
-                                                                                 }
-
-                                                                                 @Override
-                                                                                 public void setExcludePattern(
-                                                                                                               String newExcludePattern)
-                                                                                 {
-                                                                                   // Do
-                                                                                   // nothing
-                                                                                 }
-                                                                               },
-                                                                               "",
-                                                                               null);
-                        placeDialogInCenter(sWindow.getBounds(),
-                                            regexInput.sWindow);
-                      }
-                    });
+      togSaveClasses
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.saveTracedClassfiles,
+                  "[saveinstru-true", "[saveinstru-false");
+              settingsData.saveTracedClassfiles = !settingsData.saveTracedClassfiles;
+            }
+          });
+      togVerbose
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.verboseMode, "[verbose-true",
+                  "[verbose-false");
+              settingsData.verboseMode = !settingsData.verboseMode;
+            }
+          });
+      printSettings
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              textOutputTab.filterThread.addTraceLine("Settings:"
+                  + settingsData.toString());
+            }
+          });
     }
   }
 
   TextOutputTab textOutputTab;
-  Map<Long, CallersTab> callerTabs = new ConcurrentHashMap<Long, CallersTab>();
 
   private void fillOutputTabs(TabFolder tabFolder)
   {
@@ -627,12 +524,12 @@ public class TraceWindow
     final Button textFilter;
     final ProgressBar pBar;
     final Button cancelButton;
+    private Button networkOutput;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
-                                             "[70][70][70][150][70][grow]",
-                                             "[20][grow]");
+          "[70][70][70][70][150][70][grow]", "[20][grow]");
 
       final Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -642,10 +539,14 @@ public class TraceWindow
       clearText.setText(ClientStrings.CLEAR_TEXT);
       clearText.setLayoutData("grow");
 
-      Button autoScrollBtn = new Button(composite, SWT.TOGGLE);
+      Button autoScrollBtn = new Button(composite, SWT.CHECK);
       autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
       autoScrollBtn.setLayoutData("grow");
       autoScrollBtn.setSelection(autoScroll);
+
+      networkOutput = new Button(composite, SWT.CHECK);
+      networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
+      networkOutput.setAlignment(SWT.CENTER);
 
       textFilter = new Button(composite, SWT.PUSH);
       textFilter.setText(ClientStrings.FILTER_TEXT);
@@ -661,42 +562,53 @@ public class TraceWindow
       cancelButton.setVisible(false);
 
       textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
-                                             | SWT.H_SCROLL | SWT.BORDER);
+          | SWT.H_SCROLL | SWT.BORDER);
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
-      textOutput.setBackground(Display.getCurrent()
-                                      .getSystemColor(SWT.COLOR_WHITE));
+      textOutput.setBackground(Display.getCurrent().getSystemColor(
+          SWT.COLOR_WHITE));
 
       clearText
-               .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-               {
-                 @Override
-                 public void widgetSelected(SelectionEvent arg0)
-                 {
-                   sWindow.getDisplay().asyncExec(new Runnable()
-                   {
-                     @Override
-                     public void run()
-                     {
-                       filterThread.setClearTrace();
-                     }
-                   });
-                 }
-               });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              sWindow.getDisplay().asyncExec(new Runnable()
+              {
+                @Override
+                public void run()
+                {
+                  filterThread.setClearTrace();
+                }
+              });
+            }
+          });
 
       autoScrollBtn
-                   .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                   {
-                     @Override
-                     public void widgetSelected(SelectionEvent arg0)
-                     {
-                       autoScroll = !autoScroll;
-                     }
-                   });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              autoScroll = !autoScroll;
+            }
+          });
+
+      networkOutput
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              toggleSetting(settingsData.netOutEnabled, "[out-network-true",
+                  "[out-network-false");
+              settingsData.netOutEnabled = !settingsData.netOutEnabled;
+            }
+          });
 
       final String helpText = "Enter pattern in the form "
-                              + "\"text\" or using wildcards "
-                              + "\"tex*\" or \"*ext\" etc";
+          + "\"text\" or using wildcards " + "\"tex*\" or \"*ext\" etc";
 
       final PatternInputCallback patternCallback = new PatternInputCallback()
       {
@@ -727,23 +639,18 @@ public class TraceWindow
       };
 
       textFilter
-                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                {
-                  @Override
-                  public void widgetSelected(SelectionEvent arg0)
-                  {
-                    PatternInputWindow regexInput;
-                    regexInput = new PatternInputWindow(
-                                                        "Set Text Filter",
-                                                        helpText,
-                                                        patternCallback,
-                                                        includeFilterPattern
-                                                                            .pattern(),
-                                                        excludeFilterPattern
-                                                                            .pattern());
-                    placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
-                  }
-                });
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              PatternInputWindow regexInput;
+              regexInput = new PatternInputWindow("Set Text Filter", helpText,
+                  patternCallback, includeFilterPattern.pattern(),
+                  excludeFilterPattern.pattern());
+              placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
+            }
+          });
 
       filterThread = new TraceFilterThread(new TraceTextHandler()
       {
@@ -795,12 +702,10 @@ public class TraceWindow
       if (patternString.equals(".*"))
       {
         retPattern = TraceFilterThread.MATCH_ALL;
-      }
-      else if (patternString.equals(""))
+      } else if (patternString.equals(""))
       {
         retPattern = TraceFilterThread.MATCH_NONE;
-      }
-      else
+      } else
       {
         retPattern = Pattern.compile(patternString, Pattern.DOTALL);
       }
@@ -808,14 +713,13 @@ public class TraceWindow
     }
 
     private void applyPatterns(String newIncludePattern,
-                               String newExcludePattern)
+        String newExcludePattern)
     {
       if (newIncludePattern.equals(includeFilterPattern.pattern())
           && newExcludePattern.equals(excludeFilterPattern.pattern()))
       {
         return;
-      }
-      else
+      } else
       {
         oldIncludeFilterPattern = includeFilterPattern;
         oldExcludeFilterPattern = excludeFilterPattern;
@@ -866,8 +770,7 @@ public class TraceWindow
                   if (percent < 100)
                   {
                     pBar.setSelection(percent);
-                  }
-                  else
+                  } else
                   {
                     pBar.setVisible(false);
                     cancelButton.setVisible(false);
@@ -903,205 +806,6 @@ public class TraceWindow
     }
   }
 
-  private class CallersTab
-  {
-    final TabItem callersTabItem;
-    final TreeItem callersTreeRoot;
-    final TabFolder tabFolder;
-    private final Object tabCallersId;
-    private Map<String, Object> currentCallersMap;
-    private String currentCallersRegex;
-
-    private CallersTab(TabFolder tabFolder, Object callersId)
-    {
-      this.tabFolder = tabFolder;
-      this.tabCallersId = callersId;
-
-      callersTabItem = new TabItem(tabFolder, SWT.NONE);
-      callersTabItem.setText("Callers");
-
-      MigLayout windowLayout = new MigLayout("fill", "[70][70][grow]",
-                                             "[20][grow]");
-
-      Composite composite = new Composite(tabFolder, SWT.NONE);
-      composite.setLayout(windowLayout);
-      callersTabItem.setControl(composite);
-
-      final Button endCapture = new Button(composite, SWT.PUSH);
-      endCapture.setText(ClientStrings.CAPTURE_END);
-      endCapture.setLayoutData("grow");
-
-      Button closeCapture = new Button(composite, SWT.PUSH);
-      closeCapture.setText(ClientStrings.CAPTURE_CLOSE);
-      closeCapture.setLayoutData("grow,wrap");
-
-      Tree callersTree = new Tree(composite, SWT.BORDER);
-      callersTree.setLayoutData("grow, spanx");
-      callersTreeRoot = new TreeItem(callersTree, SWT.NULL);
-      callersTreeRoot.setText("Callers");
-
-      Menu treeContextMenu = new Menu(sWindow, SWT.POP_UP);
-      MenuItem copyItem = new MenuItem(treeContextMenu, SWT.PUSH);
-      copyItem.setText("Copy");
-      callersTree.setMenu(treeContextMenu);
-
-      copyItem
-              .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-              {
-                @Override
-                public void widgetSelected(SelectionEvent arg0)
-                {
-                  copyCallersTree();
-                }
-              });
-
-      endCapture
-                .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                {
-                  @Override
-                  public void widgetSelected(SelectionEvent arg0)
-                  {
-                    endCapture.setEnabled(false);
-                    controlThread.sendMessage("[callers-end-" + tabCallersId);
-                  }
-                });
-
-      closeCapture
-                  .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-                  {
-                    @Override
-                    public void widgetSelected(SelectionEvent arg0)
-                    {
-                      controlThread.sendMessage("[callers-end-" + tabCallersId);
-                      sWindow.getDisplay().asyncExec(new Runnable()
-                      {
-                        @Override
-                        public void run()
-                        {
-                          callersTabItem.dispose();
-                        }
-                      });
-                    }
-                  });
-    }
-
-    @SuppressWarnings("unchecked")
-    private void copyCallersTree()
-    {
-      StringBuilder treeCopy = new StringBuilder(currentCallersRegex + NEWLINE);
-      Iterator<Entry<String, Object>> currentIter = currentCallersMap
-                                                                     .entrySet()
-                                                                     .iterator();
-      Stack<Iterator<Entry<String, Object>>> mapStack = new Stack<Iterator<Entry<String, Object>>>();
-
-      // Keep looping while we have more entries at this level or higher levels
-      // still to check
-      while (currentIter.hasNext() || mapStack.size() > 0)
-      {
-        // No more entries at the current level - look at higher levels
-        while (!currentIter.hasNext() && (mapStack.size() > 0))
-        {
-          currentIter = mapStack.pop();
-        }
-
-        // No more entries at any level
-        if (!currentIter.hasNext())
-        {
-          break;
-        }
-
-        Entry<String, Object> callersEntry = currentIter.next();
-        for (int ii = 0; ii < (mapStack.size() + 1); ii++)
-        {
-          treeCopy.append("-");
-        }
-        treeCopy.append(callersEntry.getKey()).append(NEWLINE);
-        Object callersEntryVal = callersEntry.getValue();
-        if ((callersEntryVal != null) && (callersEntryVal instanceof Map<?, ?>))
-        {
-          mapStack.push(currentIter);
-          currentIter = ((Map<String, Object>) callersEntryVal).entrySet()
-                                                               .iterator();
-        }
-      }
-      sClipboard.setContents(new Object[]
-      { treeCopy.toString() }, new Transfer[]
-      { TextTransfer.getInstance() });
-    }
-
-    public void setData(final Map<String, Object> callersMap)
-    {
-      final Object finalFlag = callersMap.remove(CallersConfigConstants.FINAL);
-      Object callersRegexObj = callersMap
-                                         .remove(CallersConfigConstants.PATTERN);
-      final String callersRegex = "Callers: "
-                                  + callersRegexObj.toString().replace(".*",
-                                                                       "*");
-      currentCallersRegex = callersRegex;
-      currentCallersMap = callersMap;
-
-      sWindow.getDisplay().asyncExec(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          String newRootText = "Callers: "
-                               + callersRegex.toString().replace(".*", "*");
-          String currentRootText = callersTreeRoot.getText();
-          if (!currentRootText.equals(newRootText))
-          {
-            callersTreeRoot.removeAll();
-            callersTreeRoot.setText(newRootText);
-          }
-          setCallersData(callersTreeRoot, callersMap);
-          if ("true".equals(finalFlag))
-          {
-            tabFolder.setSelection(callersTabItem);
-          }
-        }
-      });
-    }
-
-    @SuppressWarnings("unchecked")
-    private void setCallersData(TreeItem parentItem,
-                                Map<String, Object> callersMap)
-    {
-      for (Entry<String, Object> mapEntry : callersMap.entrySet())
-      {
-        String entryName = mapEntry.getKey();
-
-        TreeItem item = null;
-        // Look for existing item
-        for (TreeItem iter_item : parentItem.getItems())
-        {
-          if (iter_item.getText().equals(entryName))
-          {
-            item = iter_item;
-            break;
-          }
-        }
-
-        // Create new item
-        if (item == null)
-        {
-          item = new TreeItem(parentItem, SWT.NULL);
-          item.setText(entryName);
-        }
-
-        // Process children
-        Object entryValue = mapEntry.getValue();
-        if (entryValue instanceof Map<?, ?>)
-        {
-          Map<String, Object> entryMap = (Map<String, Object>) entryValue;
-          if (entryMap.size() > 0)
-          {
-            setCallersData(item, entryMap);
-          }
-        }
-      }
-    }
-  }
-
   // Window ref
   private final TraceWindow traceDialogRef = this;
 
@@ -1122,7 +826,7 @@ public class TraceWindow
 
   // Settings
   private ParsedSettingsData settingsData = new ParsedSettingsData(
-                                                                   new HashMap<String, String>());
+      new HashMap<String, String>());
   private Pattern includeFilterPattern = TraceFilterThread.MATCH_ALL;
   private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   private Pattern excludeFilterPattern = TraceFilterThread.MATCH_NONE;
@@ -1144,21 +848,16 @@ public class TraceWindow
       int networkTracePort = Integer.parseInt(networkTracePortStr);
       try
       {
-        networkTraceThread = new NetworkDataReceiverThread(
-                                                           remoteAddress,
-                                                           networkTracePort,
-                                                           traceDialogRef,
-                                                           textOutputTab.filterThread);
+        networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
+            networkTracePort, traceDialogRef, textOutputTab.filterThread);
         networkTraceThread.start();
-      }
-      catch (IOException ex)
+      } catch (IOException ex)
       {
         textOutputTab.filterThread
-                                  .addSystemTraceLine("Failed to setup network trace: "
-                                                      + ex.toString());
+            .addSystemTraceLine("Failed to setup network trace: "
+                + ex.toString());
       }
-    }
-    else
+    } else
     {
       connectionState = ConnectState.DISCONNECTED_ERR;
     }
@@ -1195,30 +894,16 @@ public class TraceWindow
         String modifiedClasses = controlThread.getMessage();
         if (modifiedClasses.length() <= 2)
         {
-          textOutputTab.filterThread.addSystemTraceLine("No modified classes");
-        }
-        else
+          textOutputTab.filterThread.addSystemTraceLine("No instrumented classes");
+        } else
         {
-          modifiedClasses = modifiedClasses
-                                           .substring(
-                                                      1,
-                                                      modifiedClasses.length() - 1);
-          if (modifiedClasses.indexOf(",") == -1)
+          modifiedClasses = modifiedClasses.substring(1, modifiedClasses
+              .length() - 1);
+          String[] classNames = modifiedClasses.split(",");
+          for (String className : classNames)
           {
-            textOutputTab.filterThread.addSystemTraceLine("Modified: "
-                                                          + modifiedClasses);
-          }
-          else
-          {
-            String[] classNames = modifiedClasses.split(",");
-            for (String className : classNames)
-            {
-              textOutputTab.filterThread
-                                        .addSystemTraceLine("Modified: "
-                                                            + (className != null ? className
-                                                                                            .trim()
-                                                                                : "null"));
-            }
+            textOutputTab.filterThread.addSystemTraceLine("Instrumented: "
+                + (className != null ? className.trim() : "null"));
           }
         }
       }
@@ -1237,7 +922,7 @@ public class TraceWindow
           settingsData.classRegex = includePattern;
           settingsData.classExcludeRegex = excludePattern;
           controlThread.sendMessage("[regex-" + includePattern
-                                    + "[excluderegex-" + excludePattern);
+              + "[excluderegex-" + excludePattern);
           controlThread.sendMessage("getsettings");
         }
       });
@@ -1250,8 +935,7 @@ public class TraceWindow
   }
 
   private void toggleSetting(final boolean settingValue,
-                             final String enableCommand,
-                             final String disableCommand)
+      final String enableCommand, final String disableCommand)
   {
     if (!sWindow.isDisposed())
     {
@@ -1263,8 +947,7 @@ public class TraceWindow
           if (settingValue)
           {
             controlThread.sendMessage(disableCommand);
-          }
-          else
+          } else
           {
             controlThread.sendMessage(enableCommand);
           }
@@ -1275,13 +958,12 @@ public class TraceWindow
   }
 
   private void chooseText(Button control, boolean option, String enabledText,
-                          String disabledText)
+      String disabledText)
   {
     if (option)
     {
       control.setText(disabledText);
-    }
-    else
+    } else
     {
       control.setText(enabledText);
     }
@@ -1311,51 +993,50 @@ public class TraceWindow
       connTab.connectButton.setEnabled(false);
       connTab.addressInput.setEnabled(false);
       connTab.portInput.setEnabled(false);
-    }
-    else
+    } else
     {
       chooseText(connTab.connectButton,
-                 (connectionState == ConnectState.CONNECTED),
-                 ClientStrings.CONNECT, ClientStrings.DISCONNECT);
+          (connectionState == ConnectState.CONNECTED), ClientStrings.CONNECT,
+          ClientStrings.DISCONNECT);
+      chooseText(instruTab.togInstru,
+          settingsData.instrEnabled, ClientStrings.ENABLE_INSTR,
+          ClientStrings.DISABLE_INSTR);
 
       if (connectionState == ConnectState.CONNECTED)
       {
         // Enable all buttons
-        connTab.printSettings.setEnabled(true);
-
         instruTab.classRegex.setEnabled(true);
         instruTab.listClasses.setEnabled(true);
         instruTab.togInstru.setEnabled(true);
-        instruTab.togJars.setEnabled(true);
-        instruTab.togSaveClasses.setEnabled(true);
-        instruTab.togVerbose.setEnabled(true);
 
         traceTab.argsTrace.setEnabled(true);
         traceTab.branchTrace.setEnabled(true);
         traceTab.entryExitTrace.setEnabled(true);
         traceTab.fileOutput.setEnabled(true);
-        traceTab.networkOutput.setEnabled(true);
         traceTab.stdOutOutput.setEnabled(true);
 
-        callSettingsTab.callersCapture.setEnabled(true);
+        extraTab.togSaveClasses.setEnabled(true);
+        extraTab.togVerbose.setEnabled(true);
+        extraTab.printSettings.setEnabled(true);
+
+        textOutputTab.networkOutput.setEnabled(true);
 
         // Update the button pressed/unpressed state
         instruTab.togInstru.setSelection(settingsData.instrEnabled);
-        instruTab.togJars.setSelection(settingsData.allowJarsToBeTraced);
-        instruTab.togSaveClasses
-                                .setSelection(settingsData.saveTracedClassfiles);
-        instruTab.togVerbose.setSelection(settingsData.verboseMode);
-
         traceTab.argsTrace.setSelection(settingsData.argsEnabled);
         traceTab.branchTrace.setSelection(settingsData.branchEnabled);
         traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
         traceTab.fileOutput.setSelection(settingsData.fileOutEnabled);
-        traceTab.networkOutput.setSelection(settingsData.netOutEnabled);
         traceTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
+
+        extraTab.togSaveClasses.setSelection(settingsData.saveTracedClassfiles);
+        extraTab.togVerbose.setSelection(settingsData.verboseMode);
+
+        textOutputTab.networkOutput.setSelection(settingsData.netOutEnabled);
 
         // Update number of classes
         instruTab.setStatus(settingsData.instruClasses,
-                            settingsData.totalClasses);
+            settingsData.totalClasses);
       }
 
       // Only reset status text if we didn't hit an error
@@ -1370,23 +1051,22 @@ public class TraceWindow
       {
         connTab.addressInput.setEnabled(true);
         connTab.portInput.setEnabled(true);
-        connTab.printSettings.setEnabled(false);
 
         instruTab.classRegex.setEnabled(false);
         instruTab.listClasses.setEnabled(false);
         instruTab.togInstru.setEnabled(false);
-        instruTab.togJars.setEnabled(false);
-        instruTab.togSaveClasses.setEnabled(false);
-        instruTab.togVerbose.setEnabled(false);
 
         traceTab.argsTrace.setEnabled(false);
         traceTab.branchTrace.setEnabled(false);
         traceTab.entryExitTrace.setEnabled(false);
         traceTab.fileOutput.setEnabled(false);
-        traceTab.networkOutput.setEnabled(false);
         traceTab.stdOutOutput.setEnabled(false);
 
-        callSettingsTab.callersCapture.setEnabled(false);
+        extraTab.togSaveClasses.setEnabled(false);
+        extraTab.togVerbose.setEnabled(false);
+        extraTab.printSettings.setEnabled(false);
+
+        textOutputTab.networkOutput.setEnabled(false);
       }
     }
   }
@@ -1400,14 +1080,13 @@ public class TraceWindow
         @Override
         public void run()
         {
-          instruTab
-                   .setProgress(
-                                Integer
-                                       .parseInt(progressMap
-                                                            .get(AgentConfigConstants.NUM_PROGRESS_COUNT)),
-                                Integer
-                                       .parseInt(progressMap
-                                                            .get(AgentConfigConstants.NUM_PROGRESS_TOTAL)));
+          int numDone = Integer.parseInt(progressMap
+              .get(AgentConfigConstants.NUM_PROGRESS_COUNT));
+          int numTotal = Integer.parseInt(progressMap
+              .get(AgentConfigConstants.NUM_PROGRESS_TOTAL));
+          boolean done = (progressMap
+              .get(AgentConfigConstants.NUM_PROGRESS_DONE) != null);
+          instruTab.setProgress(numDone, numTotal, done);
         }
       });
     }
@@ -1423,35 +1102,13 @@ public class TraceWindow
         public void run()
         {
           textOutputTab.filterThread
-                                    .addSystemTraceLine("Latest Settings Received");
+              .addSystemTraceLine("Latest Settings Received");
           settingsData = new ParsedSettingsData(settingsMap);
           connectionState = ConnectState.CONNECTED;
           updateUIStateSameThread();
         }
       });
     }
-  }
-
-  public void setCallers(final Map<String, Object> callersMap)
-  {
-    final Object callersId = callersMap.remove(CallersConfigConstants.ID);
-
-    CallersTab cTab = callerTabs.get(callersId);
-    if (cTab == null)
-    {
-      sWindow.getDisplay().syncExec(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          CallersTab cTab = new CallersTab(outputTabs, callersId);
-          callerTabs.put((Long) callersId, cTab);
-        }
-      });
-      cTab = callerTabs.get(callersId);
-    }
-
-    cTab.setData(callersMap);
   }
 
   private static void placeDialogInCenter(Rectangle parentSize, Shell shell)

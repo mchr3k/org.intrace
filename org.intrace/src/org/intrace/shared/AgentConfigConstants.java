@@ -11,13 +11,13 @@ public class AgentConfigConstants
   public static final String NUM_PROGRESS_ID = "NUM_PROGRESS_ID";
   public static final String NUM_PROGRESS_COUNT = "NUM_PROGRESS_COUNT";
   public static final String NUM_PROGRESS_TOTAL = "NUM_PROGRESS_TOTAL";
+  public static final String NUM_PROGRESS_DONE = "NUM_PROGRESS_DONE";
 
   public static final String CLASS_REGEX = "[regex-";
   public static final String EXCLUDE_CLASS_REGEX = "[exclude-regex-";
   public static final String INSTRU_ENABLED = "[instru-";
   public static final String SAVE_TRACED_CLASSFILES = "[saveinstru-";
   public static final String VERBOSE_MODE = "[verbose-";
-  public static final String ALLOW_JARS_TO_BE_TRACED = "[instrujars-";
   public static final Set<String> COMMANDS = new HashSet<String>();
   static
   {
@@ -26,6 +26,5 @@ public class AgentConfigConstants
     COMMANDS.add(INSTRU_ENABLED + "<true/false>");
     COMMANDS.add(SAVE_TRACED_CLASSFILES + "<true/false>");
     COMMANDS.add(VERBOSE_MODE + "<true/false>");
-    COMMANDS.add(ALLOW_JARS_TO_BE_TRACED + "<true/false>");
   }
 }

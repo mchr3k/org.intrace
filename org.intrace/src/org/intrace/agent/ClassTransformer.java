@@ -10,7 +10,6 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -160,20 +159,6 @@ public class ClassTransformer implements ClassFileTransformer
       {
         System.out.println("Ignoring class with no protectionDomain: "
                            + className);
-      }
-      return false;
-    }
-
-    // Don't modify a class from a JAR file unless this is allowed
-    CodeSource codeSource = protectionDomain.getCodeSource();
-    if (!settings.allowJarsToBeTraced() && (codeSource != null)
-        && (codeSource.getLocation() != null)
-        && (codeSource.getLocation().getPath() != null)
-        && codeSource.getLocation().getPath().endsWith(".jar"))
-    {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("Ignoring class in a JAR: " + className);
       }
       return false;
     }
@@ -387,14 +372,7 @@ public class ClassTransformer implements ClassFileTransformer
       Set<ComparableClass> klasses = getModifiedClasses();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
-    }
-    else if (oldSettings.allowJarsToBeTraced() != settings
-                                                          .allowJarsToBeTraced())
-    {
-      System.out.println("## Settings Changed");
-      Set<ComparableClass> klasses = getModifiedClasses();
-      klasses.addAll(getLoadedClassesForModification());
-      instrumentKlasses(klasses);
+      // TODO: Fix class regex change bug
     }
     else if (oldSettings.saveTracedClassfiles() != settings
                                                            .saveTracedClassfiles())
@@ -521,10 +499,15 @@ public class ClassTransformer implements ClassFileTransformer
         e.printStackTrace();
       }
     }
-    broadcastProgress(totalNumClasses, totalNumClasses);
+    broadcastProgress(totalNumClasses, totalNumClasses, true);
   }
 
   private void broadcastProgress(int count, int total)
+  {
+    broadcastProgress(count, total, false);
+  }
+  
+  private void broadcastProgress(int count, int total, boolean done)
   {
     Map<String, String> progressMap = new HashMap<String, String>();
     progressMap.put(AgentConfigConstants.NUM_PROGRESS_ID,
@@ -533,6 +516,10 @@ public class ClassTransformer implements ClassFileTransformer
                     Integer.toString(count));
     progressMap.put(AgentConfigConstants.NUM_PROGRESS_TOTAL,
                     Integer.toString(total));
+    if (done)
+    {
+      progressMap.put(AgentConfigConstants.NUM_PROGRESS_DONE, Boolean.TRUE.toString());
+    }
     try
     {
       AgentServer.broadcastMessage(null, progressMap);
