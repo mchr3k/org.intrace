@@ -9,7 +9,7 @@
   <path id="findbugs.lib" >
     <fileset dir="./lib/findbugs" includes="*.jar" />
   </path>
-
+  
   <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="./lib/ant-contrib-1.0b3.jar" />
   <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
@@ -17,7 +17,6 @@
   </taskdef>
   <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
            classpath="./lib/jarjar-1.0.jar"/>
-
 
   <property name="findbugs.home" value="./lib/findbugs" />
 
@@ -76,22 +75,6 @@
 
     <mkdir dir="./build/jars/" />
 
-    <!-- Trace Agent -->
-    <jarjar jarfile="./build/jars/intrace-agent.jar" compress="false">
-      <manifest>
-        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
-        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
-        <attribute name="Can-Redefine-Classes" value="true" />
-        <attribute name="Git-Revision" value="${git.revision}" />
-        <attribute name="Implementation-Version" value="${git.tag}" />
-      </manifest>      
-      <fileset dir="./build/classes" includes="**/agent/**/*.class" />
-      <fileset dir="./build/classes" includes="**/output/**/*.class" />
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <zipfileset src="./lib/asm-debug-all-3.3.jar"/>
-      <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
-    </jarjar>
-
     <!-- Test Trace Agent -->
     <jar destfile="./build/jars/intrace-agent-test.jar" compress="false">
       <manifest>
@@ -102,47 +85,38 @@
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>     
     </jar>
-
-    <!-- CUI Trace Client -->
-    <jar destfile="./build/jars/intrace-client-cui.jar" compress="false">
+    
+    <!-- Agent -->
+    <jarjar jarfile="./build/jars/intrace-agent.jar">
       <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.cui.TraceClient" />
+        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
+        <attribute name="Can-Redefine-Classes" value="true" />
         <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
+      <fileset dir="./build/classes" includes="**/agent/**/*.class" />
+      <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/cui/*.class" />
-    </jar>
+      <zipfileset excludes="META-INF/*.MF" src="./lib/asm-debug-all-3.3.jar"/>
+      <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
+    </jarjar>
 
-    <!-- GUI Trace Client - Windows -->
-    <jar destfile="./build/jars/intrace-client-gui-win.jar" filesetmanifest="mergewithoutmain">
+    <!-- UI -->
+	<jarjar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
-        <attribute name="Class-Path" value="." />
-        <attribute name="Git-Revision" value="${git.revision}" />
-        <attribute name="Implementation-Version" value="${git.tag}" />
-      </manifest>
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/swt-windows-3.5.2.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar" />
-    </jar>
-
-    <!-- GUI Trace Client - Linux -->
-    <jar destfile="./build/jars/intrace-client-gui-linux.jar" filesetmanifest="mergewithoutmain">
-      <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClient" />
+        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClientLoader" />
         <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/swt-linux-3.5.2.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar" />
-    </jar>
-
+      <fileset dir="./lib" includes="swt-*.jar" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>      
+    </jarjar>	
   </target>
 
   <target name="test" description="Run Tests" depends="build" >

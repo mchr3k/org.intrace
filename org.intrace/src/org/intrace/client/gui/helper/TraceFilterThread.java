@@ -119,10 +119,12 @@ public class TraceFilterThread implements Runnable
     }
     catch (InterruptedException e)
     {
-      // Throw away
+      // Restore interrupted flag
+      Thread.interrupted();
     }
-    // We don't release the semaphore - the thread does so
-    // once it is happy to allow more trace lines in
+    // We don't release the semaphore here - the trace appender 
+    // thread does so once it is happy to allow more trace lines 
+    // in
   }
 
   public void addSystemTraceLine(String traceLine)
@@ -153,9 +155,10 @@ public class TraceFilterThread implements Runnable
   public void run()
   {
     long maxMemory = Runtime.getRuntime().maxMemory();
-    long memLimit = (long) Math.max(maxMemory - (10 * 1000 * 1000), // Maxmemory
+    long byteMemLimit = (long) Math.max(maxMemory - (10 * 1000 * 1000), // Maxmemory
                                     // - 10mb
                                     0.9 * maxMemory); // 90% of Maxmemory
+    long charMemLimit = byteMemLimit / 2; // UTF-16 - 2 bytes per char 
     long numChars = 0;
     boolean doClearTrace = false;
     boolean lowMemorySignalled = false;
@@ -191,21 +194,19 @@ public class TraceFilterThread implements Runnable
             traceLineSemaphore.release();
           }
 
-          if (numChars < memLimit)
+          if (numChars < charMemLimit)
           {
             lowMemorySignalled = false;
 
             // I expected a factor of 2 due to trace strings being held by this
             // thread along with another copy held by the UI. However, profiling
-            // shows a factor of 8 is necessary. I don't know why yet.
-            numChars += (8 * newTraceLine.length());
+            // shows a factor of 4 is necessary. I don't know why yet.
+            numChars += (4 * newTraceLine.length());
 
             traceLines.add(newTraceLine);
             if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX)
                 || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
-                                                                                                 .matcher(
-                                                                                                          newTraceLine)
-                                                                                                 .matches()))
+                    .matcher(newTraceLine).matches()))
             {
               callback.appendText(newTraceLine);
             }

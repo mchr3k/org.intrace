@@ -39,7 +39,9 @@ public class TraceHandler implements IInstrumentationHandler
         || (oldSettings.isStdoutTraceOutputEnabled() != traceSettings
                                                                      .isStdoutTraceOutputEnabled())
         || (oldSettings.isFileTraceOutputEnabled() != traceSettings
-                                                                   .isFileTraceOutputEnabled()))
+                                                                   .isFileTraceOutputEnabled())
+        || (oldSettings.isNetTraceOutputEnabled() != traceSettings
+                                                                  .isNetTraceOutputEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -50,6 +52,7 @@ public class TraceHandler implements IInstrumentationHandler
 
     setStdOut(traceSettings.isStdoutTraceOutputEnabled());
     setFileOut(traceSettings.isFileTraceOutputEnabled());
+    setNetOut(traceSettings.isNetTraceOutputEnabled());
 
     return null;
   }
@@ -77,6 +80,11 @@ public class TraceHandler implements IInstrumentationHandler
   private synchronized boolean isNetOut()
   {
     return netOut;
+  }
+
+  private synchronized void setNetOut(boolean netOut)
+  {
+    this.netOut = netOut;
   }
 
   public Map<String, String> getSettingsMap()

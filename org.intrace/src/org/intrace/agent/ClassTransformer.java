@@ -369,10 +369,10 @@ public class ClassTransformer implements ClassFileTransformer
                          .equals(settings.getClassRegex().pattern()))
     {
       System.out.println("## Settings Changed");
-      Set<ComparableClass> klasses = getModifiedClasses();
+      Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
+      modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
-      // TODO: Fix class regex change bug
     }
     else if (oldSettings.saveTracedClassfiles() != settings
                                                            .saveTracedClassfiles())

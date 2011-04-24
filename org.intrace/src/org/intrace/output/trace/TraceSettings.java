@@ -24,6 +24,7 @@ public class TraceSettings
 
   private boolean stdoutTraceOutputEnabled = false;
   private boolean fileTraceOutputEnabled = false;
+  private boolean netTraceOutputEnabled = false;
   private File file1 = new File("trc1.txt");
   private File file2 = new File("trc2.txt");
   private PrintWriter file1TraceWriter = null;
@@ -36,6 +37,7 @@ public class TraceSettings
     argTraceEnabled = oldSettings.argTraceEnabled;
     stdoutTraceOutputEnabled = oldSettings.stdoutTraceOutputEnabled;
     fileTraceOutputEnabled = oldSettings.fileTraceOutputEnabled;
+    netTraceOutputEnabled = oldSettings.netTraceOutputEnabled;
   }
 
   public TraceSettings(String args)
@@ -108,6 +110,15 @@ public class TraceSettings
       file2TraceWriter = closeFile(file2TraceWriter);
       file2 = new File(file2Name);
     }
+    else if (arg.equals(TraceConfigConstants.NET_OUT + "true"))
+    {
+      netTraceOutputEnabled = true;
+    }
+    else if (arg.equals(TraceConfigConstants.NET_OUT + "false"))
+    {
+      System.setProperty("NET", "OFF");
+      netTraceOutputEnabled = false;
+    }
   }
 
   public boolean isEntryExitTraceEnabled()
@@ -133,6 +144,11 @@ public class TraceSettings
   public boolean isFileTraceOutputEnabled()
   {
     return fileTraceOutputEnabled;
+  }
+
+  public boolean isNetTraceOutputEnabled()
+  {
+    return netTraceOutputEnabled;
   }
 
   // Flag to indicate whether file output is currently going to file1 or file2
@@ -232,6 +248,8 @@ public class TraceSettings
                     Boolean.toString(stdoutTraceOutputEnabled));
     settingsMap.put(TraceConfigConstants.FILE_OUT,
                     Boolean.toString(fileTraceOutputEnabled));
+    settingsMap.put(TraceConfigConstants.NET_OUT,
+                    Boolean.toString(netTraceOutputEnabled));
     return settingsMap;
   }
 }

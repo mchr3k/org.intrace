@@ -121,7 +121,7 @@ public class TraceWindow
       Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout connGroupLayout = new MigLayout("fill", "[40][200][grow]");
       connectionGroup.setLayout(connGroupLayout);
-      connectionGroup.setText("Details");
+      connectionGroup.setText("Connection Details");
       connectionGroup.setLayoutData("spany,grow,wmin 300");
 
       Label addressLabel = new Label(connectionGroup, SWT.NONE);
@@ -147,7 +147,7 @@ public class TraceWindow
       statusGroup.setLayoutData("spany,grow,wmin 0");
       MigLayout groupLayout = new MigLayout("fill", "[align center]");
       statusGroup.setLayout(groupLayout);
-      statusGroup.setText("Status");
+      statusGroup.setText("Connection Status");
 
       final Label statusLabel = new Label(statusGroup, SWT.WRAP);
       statusLabel.setAlignment(SWT.CENTER);
@@ -209,8 +209,8 @@ public class TraceWindow
       Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout mainControlGroupLayout = new MigLayout("filly", "[150][150]");
       mainControlGroup.setLayout(mainControlGroupLayout);
-      mainControlGroup.setText("Control");
       mainControlGroup.setLayoutData("hmin 0, grow");
+      mainControlGroup.setText("Instrumentation Settings");      
 
       classRegex = new Button(mainControlGroup, SWT.PUSH);
       classRegex.setText(ClientStrings.SET_CLASSREGEX);
@@ -224,7 +224,7 @@ public class TraceWindow
       Group statusGroup = new Group(composite, SWT.SHADOW_IN);
       MigLayout statusGroupLayout = new MigLayout("fillx", "[][]");
       statusGroup.setLayout(statusGroupLayout);
-      statusGroup.setText("Status");
+      statusGroup.setText("Instrumentation Status");
       statusGroup.setLayoutData("grow");
 
       instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.VERTICAL);
