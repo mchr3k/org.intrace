@@ -1,4 +1,4 @@
-package org.intrace.client.gui;
+package org.intrace.client.loader;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,8 +12,8 @@ public class TraceClientLoader
 {
   public static void main(String[] args) throws Throwable
   {
-    ClassLoader cl = getSWTClassloader();    
-    Thread.currentThread().setContextClassLoader(cl);
+    ClassLoader cl = getSWTClassloader();
+    Thread.currentThread().setContextClassLoader(cl);    
     try
     {
       Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
@@ -36,41 +36,33 @@ public class TraceClientLoader
 
   private static ClassLoader getSWTClassloader()
   {
-    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    ClassLoader parent = Thread.currentThread().getContextClassLoader();
+    URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
+    
+    String swtFileName = getSwtJarName();      
     try
     {
-      // Check if SWT if already loaded
-      Class.forName("org.eclipse.swt.widgets.Layout");
-    }
-    catch (ClassNotFoundException ex)
-    {
-      // SWT not available - we need to load the correct one      
-      ClassLoader parent = cl;
-      URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(cl));
+      URL intraceFileUrl = new URL("rsrc:intrace-ui-wrapper.jar");
+      URL swtFileUrl = new URL("rsrc:" + swtFileName);
+      ClassLoader cl = new URLClassLoader(new URL[] {intraceFileUrl, swtFileUrl}, parent);
       
-      String swtFileName = getSwtJarName();      
       try
       {
-        URL swtFileUrl = new URL("rsrc:" + swtFileName);
-        cl = new URLClassLoader(new URL[] {swtFileUrl}, parent);
-        
-        try
-        {
-          // Check we can now load the SWT class
-          Class.forName("org.eclipse.swt.widgets.Layout", true, cl);
-        }
-        catch (ClassNotFoundException exx)
-        {
-          System.err.println("Failed to load SWT jar: " + swtFileName);
-          throw new RuntimeException(exx);
-        }
+        // Check we can now load the SWT class
+        Class.forName("org.eclipse.swt.widgets.Layout", true, cl);
       }
-      catch (MalformedURLException exx)
+      catch (ClassNotFoundException exx)
       {
+        System.err.println("Failed to load SWT jar: " + swtFileName);
         throw new RuntimeException(exx);
-      }                  
-    }  
-    return cl;    
+      }
+      
+      return cl;
+    }
+    catch (MalformedURLException exx)
+    {
+      throw new RuntimeException(exx);
+    }                   
   }
   
   private static String getSwtJarName()

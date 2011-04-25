@@ -73,6 +73,7 @@
 
   <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
+  	<mkdir dir="./build/tmp/" />
     <mkdir dir="./build/jars/" />
 
     <!-- Test Trace Agent -->
@@ -103,19 +104,25 @@
       <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
     </jarjar>
 
-    <!-- UI -->
+    <!-- UI (Stage 1) -->
+	<jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>      
+    </jarjar>
+  	
+    <!-- UI (Stage 2) -->
 	<jarjar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.gui.TraceClientLoader" />
+        <attribute name="Main-Class" value="org.intrace.client.loader.TraceClientLoader" />
         <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+      <fileset dir="./build/classes" includes="**/client/loader/*.class" />
+      <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
       <fileset dir="./lib" includes="swt-*.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
-      <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>      
+	  <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>      
     </jarjar>	
   </target>
 
