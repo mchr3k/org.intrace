@@ -18,7 +18,7 @@ public class TraceClientLoader
     {
       try
       {
-        System.err.println("Launching InTrace UI");
+        System.err.println("Launching InTrace UI ...");
         Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
         Method main = c.getMethod("main", new Class[]{args.getClass()});
         main.invoke((Object)null, new Object[]{args});
@@ -27,7 +27,7 @@ public class TraceClientLoader
       {
         if (ex.getCause() instanceof UnsatisfiedLinkError)
         {
-          System.err.println("Launch failed (UnsatisfiedLinkError)");
+          System.err.println("Launch failed: (UnsatisfiedLinkError)");
           String arch = getArch();
           if ("32".equals(arch))
           {
@@ -46,11 +46,11 @@ public class TraceClientLoader
     }
     catch (ClassNotFoundException ex)
     {
-      System.err.println("Failed to find main class - org.intrace.client.gui.TraceClient");
+      System.err.println("Launch failed: Failed to find main class - org.intrace.client.gui.TraceClient");
     }
     catch (NoSuchMethodException ex)
     {
-      System.err.println("Failed to find main method");
+      System.err.println("Launch failed: Failed to find main method");
     }
     catch (InvocationTargetException ex)
     {
@@ -58,8 +58,8 @@ public class TraceClientLoader
       if ((th.getMessage() != null) &&
           th.getMessage().toLowerCase().contains("invalid thread access"))
       {
-        System.err.println("If you are running on OSX, try restarting with " + 
-            "command line option -XstartOnFirstThread");
+        System.err.println("Launch failed: (SWTException: Invalid thread access)");
+        System.err.println("Try adding '-XstartOnFirstThread' to your command line arguments");
       }
       else
       {
@@ -77,7 +77,7 @@ public class TraceClientLoader
     {
       URL intraceFileUrl = new URL("rsrc:intrace-ui-wrapper.jar");
       URL swtFileUrl = new URL("rsrc:" + swtFileName);
-      System.err.println("Using SWT Jar: " + swtFileUrl);
+      System.err.println("Using SWT Jar: " + swtFileName);
       ClassLoader cl = new URLClassLoader(new URL[] {intraceFileUrl, swtFileUrl}, parent);
       
       try
@@ -87,7 +87,7 @@ public class TraceClientLoader
       }
       catch (ClassNotFoundException exx)
       {
-        System.err.println("Failed to load SWT jar: " + swtFileName);
+        System.err.println("Launch failed: Failed to load SWT class from jar: " + swtFileName);
         throw new RuntimeException(exx);
       }
       
@@ -108,7 +108,7 @@ public class TraceClientLoader
         || osName.contains("nix") ? "linux" : "";
     if ("".equals(swtFileNameOsPart))
     {
-      throw new RuntimeException("Unknown OS name: " + osName);
+      throw new RuntimeException("Launch failed: Unknown OS name: " + osName);
     }
 
     // Detect 32bit vs 64 bit
