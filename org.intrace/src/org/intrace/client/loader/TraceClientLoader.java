@@ -11,10 +11,8 @@ import org.eclipse.jdt.internal.jarinjarloader.RsrcURLStreamHandlerFactory;
 public class TraceClientLoader
 {
   public static void main(String[] args) throws Throwable
-  {
-    ClassLoader parent = TraceClientLoader.class.getClassLoader();
-    URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
-    ClassLoader cl = getSWTClassloader(false);
+  {    
+    ClassLoader cl = getSWTClassloader();
     Thread.currentThread().setContextClassLoader(cl);    
     try
     {
@@ -29,13 +27,16 @@ public class TraceClientLoader
       {
         if (ex.getCause() instanceof UnsatisfiedLinkError)
         {
-          System.err.println("Launch failed (UnsatisfiedLinkError), try other bitness");
-          cl = getSWTClassloader(true);
-          Thread.currentThread().setContextClassLoader(cl);
-          System.err.println("Launching InTrace UI");
-          Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
-          Method main = c.getMethod("main", new Class[]{args.getClass()});
-          main.invoke((Object)null, new Object[]{args});
+          System.err.println("Launch failed (UnsatisfiedLinkError)");
+          String arch = getArch();
+          if ("32".equals(arch))
+          {
+            System.err.println("Try adding '-d64' to your command line arguments");
+          }
+          else if ("64".equals(arch))
+          {
+            System.err.println("Try adding '-d32' to your command line arguments");
+          }
         }
         else
         {
@@ -67,11 +68,11 @@ public class TraceClientLoader
     }
   }
 
-  private static ClassLoader getSWTClassloader(boolean xiInvertArch)
+  private static ClassLoader getSWTClassloader()
   {
     ClassLoader parent = TraceClientLoader.class.getClassLoader();    
-    
-    String swtFileName = getSwtJarName(xiInvertArch);      
+    URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
+    String swtFileName = getSwtJarName();      
     try
     {
       URL intraceFileUrl = new URL("rsrc:intrace-ui-wrapper.jar");
@@ -98,7 +99,7 @@ public class TraceClientLoader
     }                   
   }
   
-  private static String getSwtJarName(boolean xiInvertArch)
+  private static String getSwtJarName()
   {
     // Detect OS
     String osName = System.getProperty("os.name").toLowerCase();    
@@ -111,21 +112,18 @@ public class TraceClientLoader
     }
 
     // Detect 32bit vs 64 bit
-    String jvmArch = System.getProperty("os.arch").toLowerCase();
-    String swtFileNameArchPart = (jvmArch.contains("64") ? "64" : "32");
-    if (xiInvertArch)
-    {
-      if ("64".equals(swtFileNameArchPart))
-      {
-        swtFileNameArchPart = "32";
-      }
-      else if ("32".equals(swtFileNameArchPart))
-      {
-        swtFileNameArchPart = "64";
-      }
-    }
+    String swtFileNameArchPart = getArch();
+
     String swtFileName = "swt-" + swtFileNameOsPart + swtFileNameArchPart
         + "-3.6.2.jar";
     return swtFileName;
+  }
+  
+  private static String getArch()
+  {
+    // Detect 32bit vs 64 bit
+    String jvmArch = System.getProperty("os.arch").toLowerCase();
+    String arch = (jvmArch.contains("64") ? "64" : "32");
+    return arch;
   }
 }
