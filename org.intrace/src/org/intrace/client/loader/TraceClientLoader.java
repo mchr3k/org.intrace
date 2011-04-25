@@ -12,14 +12,27 @@ public class TraceClientLoader
 {
   public static void main(String[] args) throws Throwable
   {
-    ClassLoader cl = getSWTClassloader();
+    ClassLoader cl = getSWTClassloader(false);
     Thread.currentThread().setContextClassLoader(cl);    
     try
     {
-      System.err.println("Launching InTrace UI");
-      Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
-      Method main = c.getMethod("main", new Class[]{args.getClass()});
-      main.invoke((Object)null, new Object[]{args});
+      try
+      {
+        System.err.println("Launching InTrace UI");
+        Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
+        Method main = c.getMethod("main", new Class[]{args.getClass()});
+        main.invoke((Object)null, new Object[]{args});
+      }
+      catch (UnsatisfiedLinkError ex)
+      {
+        System.err.println("Launch failed (UnsatisfiedLinkError), try other bitness");
+        cl = getSWTClassloader(true);
+        Thread.currentThread().setContextClassLoader(cl);
+        System.err.println("Launching InTrace UI");
+        Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
+        Method main = c.getMethod("main", new Class[]{args.getClass()});
+        main.invoke((Object)null, new Object[]{args});
+      }
     }
     catch (ClassNotFoundException ex)
     {
@@ -31,16 +44,26 @@ public class TraceClientLoader
     }
     catch (InvocationTargetException ex)
     {
-      throw ex.getCause();
+      Throwable th = ex.getCause();
+      if ((th.getMessage() != null) &&
+          th.getMessage().toLowerCase().contains("invalid thread access"))
+      {
+        System.err.println("If you are running on OSX, try restarting with " + 
+            "command line option -XstartOnFirstThread");
+      }
+      else
+      {
+        throw th;
+      }
     }
   }
 
-  private static ClassLoader getSWTClassloader()
+  private static ClassLoader getSWTClassloader(boolean xiInvertArch)
   {
     ClassLoader parent = Thread.currentThread().getContextClassLoader();
     URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
     
-    String swtFileName = getSwtJarName();      
+    String swtFileName = getSwtJarName(xiInvertArch);      
     try
     {
       URL intraceFileUrl = new URL("rsrc:intrace-ui-wrapper.jar");
@@ -67,7 +90,7 @@ public class TraceClientLoader
     }                   
   }
   
-  private static String getSwtJarName()
+  private static String getSwtJarName(boolean xiInvertArch)
   {
     // Detect OS
     String osName = System.getProperty("os.name").toLowerCase();    
@@ -80,15 +103,18 @@ public class TraceClientLoader
     }
 
     // Detect 32bit vs 64 bit
-    // NOTE: sun.arch.data.model is only available on SUN JVMs
-    String osArch = System.getProperty("sun.arch.data.model");
-    String jvmArch = System.getProperty("os.arch").toLowerCase();    
-    String swtFileNameArchPart = (osArch != null ? osArch : 
-                                                  (jvmArch.contains("64") ? "64" : "32"));
-    if (osArch == null)
+    String jvmArch = System.getProperty("os.arch").toLowerCase();
+    String swtFileNameArchPart = (jvmArch.contains("64") ? "64" : "32");
+    if (xiInvertArch)
     {
-      System.err.println("Warning: Picked SWT 32 vs 64 bit based on JVM bitness. " + 
-                         "If you are running a different bitness OS and JVM the this may fail.");
+      if ("64".equals(swtFileNameArchPart))
+      {
+        swtFileNameArchPart = "32";
+      }
+      else if ("32".equals(swtFileNameArchPart))
+      {
+        swtFileNameArchPart = "64";
+      }
     }
     String swtFileName = "swt-" + swtFileNameOsPart + swtFileNameArchPart
         + "-3.6.2.jar";
