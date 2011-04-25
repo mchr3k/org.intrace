@@ -12,6 +12,8 @@ public class TraceClientLoader
 {
   public static void main(String[] args) throws Throwable
   {
+    ClassLoader parent = TraceClientLoader.class.getClassLoader();
+    URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
     ClassLoader cl = getSWTClassloader(false);
     Thread.currentThread().setContextClassLoader(cl);    
     try
@@ -67,8 +69,7 @@ public class TraceClientLoader
 
   private static ClassLoader getSWTClassloader(boolean xiInvertArch)
   {
-    ClassLoader parent = Thread.currentThread().getContextClassLoader();
-    URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
+    ClassLoader parent = TraceClientLoader.class.getClassLoader();    
     
     String swtFileName = getSwtJarName(xiInvertArch);      
     try
