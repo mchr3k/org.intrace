@@ -23,15 +23,22 @@ public class TraceClientLoader
         Method main = c.getMethod("main", new Class[]{args.getClass()});
         main.invoke((Object)null, new Object[]{args});
       }
-      catch (UnsatisfiedLinkError ex)
+      catch (InvocationTargetException ex)
       {
-        System.err.println("Launch failed (UnsatisfiedLinkError), try other bitness");
-        cl = getSWTClassloader(true);
-        Thread.currentThread().setContextClassLoader(cl);
-        System.err.println("Launching InTrace UI");
-        Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
-        Method main = c.getMethod("main", new Class[]{args.getClass()});
-        main.invoke((Object)null, new Object[]{args});
+        if (ex.getCause() instanceof UnsatisfiedLinkError)
+        {
+          System.err.println("Launch failed (UnsatisfiedLinkError), try other bitness");
+          cl = getSWTClassloader(true);
+          Thread.currentThread().setContextClassLoader(cl);
+          System.err.println("Launching InTrace UI");
+          Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
+          Method main = c.getMethod("main", new Class[]{args.getClass()});
+          main.invoke((Object)null, new Object[]{args});
+        }
+        else
+        {
+          throw ex;
+        }
       }
     }
     catch (ClassNotFoundException ex)
