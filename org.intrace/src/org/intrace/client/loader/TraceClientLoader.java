@@ -69,8 +69,8 @@ public class TraceClientLoader
   
   private static String getSwtJarName()
   {
-    String osName = System.getProperty("os.name").toLowerCase();
-    String osArch = System.getProperty("os.arch").toLowerCase();
+    // Detect OS
+    String osName = System.getProperty("os.name").toLowerCase();    
     String swtFileNameOsPart = osName.contains("win") ? "win" : osName
         .contains("mac") ? "osx" : osName.contains("linux")
         || osName.contains("nix") ? "linux" : "";
@@ -79,7 +79,17 @@ public class TraceClientLoader
       throw new RuntimeException("Unknown OS name: " + osName);
     }
 
-    String swtFileNameArchPart = osArch.contains("64") ? "64" : "32";
+    // Detect 32bit vs 64 bit
+    // NOTE: sun.arch.data.model is only available on SUN JVMs
+    String osArch = System.getProperty("sun.arch.data.model");
+    String jvmArch = System.getProperty("os.arch").toLowerCase();    
+    String swtFileNameArchPart = (osArch != null ? osArch : 
+                                                  (jvmArch.contains("64") ? "64" : "32"));
+    if (osArch == null)
+    {
+      System.err.println("Warning: Picked SWT 32 vs 64 bit based on JVM bitness. " + 
+                         "If you are running a different bitness OS and JVM the this may fail.");
+    }
     String swtFileName = "swt-" + swtFileNameOsPart + swtFileNameArchPart
         + "-3.6.2.jar";
     return swtFileName;
