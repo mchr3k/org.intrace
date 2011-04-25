@@ -1,4 +1,4 @@
-package org.test.intrace.agent;
+package org.intracetest;
 
 import java.util.ArrayList;
 import java.util.List;

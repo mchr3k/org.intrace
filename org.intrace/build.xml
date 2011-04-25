@@ -77,15 +77,20 @@
     <mkdir dir="./build/jars/" />
 
     <!-- Test Trace Agent -->
-    <jar destfile="./build/jars/intrace-agent-test.jar" compress="false">
-      <manifest>
-        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
-        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
-        <attribute name="Can-Redefine-Classes" value="true" />
-        <attribute name="Git-Revision" value="${git.revision}" />
-        <attribute name="Implementation-Version" value="${git.tag}" />
-      </manifest>     
-    </jar>
+  	<if>
+	  <available file="./lib/intrace-agent-test.jar"/>
+	  <else>
+	    <jar destfile="./lib/intrace-agent-test.jar" compress="false">
+	      <manifest>
+	        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
+	        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
+	        <attribute name="Can-Redefine-Classes" value="true" />
+	        <attribute name="Git-Revision" value="${git.revision}" />
+	        <attribute name="Implementation-Version" value="${git.tag}" />
+	      </manifest>     
+	    </jar>	  	
+	  </else>
+	</if>
     
     <!-- Agent -->
     <jarjar jarfile="./build/jars/intrace-agent.jar">

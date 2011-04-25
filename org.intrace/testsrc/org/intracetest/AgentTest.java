@@ -1,4 +1,4 @@
-package org.test.intrace.agent;
+package org.intracetest;
 
 import static org.easymock.EasyMock.isA;
 
@@ -43,6 +43,8 @@ public class AgentTest extends TestCase
     super.setUp();
     deleteOldClassFiles();
     AgentHelper.instrumentationHandlers.clear();
+    // Wait for agent to startup
+    Thread.sleep(500);
     connectToAgent();
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
   }
@@ -539,6 +541,12 @@ public class AgentTest extends TestCase
     sender.sendMessage(configConstant + configValue);
     Object okResponse = receiver.incomingMessages.take();
     assertNotNull(okResponse);
+    if (okResponse instanceof Map<?,?>)
+    {
+      // Discard any status map
+      okResponse = receiver.incomingMessages.take();
+      assertNotNull(okResponse);
+    }
     assertTrue(okResponse instanceof String);
     assertEquals(okResponse, "OK");
 

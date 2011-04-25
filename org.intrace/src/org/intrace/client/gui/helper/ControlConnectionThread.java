@@ -64,14 +64,18 @@ public class ControlConnectionThread implements Runnable
         Object receivedMessage = objIn.readObject();
         if (receivedMessage instanceof Map<?, ?>)
         {
-          Map<String, String> settingsMap = (Map<String, String>) receivedMessage;
-          if (settingsMap.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
+          Map<String, String> map = (Map<String, String>) receivedMessage;
+          if (map.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
           {
-            window.setProgress(settingsMap);
+            window.setProgress(map);
+          }
+          else if (map.containsKey(AgentConfigConstants.NUM_STATUS_ID))
+          {
+            window.setStatus(map);
           }
           else
           {
-            window.setConfig(settingsMap);
+            window.setConfig(map);
           }
         }
         else

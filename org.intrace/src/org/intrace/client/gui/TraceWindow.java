@@ -1091,6 +1091,25 @@ public class TraceWindow
       });
     }
   }
+  
+  public void setStatus(final Map<String, String> statusMap)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          int numInstr = Integer.parseInt(statusMap
+              .get(AgentConfigConstants.NUM_INSTR_CLASSES));
+          int numTotal = Integer.parseInt(statusMap
+              .get(AgentConfigConstants.NUM_TOTAL_CLASSES));
+          instruTab.setStatus(numInstr, numTotal);
+        }
+      });
+    }
+  }
 
   public void setConfig(final Map<String, String> settingsMap)
   {

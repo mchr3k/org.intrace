@@ -1,4 +1,4 @@
-package org.test.intrace.agent;
+package org.intracetest;
 
 public class BranchPatterns implements Runnable
 {

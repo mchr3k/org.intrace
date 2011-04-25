@@ -1,4 +1,4 @@
-package org.test.intrace.agent;
+package org.intracetest;
 
 import java.util.Arrays;
 import java.util.HashMap;

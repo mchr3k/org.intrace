@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
@@ -48,6 +49,11 @@ public class ClassTransformer implements ClassFileTransformer
    * Settings for this Transformer
    */
   private final AgentSettings settings;
+  
+  /**
+   * Marker indicating whether many classes are currently being updated
+   */
+  private final AtomicBoolean bulkUpdateActive = new AtomicBoolean(false);
 
   /**
    * cTor
@@ -196,7 +202,7 @@ public class ClassTransformer implements ClassFileTransformer
 
   private boolean isSensitiveClass(String className)
   {
-    return className.contains("intrace") || className.contains("objectweb.asm")
+    return className.contains(".intrace.") || className.contains("objectweb.asm")
            || className.startsWith("sun")
            || className.startsWith("org.openide")
            || className.startsWith("com.sun") || className.startsWith("java");
@@ -218,6 +224,8 @@ public class ClassTransformer implements ClassFileTransformer
   {
     String className = internalClassName.replace('/', '.');
     ComparableClassName compclass = new ComparableClassName(className, loader);
+    int modifiedSize = modifiedClasses.size();
+    int allClassesSize = allClasses.size();
 
     if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
                                            className, protectionDomain))
@@ -253,12 +261,28 @@ public class ClassTransformer implements ClassFileTransformer
       }
 
       modifiedClasses.add(compclass);
+      
+            
       return newBytes;
     }
     else
     {
       modifiedClasses.remove(compclass);
+      
+      detectStatusUpdate(modifiedSize, allClassesSize);
       return null;
+    }
+  }
+
+  private void detectStatusUpdate(int modifiedSize, int allClassesSize)
+  {
+    int newModifiedSize = modifiedClasses.size();
+    int newAllClassesSize = allClasses.size();
+    if (!bulkUpdateActive.get() &&
+        ((newModifiedSize != modifiedSize) ||
+         (newAllClassesSize != allClassesSize)))
+    {
+      broadcastStatus(modifiedClasses.size(), allClasses.size());
     }
   }
 
@@ -379,6 +403,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = getModifiedClasses();
+      modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
     }
@@ -477,29 +502,38 @@ public class ClassTransformer implements ClassFileTransformer
 
   public void instrumentKlasses(Set<ComparableClass> klasses)
   {
-    int countNumClasses = 0;
-    int totalNumClasses = klasses.size();
-    broadcastProgress(countNumClasses, totalNumClasses);
-    for (ComparableClass klass : klasses)
+    try
     {
-      try
+      bulkUpdateActive.set(true);
+      int countNumClasses = 0;
+      int totalNumClasses = klasses.size();
+      broadcastProgress(countNumClasses, totalNumClasses);
+      for (ComparableClass klass : klasses)
       {
-        inst.retransformClasses(klass.klass);
-
-        countNumClasses++;
-        if ((countNumClasses % 10) == 0)
+        try
         {
-          broadcastProgress(countNumClasses, totalNumClasses);
+          inst.retransformClasses(klass.klass);
+  
+          countNumClasses++;
+          if ((countNumClasses % 10) == 0)
+          {
+            broadcastProgress(countNumClasses, totalNumClasses);
+          }
+        }
+        catch (Throwable e)
+        {
+          // Write exception to stdout
+          System.out.println(klass.klass.getName());
+          e.printStackTrace();
         }
       }
-      catch (Throwable e)
-      {
-        // Write exception to stdout
-        System.out.println(klass.klass.getName());
-        e.printStackTrace();
-      }
+      broadcastProgress(totalNumClasses, totalNumClasses, true);
     }
-    broadcastProgress(totalNumClasses, totalNumClasses, true);
+    finally
+    {
+      bulkUpdateActive.set(false);
+      broadcastStatus(modifiedClasses.size(), allClasses.size());
+    }
   }
 
   private void broadcastProgress(int count, int total)
@@ -520,6 +554,25 @@ public class ClassTransformer implements ClassFileTransformer
     {
       progressMap.put(AgentConfigConstants.NUM_PROGRESS_DONE, Boolean.TRUE.toString());
     }
+    try
+    {
+      AgentServer.broadcastMessage(null, progressMap);
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+  }
+  
+  private void broadcastStatus(int count, int total)
+  {
+    Map<String, String> progressMap = new HashMap<String, String>();
+    progressMap.put(AgentConfigConstants.NUM_STATUS_ID,
+                    AgentConfigConstants.NUM_STATUS_ID);
+    progressMap.put(AgentConfigConstants.NUM_INSTR_CLASSES,
+                    Integer.toString(count));
+    progressMap.put(AgentConfigConstants.NUM_TOTAL_CLASSES,
+                    Integer.toString(total));
     try
     {
       AgentServer.broadcastMessage(null, progressMap);

@@ -5,6 +5,7 @@ import java.util.Set;
 
 public class AgentConfigConstants
 {
+  public static final String NUM_STATUS_ID = "NUM_STATUS_ID";
   public static final String NUM_TOTAL_CLASSES = "NUM_TOTAL_CLASSES";
   public static final String NUM_INSTR_CLASSES = "NUM_INSTR_CLASSES";
 
