@@ -16,6 +16,7 @@ public class TraceClientLoader
     Thread.currentThread().setContextClassLoader(cl);    
     try
     {
+      System.err.println("Launching InTrace UI");
       Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
       Method main = c.getMethod("main", new Class[]{args.getClass()});
       main.invoke((Object)null, new Object[]{args});
@@ -44,6 +45,7 @@ public class TraceClientLoader
     {
       URL intraceFileUrl = new URL("rsrc:intrace-ui-wrapper.jar");
       URL swtFileUrl = new URL("rsrc:" + swtFileName);
+      System.err.println("Using SWT Jar: " + swtFileUrl);
       ClassLoader cl = new URLClassLoader(new URL[] {intraceFileUrl, swtFileUrl}, parent);
       
       try
