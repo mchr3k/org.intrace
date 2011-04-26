@@ -525,6 +525,7 @@ public class TraceWindow
     final ProgressBar pBar;
     final Button cancelButton;
     private Button networkOutput;
+    private TraceTextHandler textHandler;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
@@ -652,7 +653,7 @@ public class TraceWindow
             }
           });
 
-      filterThread = new TraceFilterThread(new TraceTextHandler()
+      textHandler = new TraceTextHandler()
       {
         @Override
         public void setText(final String traceText)
@@ -693,7 +694,9 @@ public class TraceWindow
             }
           });
         }
-      });
+      };
+      textHandler.setText("Application help is available online: https://github.com/mchr3k/org.intrace/wiki\n\n");
+      filterThread = new TraceFilterThread(textHandler);
     }
 
     private Pattern getPattern(String patternString)
