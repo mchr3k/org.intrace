@@ -200,7 +200,8 @@ public class TraceFilterThread implements Runnable
 
             // I expected a factor of 2 due to trace strings being held by this
             // thread along with another copy held by the UI. However, profiling
-            // shows a factor of 4 is necessary. I don't know why yet.
+            // shows a factor of 4 is necessary. This is because we need to be able
+            // to handle entire copies of the active data when adding new strings.
             numChars += (4 * newTraceLine.length());
 
             traceLines.add(newTraceLine);

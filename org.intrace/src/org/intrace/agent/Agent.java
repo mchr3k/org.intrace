@@ -52,7 +52,7 @@ public class Agent
     }
 
     // Setup the output handlers
-    AgentHelper.instrumentationHandlers.put(new TraceHandler(), new Object());
+    AgentHelper.instrumentationHandlers.put(TraceHandler.INSTANCE, new Object());
 
     // Parse startup args
     AgentSettings args = new AgentSettings(agentArgs);

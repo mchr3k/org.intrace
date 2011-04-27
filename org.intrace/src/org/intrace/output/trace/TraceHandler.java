@@ -15,6 +15,12 @@ import org.intrace.output.IInstrumentationHandler;
  */
 public class TraceHandler implements IInstrumentationHandler
 {
+  public static final TraceHandler INSTANCE = new TraceHandler();
+  private TraceHandler()
+  {
+    // Private constructor
+  }
+  
   private boolean entryExitTrace = true;
   private boolean branchTrace = false;
   private boolean argTrace = false;

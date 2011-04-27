@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
+import org.intrace.output.trace.TraceHandler;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
 
@@ -71,7 +72,7 @@ public class ClassTransformer implements ClassFileTransformer
     settings = xiArgs;
     if (settings.isVerboseMode())
     {
-      System.out.println(settings.toString());
+      TraceHandler.INSTANCE.writeTraceOutput("DEBUG: " + settings.toString());
     }
   }
 
@@ -143,7 +144,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring sensitive class: " + className);
+        TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring system class: " + className);
       }
       return false;
     }
@@ -153,18 +154,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class already modified: " + compklass);
-      }
-      return false;
-    }
-
-    // Don't modify a class for which we don't know the protection domain
-    if (protectionDomain == null)
-    {
-      if (settings.isVerboseMode())
-      {
-        System.out.println("Ignoring class with no protectionDomain: "
-                           + className);
+        TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class already modified: " + compklass);
       }
       return false;
     }
@@ -178,7 +168,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class matching the active exclude regex: "
+        TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class matching the active exclude regex: "
                            + className);
       }
       return false;
@@ -190,7 +180,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       if (settings.isVerboseMode())
       {
-        System.out.println("Ignoring class not matching the active regex: "
+        TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class not matching the active include regex: "
                            + className);
       }
       return false;
@@ -381,7 +371,7 @@ public class ClassTransformer implements ClassFileTransformer
     if (settings.isVerboseMode()
         && (oldSettings.isVerboseMode() != settings.isVerboseMode()))
     {
-      System.out.println(settings.toString());
+      TraceHandler.INSTANCE.writeTraceOutput("DEBUG: " + settings.toString());
     }
     else if (oldSettings.isInstrumentationEnabled() != settings
                                                                .isInstrumentationEnabled())
@@ -466,7 +456,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         if (settings.isVerboseMode())
         {
-          System.out.println("Ignoring annotation class: "
+          TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring annotation class: "
                              + loadedClass.getCanonicalName());
         }
       }
@@ -474,7 +464,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         if (settings.isVerboseMode())
         {
-          System.out.println("Ignoring synthetic class: "
+          TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring synthetic class: "
                              + loadedClass.getCanonicalName());
         }
       }
@@ -482,7 +472,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         if (settings.isVerboseMode())
         {
-          System.out.println("Ignoring unmodifiable class: "
+          TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring unmodifiable class: "
                              + loadedClass.getCanonicalName());
         }
       }
