@@ -1,6 +1,10 @@
 package org.intrace.client.gui;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
@@ -18,8 +22,10 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
@@ -530,7 +536,7 @@ public class TraceWindow
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
-          "[70][70][70][70][150][70][grow]", "[20][grow]");
+          "[70][70][70][100][70][150][70][grow]", "[20][grow]");
 
       final Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -549,6 +555,10 @@ public class TraceWindow
       networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
       networkOutput.setAlignment(SWT.CENTER);
 
+      Button saveText = new Button(composite, SWT.PUSH);
+      saveText.setText(ClientStrings.SAVE_TEXT);
+      saveText.setLayoutData("grow");
+      
       textFilter = new Button(composite, SWT.PUSH);
       textFilter.setText(ClientStrings.FILTER_TEXT);
       textFilter.setLayoutData("grow");
@@ -607,6 +617,41 @@ public class TraceWindow
               settingsData.netOutEnabled = !settingsData.netOutEnabled;
             }
           });
+      
+      saveText.addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          FileDialog dialog = new FileDialog(sWindow, SWT.SAVE);
+          dialog.setFilterNames(new String[] { "Text Files", "All Files (*.*)" });
+          dialog.setFilterExtensions(new String[] { "*.txt", "*.*" });
+          dialog.setFileName("output.txt");
+          String fileName = dialog.open();
+          if (fileName != null)
+          {
+            try
+            {
+              Writer out = new OutputStreamWriter(new FileOutputStream(new File(fileName)));
+              out.append(textOutput.getText());
+              out.flush();
+              out.close();
+              
+              MessageBox messageBox = new MessageBox(sWindow, SWT.ICON_INFORMATION | SWT.OK);              
+              messageBox.setText("Save Complete");
+              messageBox.setMessage("Output Saved");
+              messageBox.open();
+            }
+            catch (IOException e)
+            {
+              MessageBox messageBox = new MessageBox(sWindow, SWT.ICON_INFORMATION | SWT.OK);              
+              messageBox.setText("Save Error");
+              messageBox.setMessage("Error: " + e.toString());
+              messageBox.open();
+            }
+          }
+        }
+      });
 
       final String helpText = "Enter pattern in the form "
           + "\"text\" or using wildcards " + "\"tex*\" or \"*ext\" etc";

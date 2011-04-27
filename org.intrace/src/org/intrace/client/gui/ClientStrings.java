@@ -39,4 +39,5 @@ public class ClientStrings
   public static final String AUTO_SCROLL = "Auto Scroll";
   public static final String FILTER_TEXT = "Filter...";
   public static final String CANCEL_TEXT = "Cancel";
+  public static final String SAVE_TEXT = "Save Output...";
 }
