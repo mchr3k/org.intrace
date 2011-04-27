@@ -2,6 +2,7 @@ package org.intrace.output.trace;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -98,6 +99,16 @@ public class TraceHandler implements IInstrumentationHandler
     return traceSettings.getSettingsMap();
   }
 
+  private String getArrayLenStr(Object array)
+  {
+    String lRet = "";
+    if (array != null)
+    {
+      lRet = "Len:" + Array.getLength(array) + " ";
+    }
+    return lRet;
+  }
+  
   @Override
   public void val(String desc, String className, String methodName, byte byteArg)
   {
@@ -114,7 +125,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(byteArrayArg));
+                       + getArrayLenStr(byteArrayArg) + Arrays.toString(byteArrayArg));
     }
   }
 
@@ -135,7 +146,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(shortArrayArg));
+                       + getArrayLenStr(shortArrayArg) + Arrays.toString(shortArrayArg));
     }
   }
 
@@ -156,7 +167,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(intArrayArg));
+                       + getArrayLenStr(intArrayArg) + Arrays.toString(intArrayArg));
     }
   }
 
@@ -177,7 +188,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(longArrayArg));
+                       + getArrayLenStr(longArrayArg) + Arrays.toString(longArrayArg));
     }
   }
 
@@ -199,7 +210,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(floatArrayArg));
+                       + getArrayLenStr(floatArrayArg) + Arrays.toString(floatArrayArg));
     }
   }
 
@@ -221,7 +232,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(doubleArrayArg));
+                       + getArrayLenStr(doubleArrayArg) + Arrays.toString(doubleArrayArg));
     }
   }
 
@@ -243,7 +254,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(boolArrayArg));
+                       + getArrayLenStr(boolArrayArg) + Arrays.toString(boolArrayArg));
     }
   }
 
@@ -264,7 +275,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.toString(charArrayArg));
+                       + getArrayLenStr(charArrayArg) + Arrays.toString(charArrayArg));
     }
   }
 
@@ -291,7 +302,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + Arrays.deepToString(objArrayArg));
+                       + getArrayLenStr(objArrayArg) + Arrays.deepToString(objArrayArg));
     }
   }
 

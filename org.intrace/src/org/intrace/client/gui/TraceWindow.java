@@ -507,7 +507,7 @@ public class TraceWindow
             @Override
             public void widgetSelected(SelectionEvent arg0)
             {
-              textOutputTab.filterThread.addTraceLine("Settings:"
+              textOutputTab.filterThread.addSystemTraceLine("Settings:"
                   + settingsData.toString());
             }
           });
