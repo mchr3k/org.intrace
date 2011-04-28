@@ -62,10 +62,11 @@ public class TraceWindow
 
   private Shell sWindow = null;
   final TabFolder outputTabs;
+  private Label statusLabel;
 
   public TraceWindow()
   {
-    MigLayout windowLayout = new MigLayout("fill", "", "[][grow]");
+    MigLayout windowLayout = new MigLayout("fill", "", "[][grow][]");
 
     sWindow = new Shell();
     sWindow.setText("Trace Window");
@@ -77,12 +78,31 @@ public class TraceWindow
     buttonTabs.setLayoutData("grow,wrap,wmin 0");
 
     outputTabs = new TabFolder(sWindow, SWT.NONE);
-    outputTabs.setLayoutData("grow,wmin 0,hmin 0");
+    outputTabs.setLayoutData("grow,wmin 0,hmin 0,wrap");
 
     fillButtonTabs(buttonTabs);
     fillOutputTabs(outputTabs);
 
+    statusLabel = new Label(sWindow, SWT.NONE);
+    statusLabel.setLayoutData("growx");
+    setOutputStatus(0, 0);
+    
     updateUIStateSameThread();
+  }
+  
+  public void setOutputStatus(final int displayed, final int total)
+  {
+    if (!sWindow.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          statusLabel.setText("Displayed lines: " + displayed + ", Total lines: " + total);
+        }
+      });
+    }    
   }
 
   private ConnectionTab connTab;
@@ -531,12 +551,11 @@ public class TraceWindow
     final ProgressBar pBar;
     final Button cancelButton;
     private Button networkOutput;
-    private TraceTextHandler textHandler;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
-          "[70][70][70][100][70][150][70][grow]", "[20][grow]");
+          "[100][100][100][150][100][grow]", "[20][20][grow]");
 
       final Composite composite = new Composite(tabFolder, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -545,15 +564,6 @@ public class TraceWindow
       Button clearText = new Button(composite, SWT.PUSH);
       clearText.setText(ClientStrings.CLEAR_TEXT);
       clearText.setLayoutData("grow");
-
-      Button autoScrollBtn = new Button(composite, SWT.CHECK);
-      autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
-      autoScrollBtn.setLayoutData("grow");
-      autoScrollBtn.setSelection(autoScroll);
-
-      networkOutput = new Button(composite, SWT.CHECK);
-      networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
-      networkOutput.setAlignment(SWT.CENTER);
 
       Button saveText = new Button(composite, SWT.PUSH);
       saveText.setText(ClientStrings.SAVE_TEXT);
@@ -571,6 +581,16 @@ public class TraceWindow
       cancelButton.setText(ClientStrings.CANCEL_TEXT);
       cancelButton.setLayoutData("grow,wrap");
       cancelButton.setVisible(false);
+      
+      Button autoScrollBtn = new Button(composite, SWT.CHECK);
+      autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
+      autoScrollBtn.setLayoutData("grow");
+      autoScrollBtn.setSelection(autoScroll);
+
+      networkOutput = new Button(composite, SWT.CHECK);
+      networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
+      networkOutput.setAlignment(SWT.CENTER);
+      networkOutput.setLayoutData("grow,wrap");
 
       textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
           | SWT.H_SCROLL | SWT.BORDER);
@@ -697,8 +717,8 @@ public class TraceWindow
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
-
-      textHandler = new TraceTextHandler()
+      
+      filterThread = new TraceFilterThread(new TraceTextHandler()
       {
         @Override
         public void setText(final String traceText)
@@ -739,9 +759,14 @@ public class TraceWindow
             }
           });
         }
-      };
-      textHandler.setText("Application help is available online: https://github.com/mchr3k/org.intrace/wiki\n\n");
-      filterThread = new TraceFilterThread(textHandler);
+
+        @Override
+        public void setStatus(int displayed, int total)
+        {          
+          setOutputStatus(displayed, total);
+        }
+      });
+      filterThread.addSystemTraceLine("Help is available online: https://github.com/mchr3k/org.intrace/wiki");
     }
 
     private Pattern getPattern(String patternString)

@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
@@ -23,6 +24,8 @@ public class TraceFilterThread implements Runnable
     void setText(String traceText);
 
     void appendText(String traceText);
+    
+    public void setStatus(final int displayed, final int total);
   }
 
   /**
@@ -78,6 +81,16 @@ public class TraceFilterThread implements Runnable
    * List of trace lines saved by this thread from the newTraceLines
    */
   private final List<String> traceLines = new ArrayList<String>();
+  
+  /**
+   * Number of displayed lines
+   */  
+  private final AtomicInteger displayedLines = new AtomicInteger();
+  
+  /**
+   * Total number of lines
+   */
+  private final AtomicInteger totalLines = new AtomicInteger();
 
   /**
    * Reference to this Thread
@@ -184,10 +197,15 @@ public class TraceFilterThread implements Runnable
             doClearTrace = false;
             traceLines.clear();
             callback.setText("");
+            displayedLines.set(0);
+            totalLines.set(0);
+            callback.setStatus(displayedLines.get(), totalLines.get());
             numChars = 0;
           }
 
           String newTraceLine = newTraceLines.take();
+          totalLines.incrementAndGet();
+          callback.setStatus(displayedLines.get(), totalLines.get());
 
           if (!newTraceLine.startsWith(SYSTEM_TRACE_PREFIX))
           {
@@ -209,15 +227,19 @@ public class TraceFilterThread implements Runnable
                 || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
                     .matcher(newTraceLine).matches()))
             {
+              displayedLines.incrementAndGet();
               callback.appendText(newTraceLine);
+              callback.setStatus(displayedLines.get(), totalLines.get());
             }
           }
           else if (!lowMemorySignalled)
           {
             lowMemorySignalled = true;
             String memWarning = SYSTEM_TRACE_PREFIX + " " + LOW_MEMORY;
+            totalLines.incrementAndGet();
             traceLines.add(memWarning);
             callback.appendText(memWarning);
+            callback.setStatus(displayedLines.get(), totalLines.get());
           }
         }
         catch (InterruptedException ex)
@@ -249,6 +271,8 @@ public class TraceFilterThread implements Runnable
     StringBuilder traceText = new StringBuilder();
     boolean cancelled = progressCallback.setProgress(0);
     boolean firstUpdate = true;
+    displayedLines.set(0);
+    callback.setStatus(displayedLines.get(), totalLines.get());
     if (!cancelled)
     {
       for (String traceLine : traceLines)
@@ -259,6 +283,7 @@ public class TraceFilterThread implements Runnable
                                                                                        traceLine)
                                                                               .matches()))
         {
+          displayedLines.incrementAndGet();
           traceText.append(traceLine);
         }
         handledLines++;
@@ -283,12 +308,14 @@ public class TraceFilterThread implements Runnable
               if (firstUpdate)
               {
                 callback.setText(traceText.toString());
+                callback.setStatus(displayedLines.get(), totalLines.get());
                 traceText = new StringBuilder();
+                firstUpdate = false;
               }
               else
-              {
-                firstUpdate = false;
+              {                
                 callback.appendText(traceText.toString());
+                callback.setStatus(displayedLines.get(), totalLines.get());
               }
             }
           }
@@ -302,10 +329,12 @@ public class TraceFilterThread implements Runnable
       if (firstUpdate)
       {
         callback.setText(traceText.toString());
+        callback.setStatus(displayedLines.get(), totalLines.get());
       }
       else
       {
         callback.appendText(traceText.toString());
+        callback.setStatus(displayedLines.get(), totalLines.get());
       }
     }
   }
