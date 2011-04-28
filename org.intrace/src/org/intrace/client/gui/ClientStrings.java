@@ -22,6 +22,7 @@ public class ClientStrings
   public static final String ENABLE_STDOUT_OUTPUT = "StdOut";
   public static final String ENABLE_FILE_OUTPUT = "File";
   public static final String ENABLE_NETWORK_OUTPUT = "Collect Trace";
+  public static final String ENABLE_FILTER = "Enable Filter";
 
   public static final String CONNECT = "Connect";
   public static final String CONNECTING = "Connect...";
