@@ -20,14 +20,19 @@ public class AgentServer implements Runnable
   // Map of client connections
   private static final Map<AgentClientConnection, Object> clientConnections = new ConcurrentHashMap<AgentClientConnection, Object>();
 
+  // Target server port
+  private final int serverPort;
+
   /**
    * cTor s
    * 
    * @param xiT
+   * @param serverPort 
    */
-  public AgentServer(ClassTransformer xiT)
+  public AgentServer(ClassTransformer xiT, int xiServerPort)
   {
     transformer = xiT;
+    serverPort = xiServerPort;
   }
 
   /**
@@ -96,7 +101,7 @@ public class AgentServer implements Runnable
 
     // Default listen port - we increment the port if we cannot listen on this
     // port
-    int tracePort = 9123;
+    int tracePort = serverPort;
 
     while (numAllowedExceptions > 0)
     {

@@ -551,6 +551,7 @@ public class TraceWindow
     final ProgressBar pBar;
     final Button cancelButton;
     private Button networkOutput;
+    private Button enableFilter;
 
     private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
     {
@@ -592,7 +593,7 @@ public class TraceWindow
       networkOutput.setAlignment(SWT.CENTER);
       networkOutput.setLayoutData("grow");
       
-      final Button enableFilter = new Button(composite, SWT.CHECK);
+      enableFilter = new Button(composite, SWT.CHECK);
       enableFilter.setText(ClientStrings.ENABLE_FILTER);
       enableFilter.setAlignment(SWT.CENTER);
       enableFilter.setLayoutData("grow,wrap");
@@ -709,7 +710,7 @@ public class TraceWindow
             lastEnteredExcludeFilterPattern = getPattern(excludePattern);
             if (enableFilter.getSelection())
             {
-              applyPatterns(includePattern, excludePattern);
+              applyPatterns(includePattern, excludePattern, false);
             }
           }
         }
@@ -723,8 +724,8 @@ public class TraceWindow
             {
               PatternInputWindow regexInput;
               regexInput = new PatternInputWindow("Set Text Filter", helpText,
-                  patternCallback, activeIncludeFilterPattern.pattern(),
-                  activeExcludeFilterPattern.pattern());
+                  patternCallback, lastEnteredIncludeFilterPattern.pattern(),
+                  lastEnteredExcludeFilterPattern.pattern());
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
@@ -738,12 +739,12 @@ public class TraceWindow
           if (enableFilter.getSelection())
           {
             applyPatterns(lastEnteredIncludeFilterPattern.pattern(), 
-                          lastEnteredExcludeFilterPattern.pattern());
+                          lastEnteredExcludeFilterPattern.pattern(), true);
           }
           else
           {
             applyPatterns(TraceFilterThread.MATCH_ALL.pattern(), 
-                          TraceFilterThread.MATCH_NONE.pattern());
+                          TraceFilterThread.MATCH_NONE.pattern(), true);
           }
         }
       });
@@ -816,7 +817,8 @@ public class TraceWindow
     }
 
     private void applyPatterns(String newIncludePattern,
-                               String newExcludePattern)
+                               String newExcludePattern,
+                               final boolean isToggle)
     {
       if (newIncludePattern.equals(activeIncludeFilterPattern.pattern())
           && newExcludePattern.equals(activeExcludeFilterPattern.pattern()))
@@ -837,6 +839,7 @@ public class TraceWindow
         @Override
         public void run()
         {
+          enableFilter.setEnabled(false);
           textFilter.setEnabled(false);
           pBar.setVisible(true);
           cancelButton.setVisible(true);
@@ -878,10 +881,15 @@ public class TraceWindow
                     cancelButton.setVisible(false);
                     cancelButton.removeSelectionListener(cancelListener);
                     textFilter.setEnabled(true);
+                    enableFilter.setEnabled(true);
                     if (filterCancelled[0])
                     {
                       activeIncludeFilterPattern = oldIncludeFilterPattern;
                       activeExcludeFilterPattern = oldExcludeFilterPattern;
+                      if (isToggle)
+                      {
+                        enableFilter.setSelection(!enableFilter.getSelection());
+                      }
                     }
                   }
                 }

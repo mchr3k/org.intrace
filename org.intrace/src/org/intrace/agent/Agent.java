@@ -66,6 +66,6 @@ public class Agent
     t.instrumentKlasses(t.getLoadedClassesForModification());
 
     // Start Server thread
-    new AgentServer(t).start();
+    new AgentServer(t, args.getServerPort()).start();
   }
 }

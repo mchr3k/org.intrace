@@ -203,9 +203,7 @@ public class TraceFilterThread implements Runnable
             numChars = 0;
           }
 
-          String newTraceLine = newTraceLines.take();
-          totalLines.incrementAndGet();
-          callback.setStatus(displayedLines.get(), totalLines.get());
+          String newTraceLine = newTraceLines.take();          
 
           if (!newTraceLine.startsWith(SYSTEM_TRACE_PREFIX))
           {
@@ -218,11 +216,13 @@ public class TraceFilterThread implements Runnable
 
             // I expected a factor of 2 due to trace strings being held by this
             // thread along with another copy held by the UI. However, profiling
-            // shows a factor of 4 is necessary. This is because we need to be able
+            // shows a factor of 5 is necessary. This is because we need to be able
             // to handle entire copies of the active data when adding new strings.
-            numChars += (4 * newTraceLine.length());
+            numChars += (20 * newTraceLine.length());
 
             traceLines.add(newTraceLine);
+            totalLines.incrementAndGet();
+            callback.setStatus(displayedLines.get(), totalLines.get());
             if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX)
                 || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
                     .matcher(newTraceLine).matches()))
@@ -235,9 +235,9 @@ public class TraceFilterThread implements Runnable
           else if (!lowMemorySignalled)
           {
             lowMemorySignalled = true;
-            String memWarning = SYSTEM_TRACE_PREFIX + " " + LOW_MEMORY;
-            totalLines.incrementAndGet();
+            String memWarning = SYSTEM_TRACE_PREFIX + " " + LOW_MEMORY;            
             traceLines.add(memWarning);
+            totalLines.incrementAndGet();
             callback.appendText(memWarning);
             callback.setStatus(displayedLines.get(), totalLines.get());
           }

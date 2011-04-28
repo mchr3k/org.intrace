@@ -19,6 +19,7 @@ public class AgentConfigConstants
   public static final String INSTRU_ENABLED = "[instru-";
   public static final String SAVE_TRACED_CLASSFILES = "[saveinstru-";
   public static final String VERBOSE_MODE = "[verbose-";
+  public static final String SERVERPORT_MODE = "[serverport-";
   public static final Set<String> COMMANDS = new HashSet<String>();
   static
   {
@@ -27,5 +28,6 @@ public class AgentConfigConstants
     COMMANDS.add(INSTRU_ENABLED + "<true/false>");
     COMMANDS.add(SAVE_TRACED_CLASSFILES + "<true/false>");
     COMMANDS.add(VERBOSE_MODE + "<true/false>");
+    COMMANDS.add(SERVERPORT_MODE + "<int>");
   }
 }

@@ -18,6 +18,12 @@ public class AgentSettings
   private boolean instruEnabled = false;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
+  private int serverPort = 9123;
+
+  public int getServerPort()
+  {
+    return serverPort;
+  }
 
   public AgentSettings(String args)
   {
@@ -53,6 +59,11 @@ public class AgentSettings
                                           + "false"))
     {
       verboseMode = false;
+    }
+    else if (arg.toLowerCase().startsWith(AgentConfigConstants.SERVERPORT_MODE))
+    {
+      String serverPortStr = arg.replace(AgentConfigConstants.SERVERPORT_MODE, "");
+      serverPort = Integer.parseInt(serverPortStr);
     }
     else if (arg.toLowerCase().equals(
                                       AgentConfigConstants.INSTRU_ENABLED
