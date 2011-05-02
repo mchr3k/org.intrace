@@ -48,7 +48,7 @@ public class TraceFilterThread implements Runnable
   /**
    * Low memory warning
    */
-  private static final String LOW_MEMORY = "Warning: Low memory - no further trace will be collected.";
+  private static final String LOW_MEMORY = "Warning: Low memory - no further trace will be collected. StdOut or File output will continue if enabled.";
 
   /**
    * Pattern which matches anything
