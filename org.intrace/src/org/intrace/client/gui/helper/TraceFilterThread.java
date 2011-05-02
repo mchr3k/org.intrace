@@ -48,7 +48,7 @@ public class TraceFilterThread implements Runnable
   /**
    * Low memory warning
    */
-  private static final String LOW_MEMORY = "Warning: Low memory - dropping trace.";
+  private static final String LOW_MEMORY = "Warning: Low memory - no further trace will be collected.";
 
   /**
    * Pattern which matches anything
@@ -216,9 +216,9 @@ public class TraceFilterThread implements Runnable
 
             // I expected a factor of 2 due to trace strings being held by this
             // thread along with another copy held by the UI. However, profiling
-            // shows a factor of 5 is necessary. This is because we need to be able
+            // shows a factor of 18 is necessary. This is because we need to be able
             // to handle entire copies of the active data when adding new strings.
-            numChars += (20 * newTraceLine.length());
+            numChars += (18 * newTraceLine.length());
 
             traceLines.add(newTraceLine);
             totalLines.incrementAndGet();
@@ -297,6 +297,8 @@ public class TraceFilterThread implements Runnable
                                                                2);
           if (lastPercentage != roundedPercantage)
           {
+            // Try and ensure that we are GC-ing regularly
+            System.gc();
             cancelled = progressCallback
                                         .setProgress((int) (100 * roundedPercantage));
             if (cancelled)

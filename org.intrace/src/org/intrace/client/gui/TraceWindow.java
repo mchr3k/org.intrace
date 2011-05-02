@@ -75,7 +75,7 @@ public class TraceWindow
     MigLayout windowLayout = new MigLayout("fill", "", "[][grow]");
 
     sWindow = new Shell();
-    sWindow.setText("Trace Window");
+    sWindow.setText("InTrace UI");
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(800, 800));
     sWindow.setMinimumSize(new Point(800, 480));
@@ -740,14 +740,7 @@ public class TraceWindow
             @Override
             public void widgetSelected(SelectionEvent arg0)
             {
-              sWindow.getDisplay().asyncExec(new Runnable()
-              {
-                @Override
-                public void run()
-                {
-                  filterThread.setClearTrace();
-                }
-              });
+              filterThread.setClearTrace();
             }
           });
 
@@ -879,44 +872,62 @@ public class TraceWindow
       
       filterThread = new TraceFilterThread(new TraceTextHandler()
       {
+        // Re-usable class to avoid object allocations
+        class SetTextRunnable implements Runnable
+        {
+          String traceText = null;
+          
+          @Override
+          public void run()
+          {
+            textOutput.setRedraw(false);
+            textOutput.setText(traceText);
+            if (autoScroll)
+            {
+              textOutput.setTopIndex(Integer.MAX_VALUE);
+            }
+            textOutput.setRedraw(true);            
+          }          
+        }        
+        SetTextRunnable mSetTextRunnable = new SetTextRunnable();
+        
         @Override
-        public void setText(final String traceText)
+        public void setText(String traceText)
         {
           if (sWindow.isDisposed())
             return;
-          sWindow.getDisplay().syncExec(new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              textOutput.setRedraw(false);
-              textOutput.setText(traceText);
-              if (autoScroll)
-              {
-                textOutput.setTopIndex(Integer.MAX_VALUE);
-              }
-              textOutput.setRedraw(true);
-            }
-          });
+          
+          mSetTextRunnable.traceText = traceText;
+          sWindow.getDisplay().syncExec(mSetTextRunnable);
+          mSetTextRunnable.traceText = null;
         }
 
+        // Re-usable class to avoid object allocations
+        class AppendTextRunnable implements Runnable
+        {
+          String traceText = null;
+          
+          @Override
+          public void run()
+          {
+            textOutput.append(traceText);
+            if (autoScroll)
+            {
+              textOutput.setTopIndex(Integer.MAX_VALUE);
+            }           
+          }          
+        }        
+        AppendTextRunnable mAppendTextRunnable = new AppendTextRunnable();
+        
         @Override
         public void appendText(final String traceText)
         {
           if (sWindow.isDisposed())
             return;
-          sWindow.getDisplay().syncExec(new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              textOutput.append(traceText);
-              if (autoScroll)
-              {
-                textOutput.setTopIndex(Integer.MAX_VALUE);
-              }
-            }
-          });
+
+          mAppendTextRunnable.traceText = traceText;
+          sWindow.getDisplay().syncExec(mAppendTextRunnable);
+          mAppendTextRunnable.traceText = null;
         }
 
         @Override
@@ -984,18 +995,27 @@ public class TraceWindow
       }
     }
     
+    // Re-usable class to avoid object allocations
+    class SetOutputStatusRunnable implements Runnable
+    {
+      int displayed;
+      int total;
+      
+      @Override
+      public void run()
+      {
+        statusLabel.setText("Displayed lines: " + displayed + ", Total lines: " + total);            
+      }          
+    }       
+    SetOutputStatusRunnable mSetOutputStatusRunnable = new SetOutputStatusRunnable();
+    
     public void setOutputStatus(final int displayed, final int total)
     {
       if (!sWindow.isDisposed())
       {
-        sWindow.getDisplay().asyncExec(new Runnable()
-        {
-          @Override
-          public void run()
-          {
-            statusLabel.setText("Displayed lines: " + displayed + ", Total lines: " + total);
-          }
-        });
+        mSetOutputStatusRunnable.displayed = displayed;
+        mSetOutputStatusRunnable.total = total;
+        sWindow.getDisplay().syncExec(mSetOutputStatusRunnable);
       }    
     }
 
