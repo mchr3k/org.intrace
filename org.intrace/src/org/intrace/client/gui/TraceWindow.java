@@ -937,6 +937,25 @@ public class TraceWindow
         }
       });
       filterThread.addSystemTraceLine("Help is available online: https://github.com/mchr3k/org.intrace/wiki");
+      filterThread.addSystemTraceLine("Here is some example trace:");
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: {:100");      
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 2");
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 4");
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: /:101");
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Return: 8");
+      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: }:105");
+      filterThread.addSystemTraceLine("");
+      filterThread.addSystemTraceLine("This means the following:");
+      filterThread.addSystemTraceLine("[10/05/27 14:14:30] is a date/timestamp - the date is in the format yy/mm/dd");
+      filterThread.addSystemTraceLine("[1] - the thread ID");
+      filterThread.addSystemTraceLine("example.ExampleClass:multiplyMethod - the Class and Method being traced");
+      filterThread.addSystemTraceLine("{:100 - The method was entered on source line 100");
+      filterThread.addSystemTraceLine("Arg: 2 - The first argument had value 2");
+      filterThread.addSystemTraceLine("Arg: 2 - The second argument had value 4");
+      filterThread.addSystemTraceLine("/:101 - An optional block of code was executed starting at source line 101 (e.g. an if statement)");
+      filterThread.addSystemTraceLine("Return: 8 - The method returned value 8");
+      filterThread.addSystemTraceLine("}:105 - The method returned on source line 105");
+      filterThread.addSystemTraceLine("");
     }
     
     private String getDisplayPatternFromText(String text)
