@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.debug.core.launchModes">
+      <launchMode
+            label="InTrace"
+            launchAsLabel="InTrace As"
+            mode="intrace">
+      </launchMode>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchDelegates">
+      <launchDelegate
+            delegate="intrace.eclipse.InTraceLaunchConfigurationDelegate"
+            id="intrace.eclipse.intraceLaunchDelegate"
+            modes="intrace"
+            name="Java Application"
+            type="org.eclipse.jdt.launching.localJavaApplication">
+      </launchDelegate>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchGroups">
+      <launchGroup
+            bannerImage="icons/runcoverage.gif"
+            id="intrace.eclipse.launchGroup.InTrace"
+            image="icons/runcoverage.gif"
+            label="InTrace"
+            mode="intrace">
+      </launchGroup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="intrace.eclipse.inTraceActionSet"
+            label="InTrace"
+            visible="true">
+         <action
+               class="intrace.eclipse.actions.InTraceToolbarAction"
+               disabledIcon="icons/runcoverage.gif"
+               hoverIcon="icons/runcoverage.gif"
+               icon="icons/runcoverage.gif"
+               id="intrace.eclipse.InTraceAction"
+               label="InTrace"
+               style="pulldown"
+               toolbarPath="org.eclipse.debug.ui.launchActionSet/intrace">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>
