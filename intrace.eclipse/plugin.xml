@@ -65,7 +65,20 @@
             label="Java Application"
             modes="intrace">
          <contextualLaunch>
-            <enablement></enablement>
+  <enablement>
+    <with variable="selection">
+     <count value="1"/>
+      <iterate>
+       <or>
+        <test property="org.eclipse.jdt.launching.hasMain"/>
+         <and>
+          <test property="org.eclipse.jdt.launching.isContainer"/>
+          <test property="org.eclipse.jdt.launching.hasProjectNature" args="org.eclipse.jdt.core.javanature"/>
+         </and>
+        </or>
+      </iterate>
+     </with>
+  </enablement>
          </contextualLaunch>
       </shortcut>
    </extension>
