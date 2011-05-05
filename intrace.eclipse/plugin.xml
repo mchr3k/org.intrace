@@ -34,7 +34,7 @@
       <actionSet
             id="intrace.eclipse.inTraceActionSet"
             label="InTrace"
-            visible="true">
+            visible="false">
          <action
                class="intrace.eclipse.actions.InTraceToolbarAction"
                disabledIcon="icons/runcoverage.gif"
@@ -43,9 +43,31 @@
                id="intrace.eclipse.InTraceAction"
                label="InTrace"
                style="pulldown"
-               toolbarPath="org.eclipse.debug.ui.launchActionSet/intrace">
+               toolbarPath="org.eclipse.debug.ui.launchActionSet/debug">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <actionSet
+               id="intrace.eclipse.inTraceActionSet">
+         </actionSet>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchShortcuts">
+      <shortcut
+            class="intrace.eclipse.ui.launching.InTraceLaunchShortcut"
+            icon="icons/runcoverage.gif"
+            id="intrace.eclipse.ui.localJavaShortcut"
+            label="Java Application"
+            modes="intrace">
+         <contextualLaunch>
+            <enablement></enablement>
+         </contextualLaunch>
+      </shortcut>
    </extension>
 
 </plugin>

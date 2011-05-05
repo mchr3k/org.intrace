@@ -7,7 +7,7 @@ public class InTraceToolbarAction extends AbstractLaunchToolbarAction
 
   public InTraceToolbarAction()
   {
-    super("intraceid");
+    super("intrace.eclipse.launchGroup.InTrace");
   }
 
 }
