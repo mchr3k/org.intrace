@@ -6,11 +6,21 @@ import java.net.Socket;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.intrace.client.gui.TraceWindow;
 
 public class Connection
 {
-  public static void connectToAgent(final TraceWindow owningWindow,
+  // State
+  public enum ConnectState
+  {
+    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
+  }
+  
+  public static interface ISocketCallback
+  {
+    public void setSocket(Socket socket);
+  }
+  
+  public static void connectToAgent(final ISocketCallback owningWindow,
                                     final Shell sShell, final String host,
                                     final String port,
                                     final StatusUpdater statusUpdater)
@@ -19,13 +29,13 @@ public class Connection
     {
       displayError(sShell, "Please enter an address");
       statusUpdater.setStatusText("Error: Please enter an address");
-      owningWindow.setConnectionState(null);
+      owningWindow.setSocket(null);
     }
     else if (port.length() == 0)
     {
       displayError(sShell, "Please enter a port");
       statusUpdater.setStatusText("Error: Please enter a port");
-      owningWindow.setConnectionState(null);
+      owningWindow.setSocket(null);
     }
     else
     {
@@ -40,12 +50,12 @@ public class Connection
           {
             socket.connect(new InetSocketAddress(host, Integer.valueOf(port)));
             statusUpdater.setStatusText("Connected");
-            owningWindow.setConnectionState(socket);
+            owningWindow.setSocket(socket);
           }
           catch (Exception e)
           {
             statusUpdater.setStatusText("Error: " + e.toString());
-            owningWindow.setConnectionState(null);
+            owningWindow.setSocket(null);
           }
         }
       }).start();

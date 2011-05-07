@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="intrace.ecl.feature"
+      label="InTrace Eclipse"
+      version="0.0.0.1">
+
+   <description url="https://github.com/mchr3k/org.intrace/wiki">
+      Enable launching Java Applications with the InTrace agent.
+   </description>
+
+   <copyright>
+      Copyright reserved by mchr3k@gmail.com
+   </copyright>
+
+   <license>
+      Published under the EPL.
+   </license>
+
+   <plugin
+         id="intrace.ecl"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

@@ -9,21 +9,28 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.intrace.client.gui.TraceWindow;
 import org.intrace.shared.AgentConfigConstants;
 
 public class ControlConnectionThread implements Runnable
 {
+  public static interface IControlConnectionListener
+  {
+    public void setProgress(Map<String,String> progress);
+    public void setStatus(Map<String,String> progress);
+    public void setConfig(Map<String,String> progress);
+    public void disconnect();
+  }
+  
   private final Socket socket;
-  private final TraceWindow window;
+  private final IControlConnectionListener listener;
   private final BlockingQueue<String> incomingMessages = new LinkedBlockingQueue<String>();
   private final BlockingQueue<String> outgoingMessages = new LinkedBlockingQueue<String>();
   private final ControlConnectionSenderThread senderThread = new ControlConnectionSenderThread();
   private Thread sendThread;
 
-  public ControlConnectionThread(Socket socket, TraceWindow devTraceWindow)
+  public ControlConnectionThread(Socket socket, IControlConnectionListener listener)
   {
-    this.window = devTraceWindow;
+    this.listener = listener;
     this.socket = socket;
   }
 
@@ -67,15 +74,15 @@ public class ControlConnectionThread implements Runnable
           Map<String, String> map = (Map<String, String>) receivedMessage;
           if (map.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
           {
-            window.setProgress(map);
+            listener.setProgress(map);
           }
           else if (map.containsKey(AgentConfigConstants.NUM_STATUS_ID))
           {
-            window.setStatus(map);
+            listener.setStatus(map);
           }
           else
           {
-            window.setConfig(map);
+            listener.setConfig(map);
           }
         }
         else
@@ -91,7 +98,7 @@ public class ControlConnectionThread implements Runnable
     catch (Exception ex)
     {
       ex.printStackTrace();
-      window.disconnect();
+      listener.disconnect();
     }
   }
 
@@ -141,7 +148,7 @@ public class ControlConnectionThread implements Runnable
       }
       catch (Exception e)
       {
-        window.disconnect();
+        listener.disconnect();
       }
     }
   }

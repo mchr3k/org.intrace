@@ -1,6 +1,11 @@
-package intrace.eclipse;
+package intrace.ecl;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -9,10 +14,13 @@ import org.osgi.framework.BundleContext;
 public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "intrace.eclipse"; //$NON-NLS-1$
+	public static final String PLUGIN_ID = "intrace.ecl"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
+	
+	// Agent arg
+	public String agentArg = "";
 	
 	/**
 	 * The constructor
@@ -26,7 +34,24 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		plugin = this;
+		plugin = this;	
+		getJar();
+	}
+	
+	private void getJar()
+	{
+	  Bundle b = getBundle();
+	  try
+    {
+      File bundleDir = FileLocator.getBundleFile(b);
+      File jarFile = new File(bundleDir, "lib/intrace-agent.jar");
+      String absPath = jarFile.getAbsolutePath();
+      agentArg = " -javaagent:" + absPath;
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
 	}
 
 	/*

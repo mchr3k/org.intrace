@@ -128,7 +128,13 @@
       <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
       <fileset dir="./lib" includes="swt-*.jar" />
 	  <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>      
-    </jarjar>	
+    </jarjar>
+    
+    <!-- UI Library -->
+	<jar jarfile="./build/jars/intrace-ui-helper.jar">
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/helper/*.class" />      
+    </jar>	
   </target>
 
   <target name="test" description="Run Tests" depends="build" >

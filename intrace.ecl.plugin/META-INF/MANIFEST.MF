@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: InTrace Eclipse
+Bundle-SymbolicName: intrace.ecl;singleton:=true
+Bundle-Version: 0.0.0.1
+Bundle-Activator: intrace.ecl.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.debug.core,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt.debug.ui;bundle-version="3.5.2",
+ org.eclipse.jdt.launching;bundle-version="3.5.200",
+ org.eclipse.ui.ide;bundle-version="3.6.2"
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: lib/miglayout-3.7.3.1-swt.jar,
+ .,
+ lib/intrace-ui-helper.jar

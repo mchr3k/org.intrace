@@ -24,7 +24,7 @@ public class TraceSettings
 
   private boolean stdoutTraceOutputEnabled = false;
   private boolean fileTraceOutputEnabled = false;
-  private boolean netTraceOutputEnabled = false;
+  private boolean netTraceOutputEnabled = true;
   private File file1 = new File("trc1.txt");
   private File file2 = new File("trc2.txt");
   private PrintWriter file1TraceWriter = null;

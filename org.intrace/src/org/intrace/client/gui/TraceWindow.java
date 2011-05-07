@@ -38,18 +38,23 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
-import org.intrace.client.gui.PatternInputWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.Connection;
+import org.intrace.client.gui.helper.Connection.ConnectState;
+import org.intrace.client.gui.helper.Connection.ISocketCallback;
 import org.intrace.client.gui.helper.ControlConnectionThread;
+import org.intrace.client.gui.helper.ControlConnectionThread.IControlConnectionListener;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread;
 import org.intrace.client.gui.helper.ParsedSettingsData;
+import org.intrace.client.gui.helper.PatternInputWindow;
 import org.intrace.client.gui.helper.StatusUpdater;
 import org.intrace.client.gui.helper.TraceFilterThread;
+import org.intrace.client.gui.helper.NetworkDataReceiverThread.INetworkOutputConfig;
+import org.intrace.client.gui.helper.PatternInputWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 import org.intrace.shared.AgentConfigConstants;
 
-public class TraceWindow
+public class TraceWindow implements ISocketCallback, IControlConnectionListener
 {
   public static String NEWLINE = System.getProperty("line.separator");
 
@@ -202,7 +207,7 @@ public class TraceWindow
           {
             connectionState = ConnectState.CONNECTING;
             updateUIStateSameThread();
-            Connection.connectToAgent(traceDialogRef, sWindow, addressInput
+            Connection.connectToAgent(thisWindow, sWindow, addressInput
                 .getText(), portInput.getText(), connectStatus);
           } else if (connectionState == ConnectState.CONNECTED)
           {
@@ -591,6 +596,7 @@ public class TraceWindow
       networkOutput = new Button(composite, SWT.CHECK);
       networkOutput.setText(ClientStrings.ENABLE_NETWORK_OUTPUT);
       networkOutput.setLayoutData("grow");
+      networkOutput.setSelection(true);
       
       Button autoScrollBtn = new Button(composite, SWT.CHECK);
       autoScrollBtn.setText(ClientStrings.AUTO_SCROLL);
@@ -1155,13 +1161,7 @@ public class TraceWindow
   }
 
   // Window ref
-  private final TraceWindow traceDialogRef = this;
-
-  // State
-  private enum ConnectState
-  {
-    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
-  }
+  private final TraceWindow thisWindow = this;
 
   private ConnectState connectionState = ConnectState.DISCONNECTED;
 
@@ -1183,7 +1183,7 @@ public class TraceWindow
   private Pattern oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   private boolean autoScroll = true;
 
-  public void setConnectionState(Socket socket)
+  public void setSocket(Socket socket)
   {
     if (socket != null)
     {
@@ -1198,8 +1198,16 @@ public class TraceWindow
       int networkTracePort = Integer.parseInt(networkTracePortStr);
       try
       {
+        INetworkOutputConfig config = new INetworkOutputConfig()
+        {          
+          @Override
+          public boolean isNetOutputEnabled()
+          {
+            return settingsData.netOutEnabled;
+          }
+        };
         networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
-            networkTracePort, traceDialogRef, textOutputTab.filterThread);
+            networkTracePort, config, textOutputTab.filterThread);
         networkTraceThread.start();
       } catch (IOException ex)
       {
@@ -1212,11 +1220,6 @@ public class TraceWindow
       connectionState = ConnectState.DISCONNECTED_ERR;
     }
     updateUIState();
-  }
-
-  public ParsedSettingsData getSettings()
-  {
-    return settingsData;
   }
 
   public void disconnect()

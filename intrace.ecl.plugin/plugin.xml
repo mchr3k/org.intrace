@@ -12,8 +12,8 @@
    <extension
          point="org.eclipse.debug.core.launchDelegates">
       <launchDelegate
-            delegate="intrace.eclipse.InTraceLaunchConfigurationDelegate"
-            id="intrace.eclipse.intraceLaunchDelegate"
+            delegate="intrace.ecl.ui.launching.ConfigurationDelegate"
+            id="intrace.ecl.intraceLaunchDelegate"
             modes="intrace"
             name="Java Application"
             type="org.eclipse.jdt.launching.localJavaApplication">
@@ -23,7 +23,7 @@
          point="org.eclipse.debug.ui.launchGroups">
       <launchGroup
             bannerImage="icons/runcoverage.gif"
-            id="intrace.eclipse.launchGroup.InTrace"
+            id="intrace.ecl.inTraceLaunchGroup"
             image="icons/runcoverage.gif"
             label="InTrace"
             mode="intrace">
@@ -32,11 +32,11 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="intrace.eclipse.inTraceActionSet"
+            id="intrace.ecl.inTraceActionSet"
             label="InTrace"
             visible="false">
          <action
-               class="intrace.eclipse.actions.InTraceToolbarAction"
+               class="intrace.ecl.ui.launching.ToolbarAction"
                disabledIcon="icons/runcoverage.gif"
                hoverIcon="icons/runcoverage.gif"
                icon="icons/runcoverage.gif"
@@ -52,16 +52,16 @@
       <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaPerspective">
          <actionSet
-               id="intrace.eclipse.inTraceActionSet">
+               id="intrace.ecl.inTraceActionSet">
          </actionSet>
       </perspectiveExtension>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            class="intrace.eclipse.ui.launching.InTraceLaunchShortcut"
+            class="intrace.ecl.ui.launching.Shortcut"
             icon="icons/runcoverage.gif"
-            id="intrace.eclipse.ui.localJavaShortcut"
+            id="intrace.ecl.inTraceLocalJavaShortcut"
             label="Java Application"
             modes="intrace">
          <contextualLaunch>
@@ -81,6 +81,24 @@
   </enablement>
          </contextualLaunch>
       </shortcut>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="intrace.ecl.ui.launching.TabGroup"
+            id="intrace.ecl.JavaAppTabGroup"
+            type="org.eclipse.jdt.launching.localJavaApplication">
+      </launchConfigurationTabGroup>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="intrace.ecl.plugin.ui.output.InTraceEditor"
+            default="false"
+            icon="icons/runcoverage.gif"
+            id="intrace.ecl.plugin.ui.output.inTraceEditor"
+            name="InTrace Output">
+      </editor>
    </extension>
 
 </plugin>

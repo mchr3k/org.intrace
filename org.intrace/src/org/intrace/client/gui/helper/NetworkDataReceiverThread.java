@@ -6,19 +6,22 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import org.intrace.client.gui.TraceWindow;
-
 public class NetworkDataReceiverThread implements Runnable
 {
+  public static interface INetworkOutputConfig
+  {
+    public boolean isNetOutputEnabled();
+  }
+  
   private final Socket traceSocket;
-  private final TraceWindow window;
+  private final INetworkOutputConfig outputConfig;
   private final TraceFilterThread traceThread;
 
   public NetworkDataReceiverThread(InetAddress address, int networkTracePort,
-      TraceWindow traceDialogRef, TraceFilterThread traceThread)
+      INetworkOutputConfig outputConfig, TraceFilterThread traceThread)
       throws IOException
   {
-    this.window = traceDialogRef;
+    this.outputConfig = outputConfig;
     this.traceThread = traceThread;
     traceSocket = new Socket();
     traceSocket.connect(new InetSocketAddress(address, networkTracePort));
@@ -48,7 +51,7 @@ public class NetworkDataReceiverThread implements Runnable
           String traceLine = (String) data;
           if (!"NOOP".equals(traceLine))
           {
-            if (window.getSettings().netOutEnabled)
+            if (outputConfig.isNetOutputEnabled())
             {
               traceThread.addTraceLine(traceLine);
             }
