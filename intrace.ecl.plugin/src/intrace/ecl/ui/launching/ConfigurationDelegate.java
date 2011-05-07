@@ -4,6 +4,9 @@ import intrace.ecl.Activator;
 import intrace.ecl.Util;
 import intrace.ecl.plugin.ui.output.EditorInput;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
@@ -15,7 +18,6 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.core.ILaunchesListener2;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -60,82 +62,53 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
   @Override
   public void launch(ILaunchConfiguration configuration, String mode,
       ILaunch launch, IProgressMonitor monitor) throws CoreException
-  {
-    // Add VM arguments
-    ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();    
-    String vmArgs = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
-    vmArgs += Activator.getDefault().agentArg;
-    wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);    
-    
-    // Add listener for termination
-    ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-    launchManager.addLaunchListener(new TerminationListener(launch));
-    
-    // Launch editor input
-    final IWorkbench workbench = PlatformUI.getWorkbench();
-    Display display = workbench.getDisplay();
-    display.asyncExec(new Runnable()
-    {      
-      @Override
-      public void run()
+  {    
+    try
+    {
+      // Prepare callback server socket
+      ServerSocket callbackServer = new ServerSocket(0);
+      final CallbackHandler callback = new CallbackHandler(callbackServer);
+      callback.start();  
+      
+      // Add VM arguments
+      ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();    
+      String vmArgs = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
+      if (Activator.getDefault().agentArg.length() > 0)
       {
-        try
-        {          
-          IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-          IWorkbenchPage page = window.getActivePage();
-          IDE.openEditor(page, new EditorInput(), "intrace.ecl.plugin.ui.output.inTraceEditor");
-        }
-        catch (PartInitException e)
+        vmArgs += Activator.getDefault().agentArg;
+        vmArgs += "=[callbackport-";
+        vmArgs += Integer.toString(callbackServer.getLocalPort());
+      }    
+      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
+      
+      // Launch editor
+      final IWorkbench workbench = PlatformUI.getWorkbench();
+      Display display = workbench.getDisplay();
+      display.asyncExec(new Runnable()
+      {      
+        @Override
+        public void run()
         {
-          e.printStackTrace();
-        } 
-      }
-    });    
-    
-    // Start launch
-    launchdelegate.launch(wc, ILaunchManager.RUN_MODE, launch,
-        new SubProgressMonitor(monitor, 1));
-  }
-  
-  public static class TerminationListener implements ILaunchesListener2
-  {
-    private final ILaunch target;
-    
-    public TerminationListener(ILaunch target)
-    {
-      this.target = target;
-    }
-    
-    @Override
-    public void launchesRemoved(ILaunch[] launches)
-    {
-      // Do nothing
-    }
-
-    @Override
-    public void launchesAdded(ILaunch[] launches)
-    {
-      // Do nothing
-    }
-
-    @Override
-    public void launchesChanged(ILaunch[] launches)
-    {
-      // Do nothing
-    }
-
-    @Override
-    public void launchesTerminated(ILaunch[] launches)
-    {
-      for (ILaunch launch : launches)
-      {
-        if (launch == target)
-        {
-          System.out.println("Removed");
-          ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-          launchManager.removeLaunchListener(this);
+          try
+          {          
+            IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+            IWorkbenchPage page = window.getActivePage();
+            IDE.openEditor(page, new EditorInput(callback), "intrace.ecl.plugin.ui.output.inTraceEditor");
+          }
+          catch (PartInitException e)
+          {
+            e.printStackTrace();
+          } 
         }
-      }
-    }    
+      });    
+      
+      // Start launch
+      launchdelegate.launch(wc, ILaunchManager.RUN_MODE, launch,
+          new SubProgressMonitor(monitor, 1));
+    }
+    catch (IOException e1)
+    {
+      // TODO Auto-generated catch block
+    }
   }
 }

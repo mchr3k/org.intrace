@@ -8,7 +8,7 @@ import java.net.URLClassLoader;
 
 import org.eclipse.jdt.internal.jarinjarloader.RsrcURLStreamHandlerFactory;
 
-public class TraceClientLoader
+public class InTraceStandaloneUILoader
 {
   public static void main(String[] args) throws Throwable
   {    
@@ -19,7 +19,7 @@ public class TraceClientLoader
       try
       {
         System.err.println("Launching InTrace UI ...");
-        Class<?> c = Class.forName("org.intrace.client.gui.TraceClient", true, cl);
+        Class<?> c = Class.forName("org.intrace.client.gui.InTraceStandaloneUI", true, cl);
         Method main = c.getMethod("main", new Class[]{args.getClass()});
         main.invoke((Object)null, new Object[]{args});
       }
@@ -70,7 +70,7 @@ public class TraceClientLoader
 
   private static ClassLoader getSWTClassloader()
   {
-    ClassLoader parent = TraceClientLoader.class.getClassLoader();    
+    ClassLoader parent = InTraceStandaloneUILoader.class.getClassLoader();    
     URL.setURLStreamHandlerFactory(new RsrcURLStreamHandlerFactory(parent));
     String swtFileName = getSwtJarName();      
     try

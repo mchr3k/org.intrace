@@ -9,6 +9,7 @@
 	<classpathentry kind="lib" path="lib/cglib-nodep-2.2.jar"/>
 	<classpathentry kind="lib" path="lib/asm-debug-all-3.3.jar"/>
 	<classpathentry kind="lib" path="lib/jar-in-jar-loader.jar"/>
+	<classpathentry kind="lib" path="lib/swt-win32-3.6.2.jar"/>
 	<classpathentry kind="con" path="SWT_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/miglayout-3.7.3.1-swt.jar"/>
 	<classpathentry kind="output" path="bin"/>

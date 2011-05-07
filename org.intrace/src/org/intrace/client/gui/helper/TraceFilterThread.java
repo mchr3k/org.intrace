@@ -122,6 +122,11 @@ public class TraceFilterThread implements Runnable
     thisThread.setName("Trace Filter");
     thisThread.start();
   }
+  
+  public void interrupt()
+  {
+    thisThread.interrupt();
+  }
 
   public void addTraceLine(String traceLine)
   {

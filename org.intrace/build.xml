@@ -237,6 +237,13 @@
 
   <target name="release" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
   </target>
+  
+  <target name="update_eclipse_jars" depends="jar" >
+    <copy todir="../intrace.ecl.plugin/lib/">
+      <fileset file="./build/jars/intrace-agent.jar" />
+      <fileset file="./build/jars/intrace-ui-helper.jar" />
+    </copy>
+  </target>
 
   <target name="example_build">
     <mkdir dir="./build/test" />

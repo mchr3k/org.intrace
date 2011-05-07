@@ -9,6 +9,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.intrace.agent.server.AgentClientConnection;
+
 public class NetworkDataSenderThread implements Runnable
 {
   private boolean alive = true;
@@ -17,9 +19,11 @@ public class NetworkDataSenderThread implements Runnable
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(
                                                                                      30);
   private Set<NetworkDataSenderThread> set;
+  private final AgentClientConnection connection;
 
-  public NetworkDataSenderThread(ServerSocket networkSocket)
+  public NetworkDataSenderThread(AgentClientConnection connection, ServerSocket networkSocket)
   {
+    this.connection = connection;
     this.networkSocket = networkSocket;
   }
 
@@ -38,12 +42,16 @@ public class NetworkDataSenderThread implements Runnable
   {
     try
     {
+      if (connection != null)
+      {
+        connection.setTraceConnEstablished(false);
+      }
       alive = false;
       networkSocket.close();
       if (traceSendingSocket != null)
       {
         traceSendingSocket.close();
-      }
+      }      
     }
     catch (IOException e)
     {
@@ -75,6 +83,12 @@ public class NetworkDataSenderThread implements Runnable
     {
       traceSendingSocket = networkSocket.accept();
       traceSendingSocket.setKeepAlive(true);
+      
+      if (connection != null)
+      {
+        connection.setTraceConnEstablished(true);
+      }
+      
       ObjectOutputStream traceWriter = new ObjectOutputStream(
                                                               traceSendingSocket
                                                                                 .getOutputStream());

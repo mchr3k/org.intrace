@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.intrace.agent.Agent;
 import org.intrace.agent.ClassTransformer;
 
 /**
@@ -24,7 +25,7 @@ public class AgentServer implements Runnable
   private final int serverPort;
 
   /**
-   * cTor s
+   * cTor
    * 
    * @param xiT
    * @param serverPort 
@@ -94,7 +95,7 @@ public class AgentServer implements Runnable
     // Server constants
 
     // Number used for naming client threads
-    int clientNum = 1;
+    int clientNum = 2;
 
     // Number of allowed exceptions before we give up
     int numAllowedExceptions = 10;
@@ -111,6 +112,7 @@ public class AgentServer implements Runnable
         System.out.println("## Listening on port " + serversock.getLocalPort());
         System.setProperty("org.intrace.port",
                            Integer.toString(serversock.getLocalPort()));
+        Agent.setServerPort(serversock.getLocalPort());
         while (true)
         {
           Socket connectedClient = serversock.accept();

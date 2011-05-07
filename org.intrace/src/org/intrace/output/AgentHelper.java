@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.intrace.agent.server.AgentClientConnection;
+
 /**
  * Static implementation of the {@link IInstrumentationHandler} interface
  */
@@ -24,16 +26,17 @@ public class AgentHelper
   private static final Map<NetworkDataSenderThread, Object> networkOutputThreads = new ConcurrentHashMap<NetworkDataSenderThread, Object>();
 
   /**
+   * @param connection 
    * @param agentArgs
    * @return A List of responses from all of the {@link IInstrumentationHandler}
    *         s and the {@link AgentHelper} itself.
    */
-  public static List<String> getResponses(String agentArgs)
+  public static List<String> getResponses(AgentClientConnection connection, String agentArgs)
   {
     List<String> responses = new ArrayList<String>();
 
     // Get the response from the AgentHelper
-    String response = getResponse(agentArgs);
+    String response = getResponse(connection, agentArgs);
     if (response != null)
     {
       responses.add(response);
@@ -53,34 +56,43 @@ public class AgentHelper
   }
 
   /**
+   * @param connection 
    * @param args
    * @return The response to the given args or null if no response is required.
    *         The only response currently implemented is sending back the local
    *         port for a new network data connection.
    */
-  private static String getResponse(String args)
+  private static String getResponse(AgentClientConnection connection, String args)
   {
     outputSettings.parseArgs(args);
 
     if (outputSettings.networkTraceOutputRequested)
     {
-      System.out.println("## Network Output Requested");
-      ServerSocket networkSocket;
-      try
+      if ((connection == null) || !connection.isTraceConnEstablished())
       {
-        networkSocket = new ServerSocket(0);
-        NetworkDataSenderThread networkOutputThread = new NetworkDataSenderThread(
-                                                                                  networkSocket);
-
-        networkOutputThreads.put(networkOutputThread, new Object());
-
-        networkOutputThread.start(networkOutputThreads.keySet());
-        outputSettings.networkTraceOutputRequested = false;
-        return Integer.toString(networkSocket.getLocalPort());
+        System.out.println("## Network Output Requested");
+        ServerSocket networkSocket;
+        try
+        {
+          networkSocket = new ServerSocket(0);
+          NetworkDataSenderThread networkOutputThread = new NetworkDataSenderThread(connection,
+                                                                                    networkSocket);
+  
+          networkOutputThreads.put(networkOutputThread, new Object());
+  
+          networkOutputThread.start(networkOutputThreads.keySet());
+          outputSettings.networkTraceOutputRequested = false;
+          return Integer.toString(networkSocket.getLocalPort());
+        }
+        catch (IOException e)
+        {
+          // Do nothing
+          return null;
+        }
       }
-      catch (IOException e)
+      else
       {
-        // Do nothing
+        System.out.println("## Network Output Already Connected");
         return null;
       }
     }

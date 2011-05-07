@@ -19,10 +19,27 @@ public class AgentSettings
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
   private int serverPort = 9123;
+  private int callbackPort = -1;
+  private int actualServerPort = -1;
+
+  public int getActualServerPort()
+  {
+    return actualServerPort;
+  }
+
+  public void setActualServerPort(int xiActualServerPort)
+  {
+    actualServerPort = xiActualServerPort;
+  }
 
   public int getServerPort()
   {
     return serverPort;
+  }
+  
+  public int getCallbackPort()
+  {
+    return callbackPort;
   }
 
   public AgentSettings(String args)
@@ -60,10 +77,15 @@ public class AgentSettings
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().startsWith(AgentConfigConstants.SERVERPORT_MODE))
+    else if (arg.toLowerCase().startsWith(AgentConfigConstants.SERVER_PORT))
     {
-      String serverPortStr = arg.replace(AgentConfigConstants.SERVERPORT_MODE, "");
+      String serverPortStr = arg.replace(AgentConfigConstants.SERVER_PORT, "");
       serverPort = Integer.parseInt(serverPortStr);
+    }
+    else if (arg.toLowerCase().startsWith(AgentConfigConstants.CALLBACK_PORT))
+    {
+      String callbackPortStr = arg.replace(AgentConfigConstants.CALLBACK_PORT, "");
+      callbackPort = Integer.parseInt(callbackPortStr);
     }
     else if (arg.toLowerCase().equals(
                                       AgentConfigConstants.INSTRU_ENABLED
@@ -150,6 +172,7 @@ public class AgentSettings
                     Boolean.toString(verboseMode));
     settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,
                     Boolean.toString(saveTracedClassfiles));
+    settingsMap.put(AgentConfigConstants.ACTUAL_SERVER_PORT, Integer.toString(actualServerPort));
     return settingsMap;
   }
 }

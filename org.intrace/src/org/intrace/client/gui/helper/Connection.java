@@ -18,24 +18,24 @@ public class Connection
   public static interface ISocketCallback
   {
     public void setSocket(Socket socket);
+    public void setConnectionStatus(final String statusText);
   }
   
-  public static void connectToAgent(final ISocketCallback owningWindow,
+  public static void connectToAgent(final ISocketCallback socketCallback,
                                     final Shell sShell, final String host,
-                                    final String port,
-                                    final StatusUpdater statusUpdater)
+                                    final String port)
   {
     if (host.length() == 0)
     {
       displayError(sShell, "Please enter an address");
-      statusUpdater.setStatusText("Error: Please enter an address");
-      owningWindow.setSocket(null);
+      socketCallback.setConnectionStatus("Error: Please enter an address");
+      socketCallback.setSocket(null);
     }
     else if (port.length() == 0)
     {
       displayError(sShell, "Please enter a port");
-      statusUpdater.setStatusText("Error: Please enter a port");
-      owningWindow.setSocket(null);
+      socketCallback.setConnectionStatus("Error: Please enter a port");
+      socketCallback.setSocket(null);
     }
     else
     {
@@ -44,18 +44,17 @@ public class Connection
         @Override
         public void run()
         {
-          statusUpdater.setStatusText("Connecting...");
+          socketCallback.setConnectionStatus("Connecting...");
           final Socket socket = new Socket();
           try
           {
-            socket.connect(new InetSocketAddress(host, Integer.valueOf(port)));
-            statusUpdater.setStatusText("Connected");
-            owningWindow.setSocket(socket);
+            socket.connect(new InetSocketAddress(host, Integer.valueOf(port)));            
+            socketCallback.setSocket(socket);
           }
           catch (Exception e)
           {
-            statusUpdater.setStatusText("Error: " + e.toString());
-            owningWindow.setSocket(null);
+            socketCallback.setConnectionStatus("Error: " + e.toString());
+            socketCallback.setSocket(null);
           }
         }
       }).start();

@@ -24,6 +24,8 @@ public class AgentClientConnection implements Runnable
 {
   private final Socket connectedClient;
   private final ClassTransformer transformer;
+  private boolean traceConnEstablished = false;
+  private final Object traceConnLock = new Object();
 
   /**
    * cTor
@@ -39,6 +41,31 @@ public class AgentClientConnection implements Runnable
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
     System.out.println("## Connected to: " + xiConnectedClient.getPort());
+  }
+  
+  public boolean isTraceConnEstablished()
+  {
+    return traceConnEstablished;
+  }
+
+  public void setTraceConnEstablished(boolean traceConnEstablished)
+  {
+    synchronized (traceConnLock)
+    {
+      this.traceConnEstablished = traceConnEstablished;
+      traceConnLock.notifyAll();
+    }    
+  }
+  
+  public void waitForTraceConn() throws InterruptedException
+  {
+    synchronized (traceConnLock)
+    {
+      if (!traceConnEstablished)
+      {
+        traceConnLock.wait();
+      }
+    }
   }
 
   /**
@@ -79,7 +106,7 @@ public class AgentClientConnection implements Runnable
           }
           else
           {
-            List<String> responses = transformer.getResponse(message);
+            List<String> responses = transformer.getResponse(this, message);
             if (responses.size() > 0)
             {
               for (String response : responses)

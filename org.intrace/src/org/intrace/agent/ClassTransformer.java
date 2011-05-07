@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.intrace.agent.server.AgentClientConnection;
 import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
 import org.intrace.output.trace.TraceHandler;
@@ -358,11 +359,12 @@ public class ClassTransformer implements ClassFileTransformer
 
   /**
    * Handle a message and return a response.
+   * @param connection 
    * 
    * @param message
    * @return Response or null if there is no response.
    */
-  public List<String> getResponse(String message)
+  public List<String> getResponse(AgentClientConnection connection, String message)
   {
     List<String> responses = new ArrayList<String>();
     AgentSettings oldSettings = new AgentSettings(settings);
@@ -402,7 +404,7 @@ public class ClassTransformer implements ClassFileTransformer
       responses.add(modifiedClasses.toString());
     }
 
-    responses.addAll(AgentHelper.getResponses(message));
+    responses.addAll(AgentHelper.getResponses(connection, message));
 
     return responses;
   }

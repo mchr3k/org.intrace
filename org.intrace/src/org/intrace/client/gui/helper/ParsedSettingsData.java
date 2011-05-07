@@ -23,6 +23,8 @@ public class ParsedSettingsData
 
   public final int instruClasses;
   public final int totalClasses;
+  
+  public final int actualServerPort;
 
   private final Map<String, String> settingsMap;
 
@@ -137,6 +139,16 @@ public class ParsedSettingsData
     else
     {
       totalClasses = 0;
+    }
+    
+    String actualServerPortStr = settingsMap.get(AgentConfigConstants.ACTUAL_SERVER_PORT);
+    if (actualServerPortStr != null)
+    {
+      actualServerPort = Integer.parseInt(actualServerPortStr);
+    }
+    else
+    {
+      actualServerPort = 9123;
     }
   }
 
