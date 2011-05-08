@@ -119,7 +119,7 @@
     <!-- UI (Stage 2) -->
 	<jarjar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.loader.TraceClientLoader" />
+        <attribute name="Main-Class" value="org.intrace.client.loader.InTraceStandaloneUILoader" />
         <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
