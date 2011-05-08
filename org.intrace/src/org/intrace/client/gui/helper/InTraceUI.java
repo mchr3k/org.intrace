@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
@@ -22,6 +24,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -29,6 +32,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -49,6 +53,11 @@ import org.intrace.shared.AgentConfigConstants;
 
 public class InTraceUI implements ISocketCallback, IControlConnectionListener
 {
+  public static interface IConnectionStateCallback
+  {
+    public void setConnectionState(ConnectState state);
+  }
+  
   public static String NEWLINE = System.getProperty("line.separator");
 
   public void open()
@@ -65,27 +74,69 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     display.dispose();
   }
 
-  private Shell sWindow = null;
-  final TabFolder outputTabs;
-  private TabFolder buttonTabs;
+  private final Shell sWindow;
   private final Composite sRoot;
+  
+  private final TabFolder outputTabs;
+  private final TabFolder buttonTabs;  
+  private final CTabFolder buttonCTabs;
+  private final CTabFolder outputCTabs;
+  private final boolean standalone;
+  
+  private IConnectionStateCallback connCallback = null;
+  private MigLayout rootLayout;
 
-  public InTraceUI(Shell xiWindow, Composite xiRoot)
+  public void setConnCallback(IConnectionStateCallback connCallback)
+  {
+    this.connCallback = connCallback;
+    if (connCallback != null)
+    {
+      connCallback.setConnectionState(connectionState);
+    }
+  }
+
+  public InTraceUI(Shell xiWindow, Composite xiRoot, boolean xiStandalone)
   {
     sWindow = xiWindow;
     sRoot = xiRoot;
+    standalone = xiStandalone;
     
-    MigLayout rootLayout = new MigLayout("fill", "", "[][grow]");
+    rootLayout = new MigLayout("fill", "[]", "[][][grow]");
     xiRoot.setLayout(rootLayout);
     
-    buttonTabs = new TabFolder(xiRoot, SWT.NONE);
-    buttonTabs.setLayoutData("grow,wrap,wmin 0");
-
-    outputTabs = new TabFolder(xiRoot, SWT.NONE);
-    outputTabs.setLayoutData("grow,wmin 0,hmin 0");
-
-    fillButtonTabs(buttonTabs);
-    fillOutputTabs(outputTabs);
+    if (xiStandalone)
+    {
+      buttonCTabs = null;           
+      buttonTabs = new TabFolder(xiRoot, SWT.NONE);
+      buttonTabs.setLayoutData("grow,wrap,wmin 0");      
+      fillButtonTabs(buttonTabs);
+    }
+    else
+    {
+      buttonTabs = null;      
+      buttonCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
+      buttonCTabs.setSimple(false);
+      buttonCTabs.setLayoutData("grow,wrap,wmin 0");
+      fillButtonCTabs(buttonCTabs);
+      buttonCTabs.setSelection(0);    
+    }
+     
+    if (xiStandalone)
+    {
+      outputCTabs = null;
+      outputTabs = new TabFolder(xiRoot, SWT.NONE);
+      outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");
+      fillOutputTabs(outputTabs);
+    }
+    else
+    {       
+      outputTabs = null;
+      outputCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
+      outputCTabs.setSimple(false);
+      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");      
+      fillOutputCTabs(outputCTabs);           
+      outputCTabs.setSelection(0);      
+    }
     
     updateUIStateSameThread();
     
@@ -115,9 +166,20 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
+          if (standalone)
+          {
+            buttonTabs.getItem(0).dispose(); 
+          }
+          else
+          {
+            buttonCTabs.getItem(0).dispose();            
+          }
           connTab.addressInput.setText("localhost");
           connTab.portInput.setText("detecting...");
-          buttonTabs.setSelection(instruTab.tabItem);
+          textOutputTab.filterThread.addSystemTraceLine("Instructions");
+          textOutputTab.filterThread.addSystemTraceLine(" - Select Classes you want to Trace");
+          textOutputTab.filterThread.addSystemTraceLine("Full help available on the Help tab");
+          textOutputTab.filterThread.addSystemTraceLine("");
         }
       });
     }
@@ -128,24 +190,99 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private InstruTab instruTab;
   private TraceTab traceTab;
   private ExtrasTab extraTab;
+  private Composite startPanel;
 
   private void fillButtonTabs(TabFolder tabFolder)
   {
     TabItem connTabItem = new TabItem(tabFolder, SWT.NONE);
     connTabItem.setText("Connection");
-    connTab = new ConnectionTab(tabFolder, connTabItem);
+    connTab = new ConnectionTab(tabFolder);
+    connTabItem.setControl(connTab.composite);
 
     TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
     instrTabItem.setText("Instrumentation");
-    instruTab = new InstruTab(tabFolder, instrTabItem);
+    instruTab = new InstruTab(tabFolder);
+    instrTabItem.setControl(instruTab.composite);
 
     TabItem traceTabItem = new TabItem(tabFolder, SWT.NONE);
     traceTabItem.setText("Trace");
-    traceTab = new TraceTab(tabFolder, traceTabItem);
+    traceTab = new TraceTab(tabFolder);
+    traceTabItem.setControl(traceTab.composite);
 
     TabItem extraTabItem = new TabItem(tabFolder, SWT.NONE);
     extraTabItem.setText("Advanced");
-    extraTab = new ExtrasTab(tabFolder, extraTabItem);
+    extraTab = new ExtrasTab(tabFolder);
+    extraTabItem.setControl(extraTab.composite);
+  }
+  
+  private void fillButtonCTabs(CTabFolder tabFolder)
+  {
+    CTabItem connTabItem = new CTabItem(tabFolder, SWT.NONE);
+    connTabItem.setText("Connection");
+    connTab = new ConnectionTab(tabFolder);
+    connTabItem.setControl(connTab.composite);
+
+    CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
+    instrTabItem.setText("Instrumentation");
+    instruTab = new InstruTab(tabFolder);
+    instrTabItem.setControl(instruTab.composite);
+
+    CTabItem traceTabItem = new CTabItem(tabFolder, SWT.NONE);
+    traceTabItem.setText("Trace");
+    traceTab = new TraceTab(tabFolder);
+    traceTabItem.setControl(traceTab.composite);
+
+    CTabItem extraTabItem = new CTabItem(tabFolder, SWT.NONE);
+    extraTabItem.setText("Advanced");
+    extraTab = new ExtrasTab(tabFolder);
+    extraTabItem.setControl(extraTab.composite);
+  }
+  
+  private boolean waitStartUIShown = false;
+  
+  private void addWaitStartUI()
+  {    
+    if (!waitStartUIShown)
+    {
+      startPanel = new Composite(sRoot, SWT.NONE);
+      startPanel.setLayoutData("grow,wrap,cell 0 1");
+      MigLayout startLayout = new MigLayout("fillx", "[align center]", "[]");
+      startPanel.setLayout(startLayout);
+      
+      Label startLabel = new Label(startPanel, SWT.NONE);
+      startLabel.setText("Program has been paused.");
+      startLabel.setLayoutData("split");
+      
+      final Button startButton = new Button(startPanel, SWT.PUSH);
+      startButton.setText("Start Program");
+      
+      startButton.addSelectionListener(new SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          controlThread.sendMessage(AgentConfigConstants.START_ACTIVATE);
+          controlThread.sendMessage("getsettings");
+          startButton.setEnabled(false);
+        }
+      });
+      
+      sRoot.layout();
+      
+      waitStartUIShown = true;
+    }
+  }
+  
+  private void removeWaitStartUI()
+  {
+    if (waitStartUIShown)
+    {
+      startPanel.dispose();
+      
+      sRoot.layout();
+
+      waitStartUIShown = false;      
+    }
   }
 
   private class ConnectionTab
@@ -153,15 +290,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final Button connectButton;
     final Text addressInput;
     final Text portInput;
-    private Label statusLabel;
+    final Label statusLabel;
+    final Composite composite;
 
-    private ConnectionTab(TabFolder tabFolder, TabItem connTab)
+    private ConnectionTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill", "[380][grow]");
 
-      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      connTab.setControl(composite);
 
       Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout connGroupLayout = new MigLayout("fill", "[40][200][grow]");
@@ -217,7 +354,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           if ((connectionState == ConnectState.DISCONNECTED)
               || (connectionState == ConnectState.DISCONNECTED_ERR))
           {
-            connectionState = ConnectState.CONNECTING;
+            setConnectionState(ConnectState.CONNECTING);
             updateUIStateSameThread();
             Connection.connectToAgent(thisWindow, sWindow, addressInput
                 .getText(), portInput.getText());
@@ -236,24 +373,21 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   private class InstruTab
   {
-    final Button togInstru;
     final Button classRegex;
     final Button listClasses;
     final Label instrStatusLabel;
-    private final TabItem tabItem;
+    final Composite composite;
 
-    private InstruTab(TabFolder tabFolder, TabItem instrTab)
+    private InstruTab(Composite parent)
     {
-      this.tabItem = instrTab;
       MigLayout windowLayout = new MigLayout("fill", "[][300][grow]", "[]");
 
-      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      instrTab.setControl(composite);
       composite.setLayoutData("hmin 0");
 
       Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout mainControlGroupLayout = new MigLayout("filly", "[150][150]");
+      MigLayout mainControlGroupLayout = new MigLayout("filly", "[150]");
       mainControlGroup.setLayout(mainControlGroupLayout);
       mainControlGroup.setLayoutData("hmin 0, grow");
       mainControlGroup.setText("Instrumentation Settings");      
@@ -261,11 +395,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       classRegex = new Button(mainControlGroup, SWT.PUSH);
       classRegex.setText(ClientStrings.SET_CLASSREGEX);
       classRegex.setLayoutData("grow");
-
-      togInstru = new Button(mainControlGroup, SWT.PUSH);
-      togInstru.setText(ClientStrings.ENABLE_INSTR);
-      togInstru.setAlignment(SWT.CENTER);
-      togInstru.setLayoutData("grow");
 
       Group statusGroup = new Group(composite, SWT.SHADOW_IN);
       MigLayout statusGroupLayout = new MigLayout("fillx", "[][]");
@@ -282,27 +411,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
       listClasses.setAlignment(SWT.CENTER);
       listClasses.setLayoutData("gapy 5px");
-
-      togInstru
-          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-          {
-            @Override
-            public void widgetSelected(SelectionEvent arg0)
-            {
-              if (!settingsData.instrEnabled)
-              {
-                togInstru.setText(ClientStrings.ENABLING_INSTR);
-              }
-              else
-              {
-                togInstru.setText(ClientStrings.DISABLE_INSTR);
-              }
-              togInstru.setEnabled(false);
-              toggleSetting(settingsData.instrEnabled, "[instru-true",
-                  "[instru-false");
-              settingsData.instrEnabled = !settingsData.instrEnabled;
-            }
-          });
 
       final String helpText = "Enter pattern in the form "
           + "\"mypack.mysubpack.MyClass\" or using wildcards "
@@ -366,17 +474,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     {
       instrStatusLabel.setText("Progress: " + progressClasses + "/"
           + totalClasses);
-      if (done)
-      {
-        if (settingsData.instrEnabled)
-        {
-          togInstru.setText(ClientStrings.DISABLE_INSTR);
-        } else
-        {
-          togInstru.setText(ClientStrings.ENABLE_INSTR);
-        }
-        togInstru.setEnabled(true);
-      }
     }
   }
 
@@ -388,14 +485,14 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
     final Button stdOutOutput;
     final Button fileOutput;
+    final Composite composite;
 
-    private TraceTab(TabFolder tabFolder, TabItem traceTab)
+    private TraceTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill", "[][][grow]");
 
-      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      traceTab.setControl(composite);
 
       Group traceTypesGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
       MigLayout traceTypesGroupLayout = new MigLayout("fill", "[150]");
@@ -492,17 +589,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   private class ExtrasTab
   {
-    private Button togSaveClasses;
-    private Button togVerbose;
-    private Button printSettings;
+    final Button togSaveClasses;
+    final Button togVerbose;
+    final Button printSettings;
+    final Composite composite;
 
-    private ExtrasTab(TabFolder tabFolder, TabItem traceTab)
+    private ExtrasTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill", "[200][grow]");
 
-      Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      traceTab.setControl(composite);
 
       togSaveClasses = new Button(composite, SWT.CHECK);
       togSaveClasses.setText(ClientStrings.ENABLE_SAVECLASSES);
@@ -555,12 +652,32 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   }
 
   TextOutputTab textOutputTab;
+  HelpOutputTab helpOutputTab;
 
   private void fillOutputTabs(TabFolder tabFolder)
   {
     TabItem textOutputTabItem = new TabItem(tabFolder, SWT.NONE);
     textOutputTabItem.setText("Output");
-    textOutputTab = new TextOutputTab(tabFolder, textOutputTabItem);
+    textOutputTab = new TextOutputTab(tabFolder);
+    textOutputTabItem.setControl(textOutputTab.composite);
+    
+    TabItem helpOutputTabItem = new TabItem(tabFolder, SWT.NONE);
+    helpOutputTabItem.setText("Help");
+    helpOutputTab = new HelpOutputTab(tabFolder);
+    helpOutputTabItem.setControl(helpOutputTab.composite);
+  }
+  
+  private void fillOutputCTabs(CTabFolder tabFolder)
+  {
+    CTabItem textOutputTabItem = new CTabItem(tabFolder, SWT.NONE);
+    textOutputTabItem.setText("Output");
+    textOutputTab = new TextOutputTab(tabFolder);
+    textOutputTabItem.setControl(textOutputTab.composite);
+    
+    CTabItem helpOutputTabItem = new CTabItem(tabFolder, SWT.NONE);
+    helpOutputTabItem.setText("Help");
+    helpOutputTab = new HelpOutputTab(tabFolder);
+    helpOutputTabItem.setControl(helpOutputTab.composite);
   }
 
   private class TextOutputTab
@@ -576,15 +693,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final Button downButton;
     final Button upButton;
     final Text findInput;
+    final Composite composite;
 
-    private TextOutputTab(TabFolder tabFolder, TabItem textOutputTab)
+    private TextOutputTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
           "[100][100][100][150][100][grow]", "[20][20][grow][]");
 
-      final Composite composite = new Composite(tabFolder, SWT.NONE);
+      composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      textOutputTab.setControl(composite);
 
       Button saveText = new Button(composite, SWT.PUSH);
       saveText.setText(ClientStrings.SAVE_TEXT);
@@ -890,7 +1007,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
       
-      filterThread = new TraceFilterThread(new TraceTextHandler()
+      filterThread = new TraceFilterThread(standalone, 
+                                           new TraceTextHandler()
       {
         // Re-usable class to avoid object allocations
         class SetTextRunnable implements Runnable
@@ -956,26 +1074,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           setOutputStatus(displayed, total);
         }
       });
-      filterThread.addSystemTraceLine("Help is available online: https://github.com/mchr3k/org.intrace/wiki");
-      filterThread.addSystemTraceLine("Here is some example trace:");
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: {:100");      
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 2");
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 4");
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: /:101");
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: Return: 8");
-      filterThread.addTraceLine("[10/05/27 14:14:30]:[1]:example.ExampleClass:multiplyMethod: }:105");
-      filterThread.addSystemTraceLine("");
-      filterThread.addSystemTraceLine("This means the following:");
-      filterThread.addSystemTraceLine("[10/05/27 14:14:30] is a date/timestamp - the date is in the format yy/mm/dd");
-      filterThread.addSystemTraceLine("[1] - the thread ID");
-      filterThread.addSystemTraceLine("example.ExampleClass:multiplyMethod - the Class and Method being traced");
-      filterThread.addSystemTraceLine("{:100 - The method was entered on source line 100");
-      filterThread.addSystemTraceLine("Arg: 2 - The first argument had value 2");
-      filterThread.addSystemTraceLine("Arg: 2 - The second argument had value 4");
-      filterThread.addSystemTraceLine("/:101 - An optional block of code was executed starting at source line 101 (e.g. an if statement)");
-      filterThread.addSystemTraceLine("Return: 8 - The method returned value 8");
-      filterThread.addSystemTraceLine("}:105 - The method returned on source line 105");
-      filterThread.addSystemTraceLine("");
+      
+      if (standalone)
+      {
+        filterThread.addSystemTraceLine("Instructions");
+        filterThread.addSystemTraceLine("(1) Connect to Agent");
+        filterThread.addSystemTraceLine("(2) Select Classes you want to Trace");
+        filterThread.addSystemTraceLine("Full help available on the Help tab");
+        filterThread.addSystemTraceLine("");
+      }      
     }
     
     private String getDisplayPatternFromText(String text)
@@ -1173,11 +1280,78 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       });
     }
   }
+  
+  private class HelpOutputTab
+  {
+    final StyledText textOutput;
+    final Composite composite;
+    final Link helpLink;
+
+    private HelpOutputTab(Composite parent)
+    {
+      MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
+          "[grow]", "[20][grow]");
+
+      composite = new Composite(parent, SWT.NONE);
+      composite.setLayout(windowLayout);
+      
+      helpLink = new Link(composite, SWT.NONE);
+      helpLink.setLayoutData("growx,wrap");
+      helpLink.setText("<A HREF=\"https://github.com/mchr3k/org.intrace/wiki\">Online Help</A>");
+      
+      textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
+          | SWT.H_SCROLL | SWT.BORDER);
+      textOutput.setEditable(false);
+      textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
+      textOutput.setBackground(Display.getCurrent().getSystemColor(
+          SWT.COLOR_WHITE));
+      
+      helpLink.addSelectionListener(new SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent event)
+        {
+          Program.launch(event.text);
+        }
+      });
+      
+      StringBuilder helpStr = new StringBuilder();
+      helpStr.append("Here is some example trace:\n");
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: {:100\n");      
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 2\n");
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: Arg: 4\n");
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: /:101\n");
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: Return: 8\n");
+      helpStr.append("[14:14:30]:[1]:example.ExampleClass:multiplyMethod: }:105\n");
+      helpStr.append("\n");
+      helpStr.append("This means the following:\n");
+      helpStr.append("[14:14:30] is a timestamp");
+      helpStr.append("[1] - the thread ID\n");
+      helpStr.append("example.ExampleClass:multiplyMethod - the Class and Method being traced\n");
+      helpStr.append("{:100 - The method was entered on source line 100\n");
+      helpStr.append("Arg: 2 - The first argument had value 2\n");
+      helpStr.append("Arg: 2 - The second argument had value 4\n");
+      helpStr.append("/:101 - An optional block of code was executed starting at source line 101 (e.g. an if statement)\n");
+      helpStr.append("Return: 8 - The method returned value 8\n");
+      helpStr.append("}:105 - The method returned on source line 105\n");
+      textOutput.setText(helpStr.toString());
+    }
+  }
 
   // Window ref
   private final InTraceUI thisWindow = this;
 
   private ConnectState connectionState = ConnectState.DISCONNECTED;
+
+  public void setConnectionState(ConnectState connectionState)
+  {
+    this.connectionState = connectionState;
+    IConnectionStateCallback callback = connCallback;
+    if (callback != null)
+    {
+      callback.setConnectionState(connectionState);
+    }
+  }
 
   // Network details
   private InetAddress remoteAddress;
@@ -1189,12 +1363,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   // Settings
   private ParsedSettingsData settingsData = new ParsedSettingsData(
       new HashMap<String, String>());
-  private Pattern lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
+  
+  private Pattern lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_NONE;  
+  private Pattern activeIncludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  
   private Pattern lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private Pattern activeIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
-  private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   private Pattern activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   private Pattern oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
 
@@ -1207,7 +1384,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       controlThread = new ControlConnectionThread(socket, this);
       controlThread.start();
       controlThread.sendMessage("getsettings");
-      connectionState = ConnectState.CONNECTED;
+      setConnectionState(ConnectState.CONNECTED);
 
       controlThread.sendMessage("[out-network");
       String networkTracePortStr = controlThread.getMessage();
@@ -1233,7 +1410,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }
     } else
     {
-      connectionState = ConnectState.DISCONNECTED_ERR;
+      setConnectionState(ConnectState.DISCONNECTED_ERR);
     }
     updateUIState();
   }
@@ -1248,7 +1425,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     {
       networkTraceThread.disconnect();
     }
-    connectionState = ConnectState.DISCONNECTED;
+    setConnectionState(ConnectState.DISCONNECTED);
     updateUIState();
   }
 
@@ -1361,6 +1538,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       connTab.portInput.setText(Integer.toString(settingsData.actualServerPort));
     }
     
+    if (settingsData.waitStart)
+    {
+      addWaitStartUI();
+    }
+    else
+    {
+      removeWaitStartUI();
+    }
+    
     if (connectionState == ConnectState.CONNECTING)
     {
       connTab.connectButton.setText(ClientStrings.CONNECTING);
@@ -1372,9 +1558,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       chooseText(connTab.connectButton,
           (connectionState == ConnectState.CONNECTED), ClientStrings.CONNECT,
           ClientStrings.DISCONNECT);
-      chooseText(instruTab.togInstru,
-          settingsData.instrEnabled, ClientStrings.ENABLE_INSTR,
-          ClientStrings.DISABLE_INSTR);
 
       if (connectionState == ConnectState.CONNECTED)
       {
@@ -1385,7 +1568,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         // Enable all buttons
         instruTab.classRegex.setEnabled(true);
         instruTab.listClasses.setEnabled(true);
-        instruTab.togInstru.setEnabled(true);
 
         traceTab.argsTrace.setEnabled(true);
         traceTab.branchTrace.setEnabled(true);
@@ -1400,7 +1582,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         textOutputTab.networkOutput.setEnabled(true);
 
         // Update the button pressed/unpressed state
-        instruTab.togInstru.setSelection(settingsData.instrEnabled);
         traceTab.argsTrace.setSelection(settingsData.argsEnabled);
         traceTab.branchTrace.setSelection(settingsData.branchEnabled);
         traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
@@ -1435,7 +1616,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
         instruTab.classRegex.setEnabled(false);
         instruTab.listClasses.setEnabled(false);
-        instruTab.togInstru.setEnabled(false);
 
         traceTab.argsTrace.setEnabled(false);
         traceTab.branchTrace.setEnabled(false);
@@ -1498,9 +1678,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         public void run()
         {
           int numInstr = Integer.parseInt(statusMap
-              .get(AgentConfigConstants.NUM_INSTR_CLASSES));
+              .get(AgentConfigConstants.STINST));
           int numTotal = Integer.parseInt(statusMap
-              .get(AgentConfigConstants.NUM_TOTAL_CLASSES));
+              .get(AgentConfigConstants.STCLS));
           instruTab.setStatus(numInstr, numTotal);
         }
       });
@@ -1519,7 +1699,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           textOutputTab.filterThread
               .addSystemTraceLine("Latest Settings Received");
           settingsData = new ParsedSettingsData(settingsMap);
-          connectionState = ConnectState.CONNECTED;
+          setConnectionState(ConnectState.CONNECTED);
           updateUIStateSameThread();
         }
       });

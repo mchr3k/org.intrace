@@ -88,7 +88,6 @@ public class AgentClientConnection implements Runnable
       {
         while (true)
         {
-
           String message = receiveMessage();
           if (message.equals("getsettings"))
           {
@@ -103,6 +102,11 @@ public class AgentClientConnection implements Runnable
             commandSet.addAll(AgentConfigConstants.COMMANDS);
             commandSet.addAll(TraceConfigConstants.COMMANDS);
             sendMessage(commandSet);
+          }
+          else if (message.equalsIgnoreCase(AgentConfigConstants.START_ACTIVATE))
+          {
+            transformer.getResponse(this, message);
+            AgentServer.setStartSignalled();
           }
           else
           {
@@ -151,7 +155,7 @@ public class AgentClientConnection implements Runnable
     try
     {
       String lRet = (String) objIn.readObject();
-      System.out.println("Received Message: " + lRet);
+      System.out.println("## Received Message: " + lRet);
       return lRet;
     }
     catch (ClassNotFoundException e)
@@ -168,10 +172,13 @@ public class AgentClientConnection implements Runnable
    */
   public void sendMessage(Object xiObject) throws IOException
   {
-    OutputStream out = connectedClient.getOutputStream();
-    ObjectOutputStream objOut = new ObjectOutputStream(out);
-    objOut.writeObject(xiObject);
-    objOut.flush();
+    synchronized (connectedClient)
+    {
+      OutputStream out = connectedClient.getOutputStream();
+      ObjectOutputStream objOut = new ObjectOutputStream(out);
+      objOut.writeObject(xiObject);
+      objOut.flush(); 
+    }
   }
 
   /**

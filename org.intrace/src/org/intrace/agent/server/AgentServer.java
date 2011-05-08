@@ -23,7 +23,24 @@ public class AgentServer implements Runnable
 
   // Target server port
   private final int serverPort;
+  
+  // Start signalled
+  private static boolean startSignaled = false;
 
+  public static synchronized void setStartSignalled()
+  {
+    startSignaled = true;
+    AgentServer.class.notifyAll();
+  }
+  
+  public static synchronized void waitForStartSignal() throws InterruptedException
+  {
+    if (!startSignaled)
+    {
+      AgentServer.class.wait();
+    }
+  }
+  
   /**
    * cTor
    * 

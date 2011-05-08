@@ -13,18 +13,25 @@
          point="org.eclipse.debug.core.launchDelegates">
       <launchDelegate
             delegate="intrace.ecl.ui.launching.ConfigurationDelegate"
-            id="intrace.ecl.intraceLaunchDelegate"
+            id="intrace.ecl.intraceJavaAppLaunchDelegate"
             modes="intrace"
             name="Java Application"
             type="org.eclipse.jdt.launching.localJavaApplication">
+      </launchDelegate>
+      <launchDelegate
+            delegate="intrace.ecl.ui.launching.ConfigurationDelegate"
+            id="intrace.ecl.intraceJunitTestLaunchDelegate"
+            modes="intrace"
+            name="JUnit Test"
+            type="org.eclipse.jdt.junit.launchconfig">
       </launchDelegate>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchGroups">
       <launchGroup
-            bannerImage="icons/runcoverage.gif"
+            bannerImage="icons/runintrace.gif"
             id="intrace.ecl.inTraceLaunchGroup"
-            image="icons/runcoverage.gif"
+            image="icons/runintrace.gif"
             label="InTrace"
             mode="intrace">
       </launchGroup>
@@ -37,9 +44,9 @@
             visible="false">
          <action
                class="intrace.ecl.ui.launching.ToolbarAction"
-               disabledIcon="icons/runcoverage.gif"
-               hoverIcon="icons/runcoverage.gif"
-               icon="icons/runcoverage.gif"
+               disabledIcon="icons/runintrace.gif"
+               hoverIcon="icons/runintrace.gif"
+               icon="icons/runintrace.gif"
                id="intrace.eclipse.InTraceAction"
                label="InTrace"
                style="pulldown"
@@ -59,8 +66,8 @@
    <extension
          point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            class="intrace.ecl.ui.launching.Shortcut"
-            icon="icons/runcoverage.gif"
+            class="intrace.ecl.ui.launching.JavaAppShortcut"
+            icon="icons/java_launch.gif"
             id="intrace.ecl.inTraceLocalJavaShortcut"
             label="Java Application"
             modes="intrace">
@@ -81,6 +88,27 @@
   </enablement>
          </contextualLaunch>
       </shortcut>
+      <shortcut
+            class="intrace.ecl.ui.launching.JunitTestShortcut"
+            icon="icons/junit_launch.gif"
+            id="intrace.ecl.inTraceJunitTestShortcut"
+            label="JUnit Test"
+            modes="intrace">
+        <contextualLaunch>
+            <enablement>
+               <with variable="selection">
+                  <count value="1"/>
+               	  <iterate>
+                     <adapt type="org.eclipse.jdt.core.IJavaElement">
+		                <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		                <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+		                <test property="org.eclipse.jdt.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+		             </adapt>
+		          </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+      </shortcut>
    </extension>
    <extension
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
@@ -89,15 +117,20 @@
             id="intrace.ecl.JavaAppTabGroup"
             type="org.eclipse.jdt.launching.localJavaApplication">
       </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            class="intrace.ecl.ui.launching.TabGroup"
+            id="intrace.ecl.JunitTestTabGroup"
+            type="org.eclipse.jdt.junit.launchconfig">
+      </launchConfigurationTabGroup>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
       <editor
             class="intrace.ecl.plugin.ui.output.InTraceEditor"
             default="false"
-            icon="icons/runcoverage.gif"
+            icon="icons/runintrace.gif"
             id="intrace.ecl.plugin.ui.output.inTraceEditor"
-            name="InTrace Output">
+            name="InTrace">
       </editor>
    </extension>
 

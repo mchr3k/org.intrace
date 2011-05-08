@@ -78,6 +78,7 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
         vmArgs += Activator.getDefault().agentArg;
         vmArgs += "=[callbackport-";
         vmArgs += Integer.toString(callbackServer.getLocalPort());
+        vmArgs += "[startwait";
       }    
       wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
       

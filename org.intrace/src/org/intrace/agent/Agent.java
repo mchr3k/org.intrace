@@ -84,6 +84,7 @@ public class Agent
     waitForServerPort();
     args.setActualServerPort(serverPort);
 
+    // Return updated settings
     try
     {
       Map<String, String> settingsMap = new HashMap<String, String>();
@@ -94,6 +95,20 @@ public class Agent
     catch (IOException e)
     {
       e.printStackTrace();
+    }
+    
+    // Wait for startup
+    if (args.isWaitStart())
+    {
+      try
+      {
+        System.out.println("## Waiting to continue");
+        AgentServer.waitForStartSignal();
+      }
+      catch (InterruptedException e)
+      {
+        e.printStackTrace();
+      }
     }
   }
   

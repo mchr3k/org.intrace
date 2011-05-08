@@ -2,10 +2,6 @@ package org.intrace.client.gui.helper;
 
 public class ClientStrings
 {
-  public static final String ENABLE_INSTR = "Add Instrumentation";
-  public static final String ENABLING_INSTR = "Adding Instrumenting...";
-  public static final String DISABLING_INSTR = "Removing Instrumentation...";
-  public static final String DISABLE_INSTR = "Remove Instrumentation";
   public static final String SET_CLASSREGEX = "Select Classes ...";
   public static final String ENABLE_ALLOWJARS = "Instru JARs";
   public static final String ENABLE_SAVECLASSES = "Save Instrumented Classes";

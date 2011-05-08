@@ -13,14 +13,21 @@ import org.intrace.shared.AgentConfigConstants;
  */
 public class AgentSettings
 {
-  private Pattern classRegex = Pattern.compile(".*");
+  private Pattern classRegex = Pattern.compile("^$");
   private Pattern excludeClassRegex = Pattern.compile("^$");
-  private boolean instruEnabled = false;
+  private boolean instruEnabled = true;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;
   private int serverPort = 9123;
   private int callbackPort = -1;
   private int actualServerPort = -1;
+  
+  private boolean waitStart = false;
+
+  public boolean isWaitStart()
+  {
+    return waitStart;
+  }
 
   public int getActualServerPort()
   {
@@ -54,6 +61,7 @@ public class AgentSettings
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
+    waitStart = oldInstance.isWaitStart();
   }
 
   public void parseArgs(String args)
@@ -77,9 +85,9 @@ public class AgentSettings
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().startsWith(AgentConfigConstants.SERVER_PORT))
+    else if (arg.toLowerCase().startsWith(AgentConfigConstants.OPT_SERVER_PORT))
     {
-      String serverPortStr = arg.replace(AgentConfigConstants.SERVER_PORT, "");
+      String serverPortStr = arg.replace(AgentConfigConstants.OPT_SERVER_PORT, "");
       serverPort = Integer.parseInt(serverPortStr);
     }
     else if (arg.toLowerCase().startsWith(AgentConfigConstants.CALLBACK_PORT))
@@ -108,6 +116,15 @@ public class AgentSettings
                 .equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "false"))
     {
       saveTracedClassfiles = false;
+    }
+    else if (arg.toLowerCase()
+        .equals(AgentConfigConstants.START_WAIT))
+    {
+      waitStart = true;
+    }
+    else if (arg.toLowerCase().equals(AgentConfigConstants.START_ACTIVATE))
+    {
+      waitStart = false;
     }
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
@@ -172,7 +189,8 @@ public class AgentSettings
                     Boolean.toString(verboseMode));
     settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,
                     Boolean.toString(saveTracedClassfiles));
-    settingsMap.put(AgentConfigConstants.ACTUAL_SERVER_PORT, Integer.toString(actualServerPort));
+    settingsMap.put(AgentConfigConstants.SERVER_PORT, Integer.toString(actualServerPort));
+    settingsMap.put(AgentConfigConstants.START_WAIT, Boolean.toString(waitStart));
     return settingsMap;
   }
 }

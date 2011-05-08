@@ -25,6 +25,8 @@ public class ParsedSettingsData
   public final int totalClasses;
   
   public final int actualServerPort;
+  
+  public final boolean waitStart;
 
   private final Map<String, String> settingsMap;
 
@@ -120,7 +122,7 @@ public class ParsedSettingsData
     }
 
     String numInstrStr = settingsMap
-                                    .get(AgentConfigConstants.NUM_INSTR_CLASSES);
+                                    .get(AgentConfigConstants.STINST);
     if (numInstrStr != null)
     {
       instruClasses = Integer.parseInt(numInstrStr);
@@ -131,7 +133,7 @@ public class ParsedSettingsData
     }
 
     String numTotalStr = settingsMap
-                                    .get(AgentConfigConstants.NUM_TOTAL_CLASSES);
+                                    .get(AgentConfigConstants.STCLS);
     if (numTotalStr != null)
     {
       totalClasses = Integer.parseInt(numTotalStr);
@@ -141,7 +143,7 @@ public class ParsedSettingsData
       totalClasses = 0;
     }
     
-    String actualServerPortStr = settingsMap.get(AgentConfigConstants.ACTUAL_SERVER_PORT);
+    String actualServerPortStr = settingsMap.get(AgentConfigConstants.SERVER_PORT);
     if (actualServerPortStr != null)
     {
       actualServerPort = Integer.parseInt(actualServerPortStr);
@@ -149,6 +151,15 @@ public class ParsedSettingsData
     else
     {
       actualServerPort = 9123;
+    }
+    
+    if ("true".equals(settingsMap.get(AgentConfigConstants.START_WAIT)))
+    {
+      waitStart = true;
+    }
+    else
+    {
+      waitStart = false;
     }
   }
 

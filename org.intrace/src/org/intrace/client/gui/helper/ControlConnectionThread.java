@@ -76,7 +76,7 @@ public class ControlConnectionThread implements Runnable
           {
             listener.setProgress(map);
           }
-          else if (map.containsKey(AgentConfigConstants.NUM_STATUS_ID))
+          else if (map.containsKey(AgentConfigConstants.STID))
           {
             listener.setStatus(map);
           }
@@ -97,7 +97,11 @@ public class ControlConnectionThread implements Runnable
     }
     catch (Exception ex)
     {
-      ex.printStackTrace();
+      if (!ex.getMessage().contains("socket closed") &&
+          !ex.getMessage().contains("onnection reset"))
+      {
+        ex.printStackTrace();
+      }
       listener.disconnect();
     }
   }

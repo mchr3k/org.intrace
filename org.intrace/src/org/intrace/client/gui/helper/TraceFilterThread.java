@@ -107,14 +107,18 @@ public class TraceFilterThread implements Runnable
    */
   private boolean clearTrace = false;
 
+  private final boolean standalone;
+
   /**
    * cTor
+   * @param standalone 
    * 
    * @param callback
    * @param progressCallback
    */
-  public TraceFilterThread(TraceTextHandler callback)
+  public TraceFilterThread(boolean standalone, TraceTextHandler callback)
   {
+    this.standalone = standalone;
     this.callback = callback;
 
     thisThread = new Thread(this);
@@ -219,11 +223,19 @@ public class TraceFilterThread implements Runnable
           {
             lowMemorySignalled = false;
 
-            // I expected a factor of 2 due to trace strings being held by this
-            // thread along with another copy held by the UI. However, profiling
-            // shows a factor of 18 is necessary. This is because we need to be able
-            // to handle entire copies of the active data when adding new strings.
-            numChars += (18 * newTraceLine.length());
+            if (standalone)
+            {
+              // I expected a factor of 2 due to trace strings being held by this
+              // thread along with another copy held by the UI. However, profiling
+              // shows a factor of 18 is necessary. This is because we need to be able
+              // to handle entire copies of the active data when adding new strings.
+              numChars += (18 * newTraceLine.length());
+            }
+            else
+            {
+              // Running within eclipse so better be really conservative
+              numChars += (40 * newTraceLine.length());
+            }
 
             traceLines.add(newTraceLine);
             totalLines.incrementAndGet();

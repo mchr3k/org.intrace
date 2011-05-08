@@ -13,6 +13,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 import org.intrace.client.gui.helper.InTraceUI;
+import org.intrace.client.gui.helper.Connection.ConnectState;
+import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
 
 public class InTraceEditor extends EditorPart
 {      
@@ -24,29 +26,38 @@ public class InTraceEditor extends EditorPart
   }
 
   @Override
-  public void createPartControl(Composite parent)
+  public void createPartControl(final Composite parent)
   {
     IWorkbench workbench = PlatformUI.getWorkbench();
-    Display display = workbench.getDisplay();
+    final Display display = workbench.getDisplay();
     Shell window = display.getActiveShell();
-    inTraceUI = new InTraceUI(window, parent);
-  }
-
-  @Override
-  public void init(IEditorSite site, 
-                   IEditorInput input)
-      throws PartInitException
-  {
-    setSite(site);
-    setInput(input);
-    final EditorInput intraceInput = (EditorInput)input;
+    inTraceUI = new InTraceUI(window, parent, false);
+    inTraceUI.setConnCallback(new IConnectionStateCallback()
+    {     
+      @Override
+      public void setConnectionState(final ConnectState state)
+      {
+        if (!parent.isDisposed())
+        {
+          display.syncExec(new Runnable()
+          {            
+            @Override
+            public void run()
+            {
+              setPartName("InTrace: " + state.str);
+            }
+          });
+        }
+      }
+    });
+    final EditorInput intraceInput = (EditorInput)getEditorInput();
     new Thread(new Runnable()
     {      
       @Override
       public void run()
       {
         try
-        {
+        {          
           Socket connection = intraceInput.callback.getClientConnection();
           inTraceUI.setFixedLocalConnection(connection);
         }
@@ -55,7 +66,16 @@ public class InTraceEditor extends EditorPart
           e.printStackTrace();
         }       
       }
-    }).start();       
+    }).start();
+  }
+
+  @Override
+  public void init(IEditorSite site, 
+                   IEditorInput input)
+      throws PartInitException
+  {
+    setSite(site);
+    setInput(input);          
   }
 
   @Override

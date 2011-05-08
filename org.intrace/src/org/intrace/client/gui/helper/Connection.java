@@ -12,7 +12,15 @@ public class Connection
   // State
   public enum ConnectState
   {
-    DISCONNECTED_ERR, DISCONNECTED, CONNECTING, CONNECTED
+    DISCONNECTED_ERR("Disconnected"), 
+    DISCONNECTED("Disconnected"), 
+    CONNECTING("Connecting"), 
+    CONNECTED("Connected");
+    public final String str;
+    private ConnectState(String xiStr)
+    {
+      str = xiStr;
+    }
   }
   
   public static interface ISocketCallback

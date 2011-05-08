@@ -134,12 +134,15 @@ public class ClassTransformer implements ClassFileTransformer
     ComparableClassName compklass = new ComparableClassName(className,
                                                             klassloader);
 
+    // Record all class names which get this far
+    allClasses.add(compklass);
+
     // Don't modify anything if tracing is disabled
     if (!settings.isInstrumentationEnabled())
     {
       return false;
     }
-
+    
     // Don't sensitive classes
     if (isSensitiveClass(className))
     {
@@ -159,10 +162,7 @@ public class ClassTransformer implements ClassFileTransformer
       }
       return false;
     }
-
-    // Record all class names which get this far
-    allClasses.add(compklass);
-
+    
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
         || settings.getExcludeClassRegex().matcher(className).matches())
@@ -350,9 +350,9 @@ public class ClassTransformer implements ClassFileTransformer
   public Map<String, String> getSettings()
   {
     Map<String, String> settingsMap = settings.getSettingsMap();
-    settingsMap.put(AgentConfigConstants.NUM_TOTAL_CLASSES,
+    settingsMap.put(AgentConfigConstants.STCLS,
                     Integer.toString(allClasses.size()));
-    settingsMap.put(AgentConfigConstants.NUM_INSTR_CLASSES,
+    settingsMap.put(AgentConfigConstants.STINST,
                     Integer.toString(modifiedClasses.size()));
     return settingsMap;
   }
@@ -559,11 +559,11 @@ public class ClassTransformer implements ClassFileTransformer
   private void broadcastStatus(int count, int total)
   {
     Map<String, String> progressMap = new HashMap<String, String>();
-    progressMap.put(AgentConfigConstants.NUM_STATUS_ID,
-                    AgentConfigConstants.NUM_STATUS_ID);
-    progressMap.put(AgentConfigConstants.NUM_INSTR_CLASSES,
+    progressMap.put(AgentConfigConstants.STID,
+                    AgentConfigConstants.STID);
+    progressMap.put(AgentConfigConstants.STINST,
                     Integer.toString(count));
-    progressMap.put(AgentConfigConstants.NUM_TOTAL_CLASSES,
+    progressMap.put(AgentConfigConstants.STCLS,
                     Integer.toString(total));
     try
     {

@@ -372,7 +372,7 @@ public class TraceHandler implements IInstrumentationHandler
    */
   public void writeTraceOutput(String xiOutput)
   {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm:ss.SSS");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
