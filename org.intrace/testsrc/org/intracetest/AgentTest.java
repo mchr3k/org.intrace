@@ -541,7 +541,7 @@ public class AgentTest extends TestCase
     sender.sendMessage(configConstant + configValue);
     Object okResponse = receiver.incomingMessages.take();
     assertNotNull(okResponse);
-    if (okResponse instanceof Map<?,?>)
+    while (okResponse instanceof Map<?,?>)
     {
       // Discard any status map
       okResponse = receiver.incomingMessages.take();

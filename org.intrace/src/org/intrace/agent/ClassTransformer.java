@@ -260,7 +260,11 @@ public class ClassTransformer implements ClassFileTransformer
     {
       modifiedClasses.remove(compclass);
       
-      detectStatusUpdate(modifiedSize, allClassesSize);
+      if (!isSensitiveClass(className))
+      {
+        // Only send updates if we aren't handling a "sensitive class"
+        detectStatusUpdate(modifiedSize, allClassesSize);
+      }
       return null;
     }
   }
