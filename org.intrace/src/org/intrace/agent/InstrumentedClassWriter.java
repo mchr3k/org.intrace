@@ -4,6 +4,7 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -147,6 +148,7 @@ public class InstrumentedClassWriter extends ClassWriter
       boolean isStaticAccess = ((methodAccess & Opcodes.ACC_STATIC) > 0);
       int offset = (isStaticAccess ? 0
                                   : 1);
+      List<String> argNames = analysis.methodArgNames.get(methodName + methodDescriptor);
 
       for (int ii = 0; ii < argTypes.length; ii++)
       {
@@ -192,7 +194,14 @@ public class InstrumentedClassWriter extends ClassWriter
           opcode = Opcodes.ALOAD;
         }
 
-        mv.visitLdcInsn("Arg");
+        if ((argNames != null) && (argNames.size() > ii))
+        {
+          mv.visitLdcInsn("Arg - " + argNames.get(ii)); 
+        }
+        else
+        {
+          mv.visitLdcInsn("Arg"); 
+        }        
         mv.visitLdcInsn(className);
         mv.visitLdcInsn(methodName);
         mv.visitVarInsn(opcode, varslot);

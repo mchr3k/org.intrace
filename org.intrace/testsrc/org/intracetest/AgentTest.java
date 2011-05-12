@@ -527,7 +527,7 @@ public class AgentTest extends TestCase
         traceData.caughtLines.add(Integer.parseInt(dataParts[3].trim()));
       }
     }
-    else if (traceType.equals("Arg"))
+    else if (traceType.startsWith("Arg"))
     {
       traceData.args.add(dataParts[2].trim());
     }
