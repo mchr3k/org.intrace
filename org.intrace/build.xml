@@ -9,7 +9,7 @@
   <path id="findbugs.lib" >
     <fileset dir="./lib/findbugs" includes="*.jar" />
   </path>
-  
+
   <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="./lib/ant-contrib-1.0b3.jar" />
   <taskdef resource="emma_ant.properties" classpathref="emma.lib" />
   <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
@@ -73,25 +73,25 @@
 
   <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
-  	<mkdir dir="./build/tmp/" />
+    <mkdir dir="./build/tmp/" />
     <mkdir dir="./build/jars/" />
 
     <!-- Test Trace Agent -->
-  	<if>
-	  <available file="./lib/intrace-agent-test.jar"/>
-	  <else>
-	    <jar destfile="./lib/intrace-agent-test.jar" compress="false">
-	      <manifest>
-	        <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
-	        <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
-	        <attribute name="Can-Redefine-Classes" value="true" />
-	        <attribute name="Git-Revision" value="${git.revision}" />
-	        <attribute name="Implementation-Version" value="${git.tag}" />
-	      </manifest>     
-	    </jar>	  	
-	  </else>
-	</if>
-    
+    <if>
+    <available file="./lib/intrace-agent-test.jar"/>
+    <else>
+      <jar destfile="./lib/intrace-agent-test.jar" compress="false">
+        <manifest>
+          <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
+          <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
+          <attribute name="Can-Redefine-Classes" value="true" />
+          <attribute name="Git-Revision" value="${git.revision}" />
+          <attribute name="Implementation-Version" value="${git.tag}" />
+        </manifest>
+      </jar>      
+    </else>
+  </if>
+
     <!-- Agent -->
     <jarjar jarfile="./build/jars/intrace-agent.jar">
       <manifest>
@@ -110,14 +110,14 @@
     </jarjar>
 
     <!-- UI (Stage 1) -->
-	<jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
+  <jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>      
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
     </jarjar>
-  	
+    
     <!-- UI (Stage 2) -->
-	<jarjar jarfile="./build/jars/intrace-ui.jar">
+  <jarjar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.loader.InTraceStandaloneUILoader" />
         <attribute name="Class-Path" value="." />
@@ -127,14 +127,14 @@
       <fileset dir="./build/classes" includes="**/client/loader/*.class" />
       <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
       <fileset dir="./lib" includes="swt-*.jar" />
-	  <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>      
+    <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>
     </jarjar>
-    
+
     <!-- UI Library -->
-	<jar jarfile="./build/jars/intrace-ui-helper.jar">
+  <jar jarfile="./build/jars/intrace-ui-helper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/helper/*.class" />      
-    </jar>	
+      <fileset dir="./build/classes" includes="**/client/gui/helper/*.class" />
+    </jar>  
   </target>
 
   <target name="test" description="Run Tests" depends="build" >
@@ -237,7 +237,7 @@
 
   <target name="release" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
   </target>
-  
+
   <target name="update_eclipse_jars" depends="jar" >
     <copy todir="../intrace.ecl.plugin/lib/">
       <fileset file="./build/jars/intrace-agent.jar" />
@@ -253,7 +253,7 @@
         <pathelement path="./build/classes" />
         <fileset dir="./lib" includes="*.jar" />
       </classpath>
-    </javac>  
+    </javac>
   </target>
 
   <target name="example" depends="jar,example_build">
@@ -266,7 +266,17 @@
     </java>
   </target>
 
-  <target name="fastexample" depends="jar,example_build">  
+  <target name="waitexample" depends="jar,example_build">
+    <java classname="example.TraceExample" fork="true">
+      <arg value="5000" />
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true[startwait" />
+    </java>
+  </target>
+
+  <target name="fastexample" depends="jar,example_build">
     <java classname="example.TraceExample" fork="true">
       <arg value="0" />
       <classpath>
