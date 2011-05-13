@@ -196,11 +196,11 @@ public class InstrumentedClassWriter extends ClassWriter
 
         if ((argNames != null) && (argNames.size() > ii))
         {
-          mv.visitLdcInsn("Arg - " + argNames.get(ii)); 
+          mv.visitLdcInsn("Arg (" + argNames.get(ii) + ")"); 
         }
         else
         {
-          mv.visitLdcInsn("Arg"); 
+          mv.visitLdcInsn("Arg (unknown)"); 
         }        
         mv.visitLdcInsn(className);
         mv.visitLdcInsn(methodName);

@@ -99,7 +99,7 @@ public class ClassAnalysis extends EmptyVisitor
       currentMethod_numArgs++;
     }
     
-    currentMethod_reverseGOTOLines.clear();
+    currentMethod_reverseGOTOLines = new HashSet<Integer>(1);
     currentMethod_labelLineNos.clear();
     return this;
   }
@@ -157,7 +157,6 @@ public class ClassAnalysis extends EmptyVisitor
     methodReverseGOTOLines.put(currentMethod_sig,
                                currentMethod_reverseGOTOLines);
     currentMethod_sig = null;
-    currentMethod_reverseGOTOLines.clear();
     currentMethod_labelLineNos.clear();
   }
 }
