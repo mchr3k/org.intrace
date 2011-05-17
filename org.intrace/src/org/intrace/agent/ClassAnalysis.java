@@ -19,10 +19,11 @@ import org.objectweb.asm.commons.EmptyVisitor;
  * class implements a first pass analysis phase to collect information which we
  * can't collect during the transformation phase.
  * <p>
- * This analysis collects two sets of data.
+ * This analysis collects three sets of data.
  * <ul>
  * <li>Reverse GOTO Lines
  * <li>Method Entry Line
+ * <li>Method Argument Names
  * </ul>
  * <h1>Reverse GOTO Lines</h1> This analysis records the target line number of
  * GOTOs that jump backwards in the code.
@@ -68,6 +69,27 @@ import org.objectweb.asm.commons.EmptyVisitor;
  * method. This is necessary so that the transformation phase can add an entry
  * trace line in the call to {@link InstrumentedMethodWriter#visitCode()} and
  * know the source line.
+ * 
+ * <h1>Method Argument Names</h1> This analysis records the variable names of 
+ * methods if available.
+ * <p>
+ * This analysis assumes that for a method with N arguments, the first
+ * N local variables will be the method arguments. For non-static methods
+ * we use local variables 1 -> N+1 to skip over the "this" variable.
+ * <p>
+ * This assumption might be wrong sometimes. Section 4.7.9 of the Class
+ * File format definition makes the following statement "If LocalVariableTable 
+ * attributes are present in the attributes table of a given Code attribute, 
+ * then they may appear in any order.". However, testing on the SUN JVM
+ * suggests that the local variables are visited in the order they were
+ * defined in the source code. This allows the analysis code to be
+ * much simpler.
+ * <p>
+ * The javadoc for Instrumentation.retransformClasses(...) states that 
+ * "Some attributes may not be present." in the bytecode which is
+ * supplied for retransformation. On the Sun JVM this seems to mean
+ * that we only get the Local Variable names when we are first transforming
+ * a class and not when we retransform classes.
  */
 public class ClassAnalysis extends EmptyVisitor
 {

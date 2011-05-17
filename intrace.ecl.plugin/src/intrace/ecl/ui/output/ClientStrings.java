@@ -1,4 +1,4 @@
-package intrace.ecl.plugin.ui.output;
+package intrace.ecl.ui.output;
 
 public class ClientStrings
 {

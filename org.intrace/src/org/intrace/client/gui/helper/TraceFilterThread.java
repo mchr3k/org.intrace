@@ -10,6 +10,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.intrace.client.gui.helper.InTraceUI.UIMode;
+
 /**
  * Threaded owner of the trace lines. Allows a Pattern to be used to filter
  * trace text.
@@ -107,18 +109,18 @@ public class TraceFilterThread implements Runnable
    */
   private boolean clearTrace = false;
 
-  private final boolean standalone;
+  private final UIMode mode;
 
   /**
    * cTor
-   * @param standalone 
+   * @param mode 
    * 
    * @param callback
    * @param progressCallback
    */
-  public TraceFilterThread(boolean standalone, TraceTextHandler callback)
+  public TraceFilterThread(UIMode mode, TraceTextHandler callback)
   {
-    this.standalone = standalone;
+    this.mode = mode;
     this.callback = callback;
 
     thisThread = new Thread(this);
@@ -223,7 +225,7 @@ public class TraceFilterThread implements Runnable
           {
             lowMemorySignalled = false;
 
-            if (standalone)
+            if (mode == UIMode.STANDALONE)
             {
               // I expected a factor of 2 due to trace strings being held by this
               // thread along with another copy held by the UI. However, profiling

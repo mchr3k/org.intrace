@@ -126,12 +126,26 @@
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="intrace.ecl.plugin.ui.output.InTraceEditor"
+            class="intrace.ecl.ui.output.InTraceEditor"
             default="false"
             icon="icons/runintrace.gif"
             id="intrace.ecl.plugin.ui.output.inTraceEditor"
             name="InTrace">
       </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <viewerContribution
+            id="intrace.ecl.ui.debugViewContrib"
+            targetID="org.eclipse.debug.ui.DebugView">
+         <action
+               class="intrace.ecl.ui.launching.ShowInTraceOutputAction"
+               icon="icons/intrace-editor.gif"
+               id="intrace.ecl.ui.inTraceOutputAction"
+               label="Show InTrace Output"
+               menubarPath="launchGroup">
+         </action>
+      </viewerContribution>
    </extension>
 
 </plugin>

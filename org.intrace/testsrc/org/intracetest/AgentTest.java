@@ -42,7 +42,7 @@ public class AgentTest extends TestCase
   {
     super.setUp();
     deleteOldClassFiles();
-    AgentHelper.instrumentationHandlers.clear();
+    AgentHelper.instrumentationHandler = null;
     // Wait for agent to startup
     Thread.sleep(500);
     connectToAgent();
@@ -201,7 +201,7 @@ public class AgentTest extends TestCase
     EasyMock.expectLastCall().anyTimes();
 
     EasyMock.replay(testHandler);
-    AgentHelper.instrumentationHandlers.put(testHandler, new Object());
+    AgentHelper.instrumentationHandler = testHandler;
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
@@ -316,7 +316,7 @@ public class AgentTest extends TestCase
     // Create and init the mock
     final BlockingQueue<String> capturedTrace = new LinkedBlockingQueue<String>();
     IInstrumentationHandler testHandler = new ArgCapture(capturedTrace);
-    AgentHelper.instrumentationHandlers.put(testHandler, new Object());
+    AgentHelper.instrumentationHandler = testHandler;
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");

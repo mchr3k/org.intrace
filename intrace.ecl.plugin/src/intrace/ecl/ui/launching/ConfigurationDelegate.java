@@ -2,7 +2,7 @@ package intrace.ecl.ui.launching;
 
 import intrace.ecl.Activator;
 import intrace.ecl.Util;
-import intrace.ecl.plugin.ui.output.EditorInput;
+import intrace.ecl.ui.output.EditorInput;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -67,7 +67,7 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
     {
       // Prepare callback server socket
       ServerSocket callbackServer = new ServerSocket(0);
-      final CallbackHandler callback = new CallbackHandler(callbackServer);
+      final ConnectionHolder callback = new ConnectionHolder(callbackServer);
       callback.start();  
       
       // Add VM arguments

@@ -1,4 +1,4 @@
-package intrace.ecl.plugin.ui.output;
+package intrace.ecl.ui.output;
 
 import java.net.Socket;
 
@@ -15,6 +15,7 @@ import org.eclipse.ui.part.EditorPart;
 import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.Connection.ConnectState;
 import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
+import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
 public class InTraceEditor extends EditorPart
 {      
@@ -31,7 +32,7 @@ public class InTraceEditor extends EditorPart
     IWorkbench workbench = PlatformUI.getWorkbench();
     final Display display = workbench.getDisplay();
     Shell window = display.getActiveShell();
-    inTraceUI = new InTraceUI(window, parent, false);
+    inTraceUI = new InTraceUI(window, parent, UIMode.ECLIPSE);
     inTraceUI.setConnCallback(new IConnectionStateCallback()
     {     
       @Override
@@ -50,6 +51,7 @@ public class InTraceEditor extends EditorPart
         }
       }
     });
+    inTraceUI.setConnectionState(ConnectState.CONNECTING);
     final EditorInput intraceInput = (EditorInput)getEditorInput();
     new Thread(new Runnable()
     {      

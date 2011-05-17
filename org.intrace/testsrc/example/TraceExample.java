@@ -46,6 +46,7 @@ public class TraceExample
     {
       System.setProperty("a", "Odd time");
     }
+    new InnerTestClass().instanceFoo();
   }
 
   private static String exceptionMethod()
@@ -73,6 +74,11 @@ public class TraceExample
 
   private static class InnerTestClass
   {
+    private void instanceFoo()
+    {
+      System.setProperty("a", "foobar");
+    }
+    
     private static void foo()
     {
       System.setProperty("a", "bar");

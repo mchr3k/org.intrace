@@ -1,6 +1,6 @@
-package intrace.ecl.plugin.ui.output;
+package intrace.ecl.ui.output;
 
-import intrace.ecl.ui.launching.CallbackHandler;
+import intrace.ecl.ui.launching.ConnectionHolder;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -8,9 +8,9 @@ import org.eclipse.ui.IPersistableElement;
 
 public class EditorInput implements IEditorInput
 {
-  public final CallbackHandler callback;
+  public final ConnectionHolder callback;
 
-  public EditorInput(CallbackHandler xiCallback)
+  public EditorInput(ConnectionHolder xiCallback)
   {
     this.callback = xiCallback;
   }

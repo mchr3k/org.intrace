@@ -81,7 +81,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private final TabFolder buttonTabs;  
   private final CTabFolder buttonCTabs;
   private final CTabFolder outputCTabs;
-  private final boolean standalone;
+  private final UIMode mode;
   
   private IConnectionStateCallback connCallback = null;
   private MigLayout rootLayout;
@@ -95,16 +95,22 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     }
   }
 
-  public InTraceUI(Shell xiWindow, Composite xiRoot, boolean xiStandalone)
+  public static enum UIMode
+  {
+    STANDALONE,
+    ECLIPSE
+  }
+  
+  public InTraceUI(Shell xiWindow, Composite xiRoot, UIMode xiMode)
   {
     sWindow = xiWindow;
     sRoot = xiRoot;
-    standalone = xiStandalone;
+    mode = xiMode;
     
     rootLayout = new MigLayout("fill", "[]", "[][][grow]");
     xiRoot.setLayout(rootLayout);
     
-    if (xiStandalone)
+    if (mode == UIMode.STANDALONE)
     {
       buttonCTabs = null;           
       buttonTabs = new TabFolder(xiRoot, SWT.NONE);
@@ -118,10 +124,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       buttonCTabs.setSimple(false);
       buttonCTabs.setLayoutData("grow,wrap,wmin 0");
       fillButtonCTabs(buttonCTabs);
-      buttonCTabs.setSelection(0);    
+      buttonCTabs.setSelection(0);
     }
      
-    if (xiStandalone)
+    if (mode == UIMode.STANDALONE)
     {
       outputCTabs = null;
       outputTabs = new TabFolder(xiRoot, SWT.NONE);
@@ -166,14 +172,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          if (standalone)
-          {
-            buttonTabs.getItem(0).dispose(); 
-          }
-          else
-          {
-            buttonCTabs.getItem(0).dispose();            
-          }
           connTab.addressInput.setText("localhost");
           connTab.portInput.setText("detecting...");
           textOutputTab.filterThread.addSystemTraceLine("Instructions");
@@ -221,6 +219,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     connTabItem.setText("Connection");
     connTab = new ConnectionTab(tabFolder);
     connTabItem.setControl(connTab.composite);
+    
+    // Hide the connection controls - in Eclipse mode the
+    // connection is handled implicitly
+    connTabItem.dispose();
 
     CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
     instrTabItem.setText("Instrumentation");
@@ -1007,7 +1009,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
       
-      filterThread = new TraceFilterThread(standalone, 
+      filterThread = new TraceFilterThread(mode, 
                                            new TraceTextHandler()
       {
         // Re-usable class to avoid object allocations
@@ -1075,7 +1077,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
       
-      if (standalone)
+      if (mode == UIMode.STANDALONE)
       {
         filterThread.addSystemTraceLine("Instructions");
         filterThread.addSystemTraceLine("(1) Connect to Agent");

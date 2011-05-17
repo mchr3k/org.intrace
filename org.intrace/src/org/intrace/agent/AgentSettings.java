@@ -13,41 +13,20 @@ import org.intrace.shared.AgentConfigConstants;
  */
 public class AgentSettings
 {
+  // Static settings which control agent startup
+  private int serverPort = 9123;
+  private int callbackPort = -1;
+  private boolean waitStart = false;
+  
+  // Static state  
+  private int actualServerPort = -1;
+  
+  // Dynamic settings
   private Pattern classRegex = Pattern.compile("^$");
   private Pattern excludeClassRegex = Pattern.compile("^$");
   private boolean instruEnabled = true;
   private boolean saveTracedClassfiles = false;
-  private boolean verboseMode = false;
-  private int serverPort = 9123;
-  private int callbackPort = -1;
-  private int actualServerPort = -1;
-  
-  private boolean waitStart = false;
-
-  public boolean isWaitStart()
-  {
-    return waitStart;
-  }
-
-  public int getActualServerPort()
-  {
-    return actualServerPort;
-  }
-
-  public void setActualServerPort(int xiActualServerPort)
-  {
-    actualServerPort = xiActualServerPort;
-  }
-
-  public int getServerPort()
-  {
-    return serverPort;
-  }
-  
-  public int getCallbackPort()
-  {
-    return callbackPort;
-  }
+  private boolean verboseMode = false;  
 
   public AgentSettings(String args)
   {
@@ -56,12 +35,13 @@ public class AgentSettings
 
   public AgentSettings(AgentSettings oldInstance)
   {
+    // Copy all static state and dynamic settings
+    actualServerPort = oldInstance.getActualServerPort();
     classRegex = oldInstance.getClassRegex();
     excludeClassRegex = oldInstance.getExcludeClassRegex();
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
-    waitStart = oldInstance.isWaitStart();
   }
 
   public void parseArgs(String args)
@@ -141,6 +121,31 @@ public class AgentSettings
     }
   }
 
+  public boolean isWaitStart()
+  {
+    return waitStart;
+  }
+
+  public int getActualServerPort()
+  {
+    return actualServerPort;
+  }
+
+  public void setActualServerPort(int xiActualServerPort)
+  {
+    actualServerPort = xiActualServerPort;
+  }
+
+  public int getServerPort()
+  {
+    return serverPort;
+  }
+
+  public int getCallbackPort()
+  {
+    return callbackPort;
+  }
+
   public Pattern getClassRegex()
   {
     return classRegex;
@@ -169,8 +174,10 @@ public class AgentSettings
   @Override
   public String toString()
   {
+    // Output key settings
     String currentSettings = "";
     currentSettings += "Class Regex                : " + classRegex + "\n";
+    currentSettings += "Exclude Class Regex        : " + excludeClassRegex + "\n";
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
     currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles
                        + "\n";

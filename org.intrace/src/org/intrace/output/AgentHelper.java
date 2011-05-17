@@ -16,11 +16,11 @@ import org.intrace.agent.server.AgentClientConnection;
  */
 public class AgentHelper
 {
-  // Set of output handlers
-  public static final Map<IInstrumentationHandler, Object> instrumentationHandlers = new ConcurrentHashMap<IInstrumentationHandler, Object>();
+  // Instrumentation handler
+  public static IInstrumentationHandler instrumentationHandler;
 
   // Output Settings
-  private static OutputSettings outputSettings = new OutputSettings("");
+  public static OutputSettings outputSettings = new OutputSettings("");
 
   // Set of active network output threads
   private static final Map<NetworkDataSenderThread, Object> networkOutputThreads = new ConcurrentHashMap<NetworkDataSenderThread, Object>();
@@ -43,10 +43,9 @@ public class AgentHelper
     }
 
     // Get responses from all of the IInstrumentationHandlers
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      response = outputHandler.getResponse(agentArgs);
+      response = instrumentationHandler.getResponse(agentArgs);
       if (response != null)
       {
         responses.add(response);
@@ -64,7 +63,17 @@ public class AgentHelper
    */
   private static String getResponse(AgentClientConnection connection, String args)
   {
+    OutputSettings oldSettings = new OutputSettings(outputSettings);
     outputSettings.parseArgs(args);
+
+    if ((oldSettings.isStdoutOutputEnabled() != outputSettings.isStdoutOutputEnabled())
+        || (oldSettings.isFileOutputEnabled() != outputSettings
+                                                                   .isFileOutputEnabled())
+        || (oldSettings.isNetOutputEnabled() != outputSettings
+                                                                  .isNetOutputEnabled()))
+    {
+      System.out.println("## Trace Settings Changed");
+    }
 
     if (outputSettings.networkTraceOutputRequested)
     {
@@ -110,10 +119,9 @@ public class AgentHelper
   {
     Map<String, String> settings = new HashMap<String, String>();
     settings.putAll(outputSettings.getSettingsMap());
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      settings.putAll(outputHandler.getSettingsMap());
+      settings.putAll(instrumentationHandler.getSettingsMap());
     }
     return settings;
   }
@@ -137,218 +145,196 @@ public class AgentHelper
 
   public static void enter(String className, String methodName, int lineNo)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.enter(className, methodName, lineNo);
+      instrumentationHandler.enter(className, methodName, lineNo);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          byte byteArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, byteArg);
+      instrumentationHandler.val(desc, className, methodName, byteArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          byte[] byteArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, byteArrayArg);
+      instrumentationHandler.val(desc, className, methodName, byteArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          short shortArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, shortArg);
+      instrumentationHandler.val(desc, className, methodName, shortArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          short[] shortArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, shortArrayArg);
+      instrumentationHandler.val(desc, className, methodName, shortArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int intArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, intArg);
+      instrumentationHandler.val(desc, className, methodName, intArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int[] intArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, intArrayArg);
+      instrumentationHandler.val(desc, className, methodName, intArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          long longArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, longArg);
+      instrumentationHandler.val(desc, className, methodName, longArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          long[] longArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, longArrayArg);
+      instrumentationHandler.val(desc, className, methodName, longArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          float floatArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, floatArg);
+      instrumentationHandler.val(desc, className, methodName, floatArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          float[] floatArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, floatArrayArg);
+      instrumentationHandler.val(desc, className, methodName, floatArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          double doubleArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, doubleArg);
+      instrumentationHandler.val(desc, className, methodName, doubleArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          double[] doubleArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, doubleArrayArg);
+      instrumentationHandler.val(desc, className, methodName, doubleArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          boolean boolArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, boolArg);
+      instrumentationHandler.val(desc, className, methodName, boolArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          boolean[] boolArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, boolArrayArg);
+      instrumentationHandler.val(desc, className, methodName, boolArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          char charArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, charArg);
+      instrumentationHandler.val(desc, className, methodName, charArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          char[] charArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, charArrayArg);
+      instrumentationHandler.val(desc, className, methodName, charArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          Object objArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, objArg);
+      instrumentationHandler.val(desc, className, methodName, objArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          Object[] objArrayArg)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, objArrayArg);
+      instrumentationHandler.val(desc, className, methodName, objArrayArg);
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int lineNo, Throwable throwable)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.val(desc, className, methodName, lineNo, throwable);
+      instrumentationHandler.val(desc, className, methodName, lineNo, throwable);
     }
   }
 
   public static void branch(String className, String methodName, int lineNo)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.branch(className, methodName, lineNo);
+      instrumentationHandler.branch(className, methodName, lineNo);
     }
   }
 
   public static void exit(String className, String methodName, int lineNo)
   {
-    for (IInstrumentationHandler outputHandler : instrumentationHandlers
-                                                                        .keySet())
+    if (instrumentationHandler != null)
     {
-      outputHandler.exit(className, methodName, lineNo);
+      instrumentationHandler.exit(className, methodName, lineNo);
     }
   }
 }

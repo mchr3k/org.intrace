@@ -5,6 +5,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.Connection.ConnectState;
 import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
+import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
 public class InTraceStandaloneUI
 {
@@ -19,7 +20,7 @@ public class InTraceStandaloneUI
     window.setMinimumSize(new Point(800, 480));
     
     // Fill in UI
-    InTraceUI ui = new InTraceUI(window, window, true);
+    InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
     
     // Register title callback
     ui.setConnCallback(new IConnectionStateCallback()

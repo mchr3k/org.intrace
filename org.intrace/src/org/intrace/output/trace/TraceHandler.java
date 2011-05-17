@@ -26,10 +26,6 @@ public class TraceHandler implements IInstrumentationHandler
   private boolean branchTrace = false;
   private boolean argTrace = false;
 
-  private boolean stdOut = true;
-  private boolean fileOut = false;
-  private boolean netOut = false;
-
   private static final TraceSettings traceSettings = new TraceSettings("");
 
   public String getResponse(String args)
@@ -42,13 +38,7 @@ public class TraceHandler implements IInstrumentationHandler
         || (oldSettings.isBranchTraceEnabled() != traceSettings
                                                                .isBranchTraceEnabled())
         || (oldSettings.isArgTraceEnabled() != traceSettings
-                                                            .isArgTraceEnabled())
-        || (oldSettings.isStdoutTraceOutputEnabled() != traceSettings
-                                                                     .isStdoutTraceOutputEnabled())
-        || (oldSettings.isFileTraceOutputEnabled() != traceSettings
-                                                                   .isFileTraceOutputEnabled())
-        || (oldSettings.isNetTraceOutputEnabled() != traceSettings
-                                                                  .isNetTraceOutputEnabled()))
+                                                            .isArgTraceEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -57,41 +47,7 @@ public class TraceHandler implements IInstrumentationHandler
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
 
-    setStdOut(traceSettings.isStdoutTraceOutputEnabled());
-    setFileOut(traceSettings.isFileTraceOutputEnabled());
-    setNetOut(traceSettings.isNetTraceOutputEnabled());
-
     return null;
-  }
-
-  private synchronized boolean isStdOut()
-  {
-    return stdOut;
-  }
-
-  private synchronized void setStdOut(boolean stdOut)
-  {
-    this.stdOut = stdOut;
-  }
-
-  private synchronized boolean isFileOut()
-  {
-    return fileOut;
-  }
-
-  private synchronized void setFileOut(boolean fileOut)
-  {
-    this.fileOut = fileOut;
-  }
-
-  private synchronized boolean isNetOut()
-  {
-    return netOut;
-  }
-
-  private synchronized void setNetOut(boolean netOut)
-  {
-    this.netOut = netOut;
   }
 
   public Map<String, String> getSettingsMap()
@@ -376,27 +332,19 @@ public class TraceHandler implements IInstrumentationHandler
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
-    if (isStdOut())
+    if (AgentHelper.outputSettings.isStdoutOutputEnabled())
     {
       System.out.println(traceString);
     }
 
-    if (isFileOut())
+    if (AgentHelper.outputSettings.isFileOutputEnabled())
     {
-      writeFileTrace(traceString);
+      AgentHelper.outputSettings.writeFileOutput(traceString);
     }
 
-    if (isNetOut())
+    if (AgentHelper.outputSettings.isNetOutputEnabled())
     {
       AgentHelper.writeDataOutput(traceString);
     }
-  }
-
-  public synchronized void writeFileTrace(String traceString)
-  {
-    PrintWriter outputWriter;
-    outputWriter = traceSettings.getFileTraceWriter();
-    outputWriter.println(traceString);
-    outputWriter.flush();
   }
 }

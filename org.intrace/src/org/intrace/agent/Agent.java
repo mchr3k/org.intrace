@@ -1,11 +1,8 @@
 package org.intrace.agent;
 
-import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.intrace.agent.server.AgentClientConnection;
 import org.intrace.agent.server.AgentServer;
@@ -57,8 +54,8 @@ public class Agent
       agentArgs = "";
     }
 
-    // Setup the output handlers
-    AgentHelper.instrumentationHandlers.put(TraceHandler.INSTANCE, new Object());
+    // Setup the trace instrumentation handler
+    AgentHelper.instrumentationHandler = TraceHandler.INSTANCE;
 
     // Parse startup args
     AgentSettings args = new AgentSettings(agentArgs);
@@ -70,12 +67,6 @@ public class Agent
 
     // Ensure loaded classes are traced
     t.instrumentKlasses(t.getLoadedClassesForModification());
-
-    // Wait for callback connection
-    if (args.getCallbackPort() > -1)
-    {
-      doCallbackConnection(args.getCallbackPort(), t);
-    }
     
     // Start Server thread
     new AgentServer(t, args.getServerPort()).start();
@@ -83,18 +74,11 @@ public class Agent
     // Store server port
     waitForServerPort();
     args.setActualServerPort(serverPort);
-
-    // Return updated settings
-    try
+    
+    // Wait for callback connection
+    if (args.getCallbackPort() > -1)
     {
-      Map<String, String> settingsMap = new HashMap<String, String>();
-      settingsMap.putAll(t.getSettings());
-      settingsMap.putAll(AgentHelper.getSettings());
-      AgentServer.broadcastMessage(null, settingsMap);
-    }
-    catch (IOException e)
-    {
-      e.printStackTrace();
+      doCallbackConnection(args.getCallbackPort(), t);
     }
     
     // Wait for startup

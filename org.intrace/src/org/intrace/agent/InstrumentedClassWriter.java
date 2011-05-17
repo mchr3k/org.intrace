@@ -200,7 +200,7 @@ public class InstrumentedClassWriter extends ClassWriter
         }
         else
         {
-          mv.visitLdcInsn("Arg (unknown)"); 
+          mv.visitLdcInsn("Arg"); 
         }        
         mv.visitLdcInsn(className);
         mv.visitLdcInsn(methodName);
