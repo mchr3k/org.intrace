@@ -162,6 +162,30 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     });   
   }
   
+  public void setFixedLocalConnection(final String xiPort)
+  {    
+    fixedConnection = true;
+    if (!sRoot.isDisposed())
+    {
+      sWindow.getDisplay().asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          connTab.addressInput.setText("localhost");
+          connTab.portInput.setText(xiPort);
+          textOutputTab.filterThread.addSystemTraceLine("Instructions");
+          textOutputTab.filterThread.addSystemTraceLine(" - Select Classes you want to Trace");
+          textOutputTab.filterThread.addSystemTraceLine("Full help available on the Help tab");
+          textOutputTab.filterThread.addSystemTraceLine("");
+          setConnectionState(ConnectState.CONNECTING);
+          updateUIStateSameThread();
+          Connection.connectToAgent(thisWindow, sWindow, "localhost", xiPort);
+        }
+      });
+    }
+  }
+  
   public void setFixedLocalConnection(final Socket xiSocket)
   {    
     fixedConnection = true;

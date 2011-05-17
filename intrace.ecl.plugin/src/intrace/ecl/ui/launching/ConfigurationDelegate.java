@@ -3,9 +3,13 @@ package intrace.ecl.ui.launching;
 import intrace.ecl.Activator;
 import intrace.ecl.Util;
 import intrace.ecl.ui.output.EditorInput;
+import intrace.ecl.ui.output.EditorInput.InputType;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -31,6 +35,11 @@ import org.eclipse.ui.ide.IDE;
 
 public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements IExecutableExtension
 {
+  public static final String INTRACE_LAUNCHKEY = "INTRACE_LAUNCHKEY";
+  public static final Map<Long,ConnectionHolder> intraceConnections = new ConcurrentHashMap<Long, ConnectionHolder>();
+  private static final AtomicLong intraceConnectionId = new AtomicLong();
+  
+  
   protected String launchtype;
 
   protected ILaunchConfigurationDelegate launchdelegate;
@@ -65,13 +74,18 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
   {    
     try
     {
+      // Create working copy
+      ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();
+      
       // Prepare callback server socket
       ServerSocket callbackServer = new ServerSocket(0);
       final ConnectionHolder callback = new ConnectionHolder(callbackServer);
-      callback.start();  
+      callback.start(); 
+      long connId = intraceConnectionId.getAndIncrement();
+      intraceConnections.put(connId, callback);
+      wc.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
       
-      // Add VM arguments
-      ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();    
+      // Add VM arguments         
       String vmArgs = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
       if (Activator.getDefault().agentArg.length() > 0)
       {
@@ -94,7 +108,8 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
           {          
             IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
             IWorkbenchPage page = window.getActivePage();
-            IDE.openEditor(page, new EditorInput(callback), "intrace.ecl.plugin.ui.output.inTraceEditor");
+            IDE.openEditor(page, new EditorInput(callback, InputType.NEWCONNECTION), 
+                           "intrace.ecl.plugin.ui.output.inTraceEditor");
           }
           catch (PartInitException e)
           {

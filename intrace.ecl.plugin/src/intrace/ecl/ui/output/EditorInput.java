@@ -9,10 +9,18 @@ import org.eclipse.ui.IPersistableElement;
 public class EditorInput implements IEditorInput
 {
   public final ConnectionHolder callback;
+  public final InputType type;
+  
+  public enum InputType
+  {
+    NEWCONNECTION,
+    RECONNECT
+  }
 
-  public EditorInput(ConnectionHolder xiCallback)
+  public EditorInput(ConnectionHolder xiCallback, InputType xiType)
   {
     this.callback = xiCallback;
+    this.type = xiType;
   }
 
   @SuppressWarnings("rawtypes")

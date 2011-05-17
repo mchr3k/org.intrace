@@ -12,7 +12,7 @@ public class ConnectionHolder implements Runnable
 {
   private final ServerSocket server;
   private Socket clientConnection = null;
-  private String agentServerPort = null;
+  public String agentServerPort = null;
 
   public ConnectionHolder(ServerSocket xiServer)
   {
@@ -38,7 +38,6 @@ public class ConnectionHolder implements Runnable
       {
         Map<String,String> settingsMap = (Map<String,String>)obj;
         agentServerPort = settingsMap.get(AgentConfigConstants.SERVER_PORT);
-        System.out.println("Detected agent server port: " + agentServerPort);
       }
       
       // Notify the UI that we have the connection

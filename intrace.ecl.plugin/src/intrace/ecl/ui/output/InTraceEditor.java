@@ -1,5 +1,7 @@
 package intrace.ecl.ui.output;
 
+import intrace.ecl.ui.output.EditorInput.InputType;
+
 import java.net.Socket;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -53,22 +55,29 @@ public class InTraceEditor extends EditorPart
     });
     inTraceUI.setConnectionState(ConnectState.CONNECTING);
     final EditorInput intraceInput = (EditorInput)getEditorInput();
-    new Thread(new Runnable()
-    {      
-      @Override
-      public void run()
-      {
-        try
-        {          
-          Socket connection = intraceInput.callback.getClientConnection();
-          inTraceUI.setFixedLocalConnection(connection);
-        }
-        catch (InterruptedException e)
+    if (intraceInput.type == InputType.NEWCONNECTION)
+    {
+      new Thread(new Runnable()
+      {      
+        @Override
+        public void run()
         {
-          e.printStackTrace();
-        }       
-      }
-    }).start();
+          try
+          {          
+            Socket connection = intraceInput.callback.getClientConnection();
+            inTraceUI.setFixedLocalConnection(connection);
+          }
+          catch (InterruptedException e)
+          {
+            e.printStackTrace();
+          }       
+        }
+      }).start();
+    }
+    else
+    {
+      inTraceUI.setFixedLocalConnection(intraceInput.callback.agentServerPort);
+    }
   }
 
   @Override
