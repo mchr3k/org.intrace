@@ -1,6 +1,6 @@
 package intrace.ecl.ui.output;
 
-import intrace.ecl.ui.launching.ConnectionHolder;
+import intrace.ecl.ui.launching.InTraceLaunch;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -8,7 +8,7 @@ import org.eclipse.ui.IPersistableElement;
 
 public class EditorInput implements IEditorInput
 {
-  public final ConnectionHolder callback;
+  public final InTraceLaunch callback;
   public final InputType type;
   
   public enum InputType
@@ -17,7 +17,7 @@ public class EditorInput implements IEditorInput
     RECONNECT
   }
 
-  public EditorInput(ConnectionHolder xiCallback, InputType xiType)
+  public EditorInput(InTraceLaunch xiCallback, InputType xiType)
   {
     this.callback = xiCallback;
     this.type = xiType;

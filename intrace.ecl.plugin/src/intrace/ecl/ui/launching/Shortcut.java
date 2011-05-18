@@ -43,7 +43,7 @@ public abstract class Shortcut implements ILaunchShortcut
           }
           catch (CoreException e)
           {
-            Activator.getDefault().getLog().log(Util.errorStatus("Error", e));
+            Activator.getDefault().getLog().log(Util.createErrorStatus("Error", e));
           }
           break;
         }
@@ -51,7 +51,7 @@ public abstract class Shortcut implements ILaunchShortcut
       if (delegate == null)
       {
         String msg = "ILaunchShortcut declaration not found: " + delegateId; //$NON-NLS-1$
-        Activator.getDefault().getLog().log(Util.errorStatus(msg, null));
+        Activator.getDefault().getLog().log(Util.createErrorStatus(msg, null));
       }
     }
     return delegate;

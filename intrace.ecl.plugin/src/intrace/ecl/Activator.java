@@ -20,7 +20,7 @@ public class Activator extends AbstractUIPlugin {
 	private static Activator plugin;
 	
 	// Agent arg
-	public String agentArg = "";
+	public String baseAgentArg = "";
 	
 	/**
 	 * The constructor
@@ -46,7 +46,7 @@ public class Activator extends AbstractUIPlugin {
       File bundleDir = FileLocator.getBundleFile(b);
       File jarFile = new File(bundleDir, "lib/intrace-agent.jar");
       String absPath = jarFile.getAbsolutePath();
-      agentArg = " -javaagent:" + absPath;
+      baseAgentArg = " -javaagent:" + absPath;
     }
     catch (IOException e)
     {

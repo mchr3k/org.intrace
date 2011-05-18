@@ -33,15 +33,35 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
-public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate implements IExecutableExtension
+/**
+ * Class which handles adding the InTrace JVM argument and launching the InTrace editor
+ */
+public class LaunchConfigurationDelegate extends
+    AbstractJavaLaunchConfigurationDelegate implements IExecutableExtension
 {
+  /**
+   * Config key used to save the launch ID into an ILaunch object
+   */
   public static final String INTRACE_LAUNCHKEY = "INTRACE_LAUNCHKEY";
-  public static final Map<Long,ConnectionHolder> intraceConnections = new ConcurrentHashMap<Long, ConnectionHolder>();
-  private static final AtomicLong intraceConnectionId = new AtomicLong();
   
+  /**
+   * Map of active launches
+   */
+  public static final Map<Long, InTraceLaunch> intraceLaunches = new ConcurrentHashMap<Long, InTraceLaunch>();
   
+  /**
+   * AtommicLong used to generate launch IDs
+   */
+  private static final AtomicLong intraceLaunchId = new AtomicLong();
+
+  /**
+   * The type of launch being handled.
+   */
   protected String launchtype;
 
+  /**
+   * The delegate which will do most of the work.
+   */
   protected ILaunchConfigurationDelegate launchdelegate;
 
   // IExecutableExtension interface:
@@ -61,7 +81,8 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
         .getLaunchConfigurationType(launchtype);
     if (type == null)
     {
-      throw new CoreException(Util.errorStatus("Unknown launch type", new Throwable()));
+      throw new CoreException(Util.createErrorStatus("Unknown launch type",
+          new Throwable()));
     }
     return type.getDelegate(ILaunchManager.RUN_MODE);
   }
@@ -71,53 +92,60 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
   @Override
   public void launch(ILaunchConfiguration configuration, String mode,
       ILaunch launch, IProgressMonitor monitor) throws CoreException
-  {    
+  {
     try
     {
-      // Create working copy
+      // Create working copy launch config
       ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();
-      
-      // Prepare callback server socket
+
+      // Prepare InTraceLaunch object to handle callback connection
       ServerSocket callbackServer = new ServerSocket(0);
-      final ConnectionHolder callback = new ConnectionHolder(callbackServer);
-      callback.start(); 
-      long connId = intraceConnectionId.getAndIncrement();
-      intraceConnections.put(connId, callback);
+      final InTraceLaunch intraceLaunch = new InTraceLaunch(callbackServer);
+      intraceLaunch.start();
+      
+      // Save off launch object for later access
+      long connId = intraceLaunchId.getAndIncrement();
+      intraceLaunches.put(connId, intraceLaunch);
       launch.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
       
-      // Add VM arguments         
-      String vmArgs = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
-      if (Activator.getDefault().agentArg.length() > 0)
+      // XXX - continue refactoring. Handle launch termination.
+
+      // Add VM arguments
+      String vmArgs = wc.getAttribute(
+          IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
+      if (Activator.getDefault().baseAgentArg.length() > 0)
       {
-        vmArgs += Activator.getDefault().agentArg;
+        vmArgs += Activator.getDefault().baseAgentArg;
         vmArgs += "=[callbackport-";
         vmArgs += Integer.toString(callbackServer.getLocalPort());
         vmArgs += "[startwait";
-      }    
-      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArgs);
-      
+      }
+      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
+          vmArgs);
+
       // Launch editor
       final IWorkbench workbench = PlatformUI.getWorkbench();
       Display display = workbench.getDisplay();
       display.asyncExec(new Runnable()
-      {      
+      {
         @Override
         public void run()
         {
           try
-          {          
+          {
             IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
             IWorkbenchPage page = window.getActivePage();
-            IDE.openEditor(page, new EditorInput(callback, InputType.NEWCONNECTION), 
-                           "intrace.ecl.plugin.ui.output.inTraceEditor");
+            IDE.openEditor(page, new EditorInput(intraceLaunch,
+                InputType.NEWCONNECTION),
+                "intrace.ecl.plugin.ui.output.inTraceEditor");
           }
           catch (PartInitException e)
           {
             e.printStackTrace();
-          } 
+          }
         }
-      });    
-      
+      });
+
       // Start launch
       launchdelegate.launch(wc, ILaunchManager.RUN_MODE, launch,
           new SubProgressMonitor(monitor, 1));

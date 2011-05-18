@@ -54,7 +54,7 @@ public class TabGroup extends AbstractLaunchConfigurationTabGroup implements IEx
     if (element == null)
     {
       String msg = "No tab group registered to run " + type; //$NON-NLS-1$;
-      throw new CoreException(Util.errorStatus(msg, null));
+      throw new CoreException(Util.createErrorStatus(msg, null));
     }
     else
     {

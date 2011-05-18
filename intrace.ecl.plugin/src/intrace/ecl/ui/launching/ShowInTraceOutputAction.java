@@ -157,9 +157,9 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     {
       // Get connection object
       String connIDStr;
-      connIDStr = launch.getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY);
+      connIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
       Long connID = Long.parseLong(connIDStr);
-      final ConnectionHolder conn = ConfigurationDelegate.intraceConnections.get(connID);
+      final InTraceLaunch conn = LaunchConfigurationDelegate.intraceLaunches.get(connID);
       
       // Launch editor
       final IWorkbench workbench = PlatformUI.getWorkbench();
@@ -414,7 +414,7 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
 
   private static boolean connAvailable(ILaunch launch)
   {
-    String connID = launch.getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY);
+    String connID = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
     if (connID.length() > 0)
     {
       return true;
