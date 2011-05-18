@@ -1,6 +1,7 @@
 package intrace.ecl.ui.launching;
 
 import intrace.ecl.ui.output.EditorInput;
+import intrace.ecl.ui.output.InTraceEditor;
 import intrace.ecl.ui.output.EditorInput.InputType;
 
 import java.util.Iterator;
@@ -89,7 +90,10 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
             // it was last enabled. Check that the action is still
             // enabled before running the action.
             if (isEnabledFor(element))
+            {
               doAction(element);
+              fAction.setEnabled(true);
+            }
           }
           catch (Exception e)
           {
@@ -135,7 +139,8 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     if (s instanceof IStructuredSelection)
     {
       IStructuredSelection ss = getTargetSelection((IStructuredSelection) s);
-      action.setEnabled(getEnableStateForSelection(ss));
+      boolean setEn = getEnableStateForSelection(ss);
+      action.setEnabled(setEn);
       setSelection(ss);
     }
     else
@@ -152,19 +157,25 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     {
       // Get connection object
       String connIDStr;
-      try
-      {
-        connIDStr = launch.getLaunchConfiguration().getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY, "");
-        Long connID = Long.parseLong(connIDStr);
-        final ConnectionHolder conn = ConfigurationDelegate.intraceConnections.get(connID);
-        
-        // Launch editor
-        final IWorkbench workbench = PlatformUI.getWorkbench();
-        Display display = workbench.getDisplay();
-        display.asyncExec(new Runnable()
-        {      
-          @Override
-          public void run()
+      connIDStr = launch.getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY);
+      Long connID = Long.parseLong(connIDStr);
+      final ConnectionHolder conn = ConfigurationDelegate.intraceConnections.get(connID);
+      
+      // Launch editor
+      final IWorkbench workbench = PlatformUI.getWorkbench();
+      Display display = workbench.getDisplay();
+      display.asyncExec(new Runnable()
+      {      
+        @Override
+        public void run()
+        {
+          InTraceEditor editor = conn.getEditor();
+          if (editor != null)
+          {
+            editor.getSite().getPage().activate(editor);
+            editor.setFocus();
+          }
+          else
           {
             try
             {          
@@ -176,14 +187,10 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
             catch (PartInitException e)
             {
               e.printStackTrace();
-            } 
+            }
           }
-        });   
-      }
-      catch (CoreException e1)
-      {
-        e1.printStackTrace();
-      } 
+        }
+      });   
     }
   }
 
@@ -399,25 +406,18 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
   protected boolean isEnabledFor(Object element)
   {
     ILaunch launch = getLaunch(element);
+
     return launch != null && launch.getLaunchConfiguration() != null
         && isVisible(launch.getLaunchConfiguration()) && 
-        connAvailable(launch.getLaunchConfiguration());
+        connAvailable(launch);
   }
 
-  private static boolean connAvailable(ILaunchConfiguration launchConfiguration)
+  private static boolean connAvailable(ILaunch launch)
   {
-    try
+    String connID = launch.getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY);
+    if (connID.length() > 0)
     {
-      String connID = launchConfiguration.getAttribute(ConfigurationDelegate.INTRACE_LAUNCHKEY, "");
-      if (connID.length() > 0)
-      {
-        return true;
-      }
-    }
-    catch (CoreException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      return true;
     }    
     return false;
   }

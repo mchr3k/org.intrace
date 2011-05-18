@@ -1,5 +1,7 @@
 package intrace.ecl.ui.launching;
 
+import intrace.ecl.ui.output.InTraceEditor;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -13,6 +15,17 @@ public class ConnectionHolder implements Runnable
   private final ServerSocket server;
   private Socket clientConnection = null;
   public String agentServerPort = null;
+  private InTraceEditor editor = null;
+
+  public synchronized InTraceEditor getEditor()
+  {
+    return editor;
+  }
+
+  public synchronized void setEditor(InTraceEditor editor)
+  {
+    this.editor = editor;
+  }
 
   public ConnectionHolder(ServerSocket xiServer)
   {

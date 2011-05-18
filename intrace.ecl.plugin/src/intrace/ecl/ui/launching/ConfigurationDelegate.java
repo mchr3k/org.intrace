@@ -83,7 +83,7 @@ public class ConfigurationDelegate extends AbstractJavaLaunchConfigurationDelega
       callback.start(); 
       long connId = intraceConnectionId.getAndIncrement();
       intraceConnections.put(connId, callback);
-      wc.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
+      launch.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
       
       // Add VM arguments         
       String vmArgs = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");

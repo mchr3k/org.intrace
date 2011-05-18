@@ -22,6 +22,7 @@ import org.intrace.client.gui.helper.InTraceUI.UIMode;
 public class InTraceEditor extends EditorPart
 {      
   private InTraceUI inTraceUI;
+  private EditorInput intraceInput;
 
   public InTraceEditor()
   {
@@ -54,7 +55,7 @@ public class InTraceEditor extends EditorPart
       }
     });
     inTraceUI.setConnectionState(ConnectState.CONNECTING);
-    final EditorInput intraceInput = (EditorInput)getEditorInput();
+    intraceInput = (EditorInput)getEditorInput();
     if (intraceInput.type == InputType.NEWCONNECTION)
     {
       new Thread(new Runnable()
@@ -78,6 +79,7 @@ public class InTraceEditor extends EditorPart
     {
       inTraceUI.setFixedLocalConnection(intraceInput.callback.agentServerPort);
     }
+    intraceInput.callback.setEditor(this);
   }
 
   @Override
@@ -92,6 +94,10 @@ public class InTraceEditor extends EditorPart
   @Override
   public void dispose()
   {
+    if (intraceInput != null)
+    {
+      intraceInput.callback.setEditor(null);
+    }
     inTraceUI.dispose();
     super.dispose();
   }
