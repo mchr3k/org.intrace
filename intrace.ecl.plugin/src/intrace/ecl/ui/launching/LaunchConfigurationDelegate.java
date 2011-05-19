@@ -22,6 +22,7 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.ILaunchesListener2;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -32,6 +33,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 /**
  * Class which handles adding the InTrace JVM argument and launching the InTrace editor
@@ -104,12 +106,14 @@ public class LaunchConfigurationDelegate extends
       intraceLaunch.start();
       
       // Save off launch object for later access
-      long connId = intraceLaunchId.getAndIncrement();
+      Long connId = intraceLaunchId.getAndIncrement();
       intraceLaunches.put(connId, intraceLaunch);
       launch.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
       
-      // XXX - continue refactoring. Handle launch termination.
-
+      // Setup a launch listener to cleanup the intrace launch object
+      ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
+      manager.addLaunchListener(new LaunchListener(launch, connId));      
+      
       // Add VM arguments
       String vmArgs = wc.getAttribute(
           IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
@@ -139,9 +143,10 @@ public class LaunchConfigurationDelegate extends
                 InputType.NEWCONNECTION),
                 "intrace.ecl.plugin.ui.output.inTraceEditor");
           }
-          catch (PartInitException e)
+          catch (PartInitException ex)
           {
-            e.printStackTrace();
+            Util.handleStatus(Util.createErrorStatus("Failed to open InTrace Output", ex), 
+                              StatusManager.SHOW);
           }
         }
       });
@@ -152,7 +157,60 @@ public class LaunchConfigurationDelegate extends
     }
     catch (IOException e1)
     {
-      // TODO Auto-generated catch block
+      Util.handleStatus(Util.createErrorStatus("InTrace launch failed", e1), 
+          StatusManager.SHOW);
     }
+  }
+  
+  /**
+   * Launch listener which handles the cleanup of entries in the intraceLaunches map
+   */
+  private static class LaunchListener implements ILaunchesListener2
+  {
+    public LaunchListener(ILaunch targetlaunch,
+                          Long intraceLaunchId)
+    {
+      this.targetlaunch = targetlaunch;
+      this.intraceLaunchId = intraceLaunchId;
+    }
+
+    private final ILaunch targetlaunch;
+    private final Long intraceLaunchId;
+    
+    @Override
+    public void launchesRemoved(ILaunch[] launches)
+    {
+      // Do nothing
+    }
+
+    @Override
+    public void launchesAdded(ILaunch[] launches)
+    {
+      // Do nothing
+    }
+
+    @Override
+    public void launchesChanged(ILaunch[] launches)
+    {
+      // Do nothing
+    }
+
+    @Override
+    public void launchesTerminated(ILaunch[] launches)
+    {
+      for (ILaunch launch : launches)
+      {
+        if (launch == targetlaunch)
+        {
+          intraceLaunches.remove(intraceLaunchId);
+          ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
+          manager.removeLaunchListener(this);
+          
+          // XXX - Notify "Open InTrace Output" action that it should now be
+          // disabled
+        }
+      }
+    }
+    
   }
 }

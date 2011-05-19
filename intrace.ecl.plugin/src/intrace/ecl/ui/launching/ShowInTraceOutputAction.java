@@ -1,5 +1,6 @@
 package intrace.ecl.ui.launching;
 
+import intrace.ecl.Util;
 import intrace.ecl.ui.output.EditorInput;
 import intrace.ecl.ui.output.InTraceEditor;
 import intrace.ecl.ui.output.EditorInput.InputType;
@@ -31,6 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 public class ShowInTraceOutputAction implements IViewActionDelegate,
     IActionDelegate2
@@ -60,10 +62,6 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     if (action.isEnabled())
     {
       IStructuredSelection selection = getSelection();
-      // disable the action so it cannot be run again until an event or
-      // selection change
-      // updates the enablement
-      action.setEnabled(false);
       runInForeground(selection);
     }
   }
@@ -73,9 +71,6 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
    */
   private void runInForeground(final IStructuredSelection selection)
   {
-    // final MultiStatus status=
-    // new MultiStatus(DebugUIPlugin.getUniqueIdentifier(),
-    // DebugException.REQUEST_FAILED, getStatusMessage(), null);
     BusyIndicator.showWhile(Display.getCurrent(), new Runnable()
     {
       public void run()
@@ -92,18 +87,16 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
             if (isEnabledFor(element))
             {
               doAction(element);
-              fAction.setEnabled(true);
             }
           }
-          catch (Exception e)
+          catch (Exception ex)
           {
-            // status.merge(e.getStatus());
-            e.printStackTrace();
+            Util.handleStatus(Util.createErrorStatus("Failed to Show InTrace Output", ex), 
+                              StatusManager.SHOW);
           }
         }
       }
     });
-    // reportErrors(status);
   }
 
   /*
@@ -139,8 +132,8 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     if (s instanceof IStructuredSelection)
     {
       IStructuredSelection ss = getTargetSelection((IStructuredSelection) s);
-      boolean setEn = getEnableStateForSelection(ss);
-      action.setEnabled(setEn);
+      boolean enabled = getEnableStateForSelection(ss);
+      action.setEnabled(enabled);
       setSelection(ss);
     }
     else
@@ -156,41 +149,45 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
     if (launch != null)
     {
       // Get connection object
-      String connIDStr;
-      connIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
+      String connIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
       Long connID = Long.parseLong(connIDStr);
       final InTraceLaunch conn = LaunchConfigurationDelegate.intraceLaunches.get(connID);
-      
-      // Launch editor
-      final IWorkbench workbench = PlatformUI.getWorkbench();
-      Display display = workbench.getDisplay();
-      display.asyncExec(new Runnable()
+      if (conn != null)
       {      
-        @Override
-        public void run()
-        {
-          InTraceEditor editor = conn.getEditor();
-          if (editor != null)
+        // Launch editor
+        final IWorkbench workbench = PlatformUI.getWorkbench();
+        Display display = workbench.getDisplay();
+        display.asyncExec(new Runnable()
+        {      
+          @Override
+          public void run()
           {
-            editor.getSite().getPage().activate(editor);
-            editor.setFocus();
-          }
-          else
-          {
-            try
-            {          
-              IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
-              IWorkbenchPage page = window.getActivePage();
-              IDE.openEditor(page, new EditorInput(conn, InputType.RECONNECT), 
-                             "intrace.ecl.plugin.ui.output.inTraceEditor");
-            }
-            catch (PartInitException e)
+            InTraceEditor editor = conn.getEditor();
+            if (editor != null)
             {
-              e.printStackTrace();
+              // Show an existing editor
+              editor.getSite().getPage().activate(editor);
+              editor.setFocus();
+            }
+            else
+            {
+              // Launch a new editor
+              try
+              {          
+                IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
+                IWorkbenchPage page = window.getActivePage();
+                IDE.openEditor(page, new EditorInput(conn, InputType.RECONNECT), 
+                               "intrace.ecl.plugin.ui.output.inTraceEditor");
+              }
+              catch (PartInitException ex)
+              {
+                Util.handleStatus(Util.createErrorStatus("Failed to open InTrace Output", ex), 
+                                  StatusManager.SHOW);
+              }
             }
           }
-        }
-      });   
+        });   
+      }
     }
   }
 
@@ -407,17 +404,38 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
   {
     ILaunch launch = getLaunch(element);
 
-    return launch != null && launch.getLaunchConfiguration() != null
-        && isVisible(launch.getLaunchConfiguration()) && 
-        connAvailable(launch);
+    return (launch != null) && 
+           (launch.getLaunchConfiguration() != null) && 
+           isVisible(launch.getLaunchConfiguration()) && 
+           isInTraceLaunchAvailable(launch);
   }
 
-  private static boolean connAvailable(ILaunch launch)
+  /**
+   * @param launch
+   * @return True if the provided launch has a corresponding InTraceLaunch
+   */
+  private static boolean isInTraceLaunchAvailable(ILaunch launch)
   {
-    String connID = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
-    if (connID.length() > 0)
+    String launchIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
+    if (launchIDStr.length() > 0)
     {
-      return true;
+      try
+      {
+        Long connID = Long.parseLong(launchIDStr);
+        InTraceLaunch intraceLaunch = LaunchConfigurationDelegate.intraceLaunches.get(connID);
+        if (intraceLaunch != null)
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
+      catch (NumberFormatException ex)
+      {
+        return false;
+      }
     }    
     return false;
   }

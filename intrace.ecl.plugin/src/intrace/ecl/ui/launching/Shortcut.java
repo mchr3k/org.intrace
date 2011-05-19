@@ -11,16 +11,23 @@ import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.debug.ui.ILaunchShortcut;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.statushandlers.StatusManager;
 
+/**
+ * Abstract class which handles relaunching an existing InTrace launch
+ * configuration.
+ * <p>
+ * Subclasses specify the ID of the correct delegate type.
+ */
 public abstract class Shortcut implements ILaunchShortcut
 {
   private final String delegateId;
-  
+
   public Shortcut(String xiDelegateId)
   {
     delegateId = xiDelegateId;
   }
-  
+
   private ILaunchShortcut delegate;
 
   private ILaunchShortcut getDelegate()
@@ -34,8 +41,9 @@ public abstract class Shortcut implements ILaunchShortcut
           .getConfigurationElements();
       for (IConfigurationElement config : configs)
       {
-        String configID = config.getAttribute("id");
-        if (delegateId.equals(configID)) { //$NON-NLS-1$
+        String configID = config.getAttribute("id"); //$NON-NLS-1$
+        if (delegateId.equals(configID))
+        {
           try
           {
             delegate = (ILaunchShortcut) config
@@ -43,7 +51,8 @@ public abstract class Shortcut implements ILaunchShortcut
           }
           catch (CoreException e)
           {
-            Activator.getDefault().getLog().log(Util.createErrorStatus("Error", e));
+            Activator.getDefault().getLog()
+                .log(Util.createErrorStatus("Error", e));
           }
           break;
         }
@@ -51,7 +60,7 @@ public abstract class Shortcut implements ILaunchShortcut
       if (delegate == null)
       {
         String msg = "ILaunchShortcut declaration not found: " + delegateId; //$NON-NLS-1$
-        Activator.getDefault().getLog().log(Util.createErrorStatus(msg, null));
+        Util.handleStatus(Util.createErrorStatus(msg, null), StatusManager.SHOW);
       }
     }
     return delegate;
