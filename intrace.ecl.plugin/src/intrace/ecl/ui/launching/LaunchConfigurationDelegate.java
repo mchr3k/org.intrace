@@ -202,12 +202,15 @@ public class LaunchConfigurationDelegate extends
       {
         if (launch == targetlaunch)
         {
-          intraceLaunches.remove(intraceLaunchId);
+          InTraceLaunch intraceLaunch = intraceLaunches.remove(intraceLaunchId);
+          
+          if (intraceLaunch != null)
+          {
+            intraceLaunch.destroy();
+          }
+          
           ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
           manager.removeLaunchListener(this);
-          
-          // XXX - Notify "Open InTrace Output" action that it should now be
-          // disabled
         }
       }
     }

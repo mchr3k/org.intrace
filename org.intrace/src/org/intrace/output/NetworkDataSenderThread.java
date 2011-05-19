@@ -58,7 +58,7 @@ public class NetworkDataSenderThread implements Runnable
       // Throw away
     }
     set.remove(this);
-    System.out.println("## Network Data Connection Disconnected");
+    System.out.println("## Trace Connection Disconnected");
   }
 
   public void queueData(Object data)
@@ -82,6 +82,7 @@ public class NetworkDataSenderThread implements Runnable
     try
     {
       traceSendingSocket = networkSocket.accept();
+      System.out.println("## Trace Connection Established");
       traceSendingSocket.setKeepAlive(true);
       
       if (connection != null)

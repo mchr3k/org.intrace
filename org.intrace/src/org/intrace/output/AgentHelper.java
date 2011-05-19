@@ -79,7 +79,6 @@ public class AgentHelper
     {
       if ((connection == null) || !connection.isTraceConnEstablished())
       {
-        System.out.println("## Network Output Requested");
         ServerSocket networkSocket;
         try
         {

@@ -40,7 +40,8 @@ public class AgentClientConnection implements Runnable
     super();
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
-    System.out.println("## Connected to: " + xiConnectedClient.getPort());
+    System.out.println("## Control Connection Established (Port: " + 
+                       xiConnectedClient.getPort() + ")");
   }
   
   public boolean isTraceConnEstablished()
@@ -127,8 +128,8 @@ public class AgentClientConnection implements Runnable
       }
       catch (IOException ex)
       {
-        System.out.println("## Disconnected from: " + connectedClient.getPort()
-                           + " : " + ex.toString());
+        System.out.println("## Control Connection Disconnected (Port: " + 
+                           connectedClient.getPort() + ")");
       }
       connectedClient.close();
     }
@@ -155,7 +156,6 @@ public class AgentClientConnection implements Runnable
     try
     {
       String lRet = (String) objIn.readObject();
-      System.out.println("## Received Message: " + lRet);
       return lRet;
     }
     catch (ClassNotFoundException e)

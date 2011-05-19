@@ -9,6 +9,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 
+import org.eclipse.jface.action.IAction;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.statushandlers.StatusManager;
 import org.intrace.shared.AgentConfigConstants;
 
@@ -36,6 +40,11 @@ public class InTraceLaunch implements Runnable
    * Currently active InTrace editor
    */
   private InTraceEditor editor = null;
+  
+  /**
+   * Action which opens the InTrace editor
+   */
+  private IAction openeditoraction = null;
 
   /**
    * Construct an instance to listen on a provided ServerSocket
@@ -119,5 +128,31 @@ public class InTraceLaunch implements Runnable
   public synchronized void setEditor(InTraceEditor editor)
   {
     this.editor = editor;
+  }
+
+  public synchronized void setOpeneditoraction(IAction openeditoraction)
+  {
+    this.openeditoraction = openeditoraction;
+  }
+  
+  public synchronized void destroy()
+  {
+    final IAction action = openeditoraction;
+    
+    if (action != null)
+    {
+      // Disable action
+      final IWorkbench workbench = PlatformUI.getWorkbench();
+      Display display = workbench.getDisplay();
+      display.asyncExec(new Runnable()
+      {
+        @Override
+        public void run()
+        {
+          action.setEnabled(false);
+        }
+      });
+    }
+    this.openeditoraction = null;
   }
 }

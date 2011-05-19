@@ -414,7 +414,7 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
    * @param launch
    * @return True if the provided launch has a corresponding InTraceLaunch
    */
-  private static boolean isInTraceLaunchAvailable(ILaunch launch)
+  private boolean isInTraceLaunchAvailable(ILaunch launch)
   {
     String launchIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
     if (launchIDStr.length() > 0)
@@ -425,6 +425,7 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
         InTraceLaunch intraceLaunch = LaunchConfigurationDelegate.intraceLaunches.get(connID);
         if (intraceLaunch != null)
         {
+          intraceLaunch.setOpeneditoraction(fAction);
           return true;
         }
         else

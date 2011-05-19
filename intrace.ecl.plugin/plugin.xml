@@ -142,7 +142,7 @@
                class="intrace.ecl.ui.launching.ShowInTraceOutputAction"
                icon="icons/intrace-editor.gif"
                id="intrace.ecl.ui.inTraceOutputAction"
-               label="Show InTrace Output"
+               label="Open InTrace Output"
                menubarPath="launchGroup">
          </action>
       </viewerContribution>

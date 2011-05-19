@@ -78,6 +78,7 @@ public class Agent
     // Wait for callback connection
     if (args.getCallbackPort() > -1)
     {
+      System.out.println("## Establishing Callback Connection...");
       doCallbackConnection(args.getCallbackPort(), t);
     }
     
@@ -86,7 +87,7 @@ public class Agent
     {
       try
       {
-        System.out.println("## Waiting to continue");
+        System.out.println("## Program Paused");
         AgentServer.waitForStartSignal();
       }
       catch (InterruptedException e)
