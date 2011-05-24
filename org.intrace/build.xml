@@ -76,22 +76,6 @@
     <mkdir dir="./build/tmp/" />
     <mkdir dir="./build/jars/" />
 
-    <!-- Test Trace Agent -->
-    <if>
-    <available file="./lib/intrace-agent-test.jar"/>
-    <else>
-      <jar destfile="./lib/intrace-agent-test.jar" compress="false">
-        <manifest>
-          <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
-          <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
-          <attribute name="Can-Redefine-Classes" value="true" />
-          <attribute name="Git-Revision" value="${git.revision}" />
-          <attribute name="Implementation-Version" value="${git.tag}" />
-        </manifest>
-      </jar>      
-    </else>
-  </if>
-
     <!-- Agent -->
     <jarjar jarfile="./build/jars/intrace-agent.jar">
       <manifest>
@@ -108,16 +92,17 @@
       <zipfileset excludes="META-INF/*.MF" src="./lib/asm-debug-all-3.3.jar"/>
       <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
     </jarjar>
+    <copy file="./build/jars/intrace-agent.jar" todir="./lib/" />
 
     <!-- UI (Stage 1) -->
-  <jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
+    <jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
       <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
     </jarjar>
-    
+
     <!-- UI (Stage 2) -->
-  <jarjar jarfile="./build/jars/intrace-ui.jar">
+    <jarjar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.loader.InTraceStandaloneUILoader" />
         <attribute name="Class-Path" value="." />
@@ -127,14 +112,14 @@
       <fileset dir="./build/classes" includes="**/client/loader/*.class" />
       <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
       <fileset dir="./lib" includes="swt-*.jar" />
-    <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>
     </jarjar>
 
     <!-- UI Library -->
-  <jar jarfile="./build/jars/intrace-ui-helper.jar">
+    <jar jarfile="./build/jars/intrace-ui-helper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/helper/*.class" />
-    </jar>  
+    </jar>
   </target>
 
   <target name="test" description="Run Tests" depends="build" >
@@ -184,9 +169,9 @@
       <formatter type="plain"/>
 
       <batchtest fork="yes" todir="./reports/junit/raw">
-      <fileset dir="./testsrc">
-        <include name="**/*Test.java"/>
-      </fileset>
+        <fileset dir="./testsrc">
+          <include name="**/*Test.java"/>
+        </fileset>
       </batchtest>
     </junit>
 
@@ -235,9 +220,9 @@
 
   </target>
 
-  <target name="validate" description="Build jars and run all automated tests" depends="jar, test, findbugs" >    
+  <target name="validate" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
   </target>
-  
+
   <target name="release1" description="Validate InTrace and copy files ready for Eclipse build" depends="validate,update_eclipse_jars">
     <copy todir="../binaries/jars/latest_development" overwrite="true">
       <fileset file="./build/jars/intrace-agent.jar" />
@@ -249,12 +234,12 @@
     <echo>****</echo>
     <echo>****</echo>
   </target>
-  
+
   <target name="release2" description="Copy around built Eclipse files">
     <copy todir="../intrace.appengine/war" overwrite="true">
       <fileset dir="../intrace.ecl.site/" excludes="artifacts.jar,content.jar,.project"/>
     </copy>
-    
+
     <delete file="../binaries/jars/latest_development/intrace.ecl.site.zip" />
     <zip destfile="../binaries/jars/latest_development/intrace.ecl.site.zip"
          basedir="../intrace.ecl.site/"

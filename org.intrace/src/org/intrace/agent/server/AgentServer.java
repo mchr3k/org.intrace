@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.intrace.agent.Agent;
+import org.intrace.agent.AgentInit;
 import org.intrace.agent.ClassTransformer;
 
 /**
@@ -129,7 +129,7 @@ public class AgentServer implements Runnable
         System.out.println("## Listening on port " + serversock.getLocalPort());
         System.setProperty("org.intrace.port",
                            Integer.toString(serversock.getLocalPort()));
-        Agent.setServerPort(serversock.getLocalPort());
+        AgentInit.setServerPort(serversock.getLocalPort());
         while (true)
         {
           Socket connectedClient = serversock.accept();

@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -193,10 +194,10 @@ public class ClassTransformer implements ClassFileTransformer
 
   private boolean isSensitiveClass(String className)
   {
-    return className.contains(".intrace.") || className.contains("objectweb.asm")
-           || className.startsWith("sun")
-           || className.startsWith("org.openide")
-           || className.startsWith("com.sun") || className.startsWith("java");
+    return className.contains(".intrace.") || className.contains("objectweb.asm");
+//           || className.startsWith("sun")
+//           || className.startsWith("org.openide")
+//           || className.startsWith("com.sun") || className.startsWith("java");
   }
 
   /**
@@ -213,63 +214,87 @@ public class ClassTransformer implements ClassFileTransformer
                           byte[] originalClassfile)
       throws IllegalClassFormatException
   {
-    String className = internalClassName.replace('/', '.');
-    ComparableClassName compclass = new ComparableClassName(className, loader);
-    int modifiedSize = modifiedClasses.size();
-    int allClassesSize = allClasses.size();
-
-    if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
-                                           className, protectionDomain))
+    // Touching the Thread and UncaughtExceptionHandler classes here is safe
+    // as they must already be loaded by the time we get here.
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != CRITICAL_BLOCK)
     {
-      System.out.println("!! Instrumenting class: " + compclass);
-
-      if (settings.saveTracedClassfiles())
-      {
-        writeClassBytes(originalClassfile, internalClassName + "_src.class");
-      }
-
-      byte[] newBytes;
+      // Allow instrumentation to proceed
+      currentTh.setUncaughtExceptionHandler(CRITICAL_BLOCK);
+      
       try
       {
-        newBytes = getInstrumentedClassBytes(className, originalClassfile);
+        String className = internalClassName.replace('/', '.');
+        ComparableClassName compclass = new ComparableClassName(className, loader);
+        System.out.println("!! Consider: " + compclass);
+        int modifiedSize = modifiedClasses.size();
+        int allClassesSize = allClasses.size();
+    
+        if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
+                                               className, protectionDomain))
+        {
+          System.out.println("!! Instrumenting class: " + compclass);
+    
+          if (settings.saveTracedClassfiles())
+          {
+            writeClassBytes(originalClassfile, internalClassName + "_src.class");
+          }
+    
+          byte[] newBytes;
+          try
+          {
+            newBytes = getInstrumentedClassBytes(className, originalClassfile);
+          }
+          catch (RuntimeException th)
+          {
+            // Ensure the JVM doesn't silently swallow an unchecked exception
+            th.printStackTrace();
+            throw th;
+          }
+          catch (Error th)
+          {
+            // Ensure the JVM doesn't silently swallow an unchecked exception
+            th.printStackTrace();
+            throw th;
+          }
+    
+          if (settings.saveTracedClassfiles())
+          {
+            writeClassBytes(newBytes, internalClassName + "_gen.class");
+          }
+    
+          modifiedClasses.add(compclass);
+          
+          if (!isSensitiveClass(className))
+          {
+            // Only send updates if we aren't handling a "sensitive class"
+            detectStatusUpdate(modifiedSize, allClassesSize);
+          }
+                
+          return newBytes;
+        }
+        else
+        {
+          modifiedClasses.remove(compclass);
+          
+          if (!isSensitiveClass(className))
+          {
+            // Only send updates if we aren't handling a "sensitive class"
+            detectStatusUpdate(modifiedSize, allClassesSize);
+          }
+          return null;
+        }
       }
-      catch (RuntimeException th)
+      finally
       {
-        // Ensure the JVM doesn't silently swallow an unchecked exception
-        th.printStackTrace();
-        throw th;
+        currentTh.setUncaughtExceptionHandler(handler);
       }
-      catch (Error th)
-      {
-        // Ensure the JVM doesn't silently swallow an unchecked exception
-        th.printStackTrace();
-        throw th;
-      }
-
-      if (settings.saveTracedClassfiles())
-      {
-        writeClassBytes(newBytes, internalClassName + "_gen.class");
-      }
-
-      modifiedClasses.add(compclass);
-      
-      if (!isSensitiveClass(className))
-      {
-        // Only send updates if we aren't handling a "sensitive class"
-        detectStatusUpdate(modifiedSize, allClassesSize);
-      }
-            
-      return newBytes;
     }
     else
     {
-      modifiedClasses.remove(compclass);
-      
-      if (!isSensitiveClass(className))
-      {
-        // Only send updates if we aren't handling a "sensitive class"
-        detectStatusUpdate(modifiedSize, allClassesSize);
-      }
+      // This thread is currently handling instrumenting a class.
+      // We must return now.
       return null;
     }
   }
@@ -501,39 +526,80 @@ public class ClassTransformer implements ClassFileTransformer
     return unmodifiedKlasses;
   }
 
-  public void instrumentKlasses(Set<ComparableClass> klasses)
-  {
-    try
-    {
-      bulkUpdateActive.set(true);
-      int countNumClasses = 0;
-      int totalNumClasses = klasses.size();
-      broadcastProgress(countNumClasses, totalNumClasses);
-      for (ComparableClass klass : klasses)
-      {
-        try
-        {
-          inst.retransformClasses(klass.klass);
+  private InstruKlassesAction instruAction = null;
+  private final Object instruLock = new Object();
   
-          countNumClasses++;
-          if ((countNumClasses % 10) == 0)
+  public void instrumentKlasses(final Set<ComparableClass> klasses)
+  {
+    synchronized (instruLock)
+    {
+      if (instruAction != null)
+      {
+        instruAction.active = false;
+        instruAction = null;
+      }
+      instruAction = new InstruKlassesAction(klasses);
+      instruAction.start();
+    }
+  }
+  
+  private class InstruKlassesAction implements Runnable
+  {
+    public InstruKlassesAction(Set<ComparableClass> klasses)
+    {
+      this.klasses = klasses;
+    }
+
+    private final Set<ComparableClass> klasses;
+    public volatile boolean active = true;
+    
+    @Override
+    public void run()
+    {
+      try
+      {
+        bulkUpdateActive.set(true);
+        int countNumClasses = 0;
+        int totalNumClasses = klasses.size();
+        broadcastProgress(countNumClasses, totalNumClasses);
+        for (ComparableClass klass : klasses)
+        {
+          if (!active)
           {
-            broadcastProgress(countNumClasses, totalNumClasses);
+            break;
+          }
+          try
+          {
+            inst.retransformClasses(klass.klass);
+    
+            countNumClasses++;
+            if ((countNumClasses % 10) == 0)
+            {
+              broadcastProgress(countNumClasses, totalNumClasses);
+            }
+          }
+          catch (Throwable e)
+          {
+            // Write exception to stdout
+            System.out.println(klass.klass.getName());
+            e.printStackTrace();
           }
         }
-        catch (Throwable e)
-        {
-          // Write exception to stdout
-          System.out.println(klass.klass.getName());
-          e.printStackTrace();
-        }
+        broadcastProgress(totalNumClasses, totalNumClasses, true);
       }
-      broadcastProgress(totalNumClasses, totalNumClasses, true);
+      finally
+      {
+        bulkUpdateActive.set(false);
+        broadcastStatus(modifiedClasses.size(), allClasses.size());
+      }      
     }
-    finally
+   
+    public void start()
     {
-      bulkUpdateActive.set(false);
-      broadcastStatus(modifiedClasses.size(), allClasses.size());
+      Thread th = new Thread(this);
+      th.setName("instrumentKlasses");
+      th.setDaemon(true);
+      th.start();   
     }
   }
 
@@ -802,6 +868,15 @@ public class ClassTransformer implements ClassFileTransformer
                          + Integer.toHexString(klassloader.hashCode()) + ":";
       }
       return klassloaderStr + klass.getName();
+    }
+  }
+  public static final CriticalBlock CRITICAL_BLOCK = new CriticalBlock();
+  private static class CriticalBlock implements Thread.UncaughtExceptionHandler
+  {
+    @Override
+    public void uncaughtException(Thread t, Throwable e)
+    {
+      // Do nothing
     }
   }
 }
