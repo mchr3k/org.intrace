@@ -1,6 +1,7 @@
 package org.intrace.output;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -142,198 +143,516 @@ public class AgentHelper
     }
   }
 
+  public static final CriticalBlock INSTRU_CRITICAL_BLOCK = new CriticalBlock();
+  private static class CriticalBlock implements Thread.UncaughtExceptionHandler
+  {
+    @Override
+    public void uncaughtException(Thread t, Throwable e)
+    {
+      // Do nothing
+    }
+  }
+  
   public static void enter(String className, String methodName, int lineNo)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.enter(className, methodName, lineNo);
-    }
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.enter(className, methodName, lineNo);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
+    }    
   }
 
   public static void val(String desc, String className, String methodName,
                          byte byteArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, byteArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, byteArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          byte[] byteArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, byteArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, byteArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          short shortArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, shortArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, shortArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);      
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          short[] shortArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, shortArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, shortArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int intArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, intArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, intArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int[] intArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, intArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, intArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          long longArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, longArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, longArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          long[] longArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, longArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, longArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          float floatArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, floatArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, floatArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          float[] floatArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, floatArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, floatArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          double doubleArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, doubleArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, doubleArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          double[] doubleArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, doubleArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, doubleArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          boolean boolArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, boolArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, boolArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          boolean[] boolArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, boolArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, boolArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          char charArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, charArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, charArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          char[] charArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, charArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, charArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          Object objArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, objArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, objArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          Object[] objArrayArg)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, objArrayArg);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, objArrayArg);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void val(String desc, String className, String methodName,
                          int lineNo, Throwable throwable)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.val(desc, className, methodName, lineNo, throwable);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.val(desc, className, methodName, lineNo, throwable);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void branch(String className, String methodName, int lineNo)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.branch(className, methodName, lineNo);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.branch(className, methodName, lineNo);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 
   public static void exit(String className, String methodName, int lineNo)
   {
-    if (instrumentationHandler != null)
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    if (handler != INSTRU_CRITICAL_BLOCK)
     {
-      instrumentationHandler.exit(className, methodName, lineNo);
+      // Allow instrumentation call to proceed
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      try
+      {      
+        if (instrumentationHandler != null)
+        {
+          instrumentationHandler.exit(className, methodName, lineNo);
+        }
+      }
+      finally
+      {
+        currentTh.setUncaughtExceptionHandler(handler);
+      }
     }
   }
 }

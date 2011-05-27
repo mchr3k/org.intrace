@@ -1,10 +1,18 @@
 package example;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TraceExample
 {
-
+  
+  private static Map<String,String> map = new HashMap<String, String>();
+  static
+  {
+    map.put("foo", "bar");
+  }
+  
   /**
    * @param args
    * @throws Exception
@@ -46,6 +54,7 @@ public class TraceExample
     {
       System.setProperty("a", "Odd time");
     }
+    map.get("foo");
     new InnerTestClass().instanceFoo();
   }
 

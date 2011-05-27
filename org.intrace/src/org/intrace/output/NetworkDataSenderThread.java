@@ -2,6 +2,7 @@ package org.intrace.output;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
@@ -79,6 +80,21 @@ public class NetworkDataSenderThread implements Runnable
   @Override
   public void run()
   {
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    try
+    {
+      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
+      doRun();
+    }
+    finally
+    {
+      currentTh.setUncaughtExceptionHandler(handler);
+    }
+  }
+  
+  public void doRun()
+  {    
     try
     {
       traceSendingSocket = networkSocket.accept();

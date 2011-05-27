@@ -27,6 +27,8 @@ public class AgentClientConnection implements Runnable
   private final ClassTransformer transformer;
   private boolean traceConnEstablished = false;
   private final Object traceConnLock = new Object();
+  
+  private volatile boolean connected = true;
 
   /**
    * cTor
@@ -70,6 +72,22 @@ public class AgentClientConnection implements Runnable
     }
   }
 
+  @Override
+  public void run()
+  {
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    try
+    {
+      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
+      doRun();
+    }
+    finally
+    {
+      currentTh.setUncaughtExceptionHandler(handler);
+    }
+  }
+
   /**
    * Main client loop
    * <ul>
@@ -81,75 +99,66 @@ public class AgentClientConnection implements Runnable
    * <li>help - Return a Set of all the supported commands
    * </ul>
    */
-  @Override
-  public void run()
+  public void doRun()
   {
-    UncaughtExceptionHandler handler = Thread.currentThread().getUncaughtExceptionHandler();
     try
     {
-      Thread.currentThread().setUncaughtExceptionHandler(ClassTransformer.CRITICAL_BLOCK);
       try
       {
-        try
+        while (true)
         {
-          while (true)
+          String message = receiveMessage();
+          if (message.equals("getsettings"))
           {
-            String message = receiveMessage();
-            if (message.equals("getsettings"))
+            Map<String, String> settingsMap = new HashMap<String, String>();
+            settingsMap.putAll(transformer.getSettings());
+            settingsMap.putAll(AgentHelper.getSettings());
+            AgentServer.broadcastMessage(this, settingsMap);
+          }
+          else if (message.equals("help"))
+          {
+            Set<String> commandSet = new HashSet<String>();
+            commandSet.addAll(AgentConfigConstants.COMMANDS);
+            commandSet.addAll(TraceConfigConstants.COMMANDS);
+            sendMessage(commandSet);
+          }
+          else if (message.equalsIgnoreCase(AgentConfigConstants.START_ACTIVATE))
+          {
+            transformer.getResponse(this, message);
+            AgentServer.setStartSignalled();
+          }
+          else
+          {
+            List<String> responses = transformer.getResponse(this, message);
+            if (responses.size() > 0)
             {
-              Map<String, String> settingsMap = new HashMap<String, String>();
-              settingsMap.putAll(transformer.getSettings());
-              settingsMap.putAll(AgentHelper.getSettings());
-              AgentServer.broadcastMessage(this, settingsMap);
-            }
-            else if (message.equals("help"))
-            {
-              Set<String> commandSet = new HashSet<String>();
-              commandSet.addAll(AgentConfigConstants.COMMANDS);
-              commandSet.addAll(TraceConfigConstants.COMMANDS);
-              sendMessage(commandSet);
-            }
-            else if (message.equalsIgnoreCase(AgentConfigConstants.START_ACTIVATE))
-            {
-              transformer.getResponse(this, message);
-              AgentServer.setStartSignalled();
+              for (String response : responses)
+              {
+                sendMessage(response);
+              }
             }
             else
             {
-              List<String> responses = transformer.getResponse(this, message);
-              if (responses.size() > 0)
-              {
-                for (String response : responses)
-                {
-                  sendMessage(response);
-                }
-              }
-              else
-              {
-                sendMessage("OK");
-              }
+              sendMessage("OK");
             }
           }
         }
-        catch (IOException ex)
-        {
-          System.out.println("## Control Connection Disconnected (Port: " + 
-                             connectedClient.getPort() + ")");
-        }
-        connectedClient.close();
       }
-      catch (IOException e1)
+      catch (IOException ex)
       {
-        e1.printStackTrace();
+        System.out.println("## Control Connection Disconnected (Port: " + 
+                           connectedClient.getPort() + ")");
+        connected = false;
       }
-      finally
-      {
-        AgentServer.removeClientConnection(this);
-      }
+      connectedClient.close();
+    }
+    catch (IOException e1)
+    {
+      e1.printStackTrace();
     }
     finally
     {
-      Thread.currentThread().setUncaughtExceptionHandler(handler);
+      AgentServer.removeClientConnection(this);
     }
   }
 
@@ -180,8 +189,13 @@ public class AgentClientConnection implements Runnable
    * @param xiObject
    * @throws IOException
    */
-  public synchronized void sendMessage(Object xiObject) throws IOException
+  public void sendMessage(Object xiObject) throws IOException
   {
+    if (!connected)
+    {
+      System.out.println("oh no!");
+    }
+    
 //    synchronized (connectedClient)
     {
       OutputStream out = connectedClient.getOutputStream();

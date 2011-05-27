@@ -696,6 +696,7 @@ public class AgentTest extends TestCase
               continue;
             }
           }
+          System.out.println("Test received: " + receivedMessage);
           incomingMessages.put(receivedMessage);
         }
       }

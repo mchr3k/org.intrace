@@ -1,6 +1,7 @@
 package org.intrace.agent.server;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.intrace.agent.AgentInit;
 import org.intrace.agent.ClassTransformer;
+import org.intrace.output.AgentHelper;
 
 /**
  * TCP Server used for communication with Trace clients.
@@ -109,6 +111,21 @@ public class AgentServer implements Runnable
   @Override
   public void run()
   {
+    Thread currentTh = Thread.currentThread();
+    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
+    try
+    {
+      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
+      doRun();
+    }
+    finally
+    {
+      currentTh.setUncaughtExceptionHandler(handler);
+    }
+  }
+    
+  public void doRun()
+  {
     // Server constants
 
     // Number used for naming client threads
@@ -126,7 +143,7 @@ public class AgentServer implements Runnable
       try
       {
         ServerSocket serversock = new ServerSocket(tracePort);
-        System.out.println("## Listening on port " + serversock.getLocalPort());
+        System.out.println("## InTrace Agent listening on port " + serversock.getLocalPort());
         System.setProperty("org.intrace.port",
                            Integer.toString(serversock.getLocalPort()));
         AgentInit.setServerPort(serversock.getLocalPort());

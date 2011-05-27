@@ -18,7 +18,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.intrace.agent.server.AgentClientConnection;
@@ -194,10 +198,11 @@ public class ClassTransformer implements ClassFileTransformer
 
   private boolean isSensitiveClass(String className)
   {
-    return className.contains(".intrace.") || className.contains("objectweb.asm");
-//           || className.startsWith("sun")
-//           || className.startsWith("org.openide")
-//           || className.startsWith("com.sun") || className.startsWith("java");
+    return className.contains(".intrace.") || 
+           className.contains("objectweb.asm") ||
+           className.equals("java.lang.Thread") || 
+           className.equals("java.lang.SecurityManager") ||
+           className.equals("java.lang.System");
   }
 
   /**
@@ -218,97 +223,109 @@ public class ClassTransformer implements ClassFileTransformer
     // as they must already be loaded by the time we get here.
     Thread currentTh = Thread.currentThread();
     UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
-    if (handler != CRITICAL_BLOCK)
-    {
-      // Allow instrumentation to proceed
-      currentTh.setUncaughtExceptionHandler(CRITICAL_BLOCK);
+    currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
       
-      try
+    try
+    {
+      String className = internalClassName.replace('/', '.');
+      ComparableClassName compclass = new ComparableClassName(className, loader);
+      System.out.println("!! Consider: " + compclass);
+      int modifiedSize = modifiedClasses.size();
+      int allClassesSize = allClasses.size();
+  
+      if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
+                                             className, protectionDomain))
       {
-        String className = internalClassName.replace('/', '.');
-        ComparableClassName compclass = new ComparableClassName(className, loader);
-        System.out.println("!! Consider: " + compclass);
-        int modifiedSize = modifiedClasses.size();
-        int allClassesSize = allClasses.size();
-    
-        if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
-                                               className, protectionDomain))
+        System.out.println("!! Instrumenting class: " + compclass);
+  
+        if (settings.saveTracedClassfiles())
         {
-          System.out.println("!! Instrumenting class: " + compclass);
-    
-          if (settings.saveTracedClassfiles())
-          {
-            writeClassBytes(originalClassfile, internalClassName + "_src.class");
-          }
-    
-          byte[] newBytes;
-          try
-          {
-            newBytes = getInstrumentedClassBytes(className, originalClassfile);
-          }
-          catch (RuntimeException th)
-          {
-            // Ensure the JVM doesn't silently swallow an unchecked exception
-            th.printStackTrace();
-            throw th;
-          }
-          catch (Error th)
-          {
-            // Ensure the JVM doesn't silently swallow an unchecked exception
-            th.printStackTrace();
-            throw th;
-          }
-    
-          if (settings.saveTracedClassfiles())
-          {
-            writeClassBytes(newBytes, internalClassName + "_gen.class");
-          }
-    
-          modifiedClasses.add(compclass);
-          
-          if (!isSensitiveClass(className))
-          {
-            // Only send updates if we aren't handling a "sensitive class"
-            detectStatusUpdate(modifiedSize, allClassesSize);
-          }
-                
-          return newBytes;
+          writeClassBytes(originalClassfile, internalClassName + "_src.class");
         }
-        else
+  
+        byte[] newBytes;
+        try
         {
-          modifiedClasses.remove(compclass);
-          
-          if (!isSensitiveClass(className))
-          {
-            // Only send updates if we aren't handling a "sensitive class"
-            detectStatusUpdate(modifiedSize, allClassesSize);
-          }
-          return null;
+          newBytes = getInstrumentedClassBytes(className, originalClassfile);
         }
+        catch (RuntimeException th)
+        {
+          // Ensure the JVM doesn't silently swallow an unchecked exception
+          th.printStackTrace();
+          throw th;
+        }
+        catch (Error th)
+        {
+          // Ensure the JVM doesn't silently swallow an unchecked exception
+          th.printStackTrace();
+          throw th;
+        }
+  
+        if (settings.saveTracedClassfiles())
+        {
+          writeClassBytes(newBytes, internalClassName + "_gen.class");
+        }
+  
+        modifiedClasses.add(compclass);
+        
+        if (!isSensitiveClass(className))
+        {
+          // Only send updates if we aren't handling a "sensitive class"
+          detectStatusUpdate(modifiedSize, allClassesSize);
+        }
+              
+        return newBytes;
       }
-      finally
+      else
       {
-        currentTh.setUncaughtExceptionHandler(handler);
+        modifiedClasses.remove(compclass);
+        
+        if (!isSensitiveClass(className))
+        {
+          // Only send updates if we aren't handling a "sensitive class"
+          detectStatusUpdate(modifiedSize, allClassesSize);
+        }
+        return null;
       }
     }
-    else
+    finally
     {
-      // This thread is currently handling instrumenting a class.
-      // We must return now.
-      return null;
+      currentTh.setUncaughtExceptionHandler(handler);
     }
   }
 
+  BlockingQueue<Runnable> runnerTasks = new LinkedBlockingQueue<Runnable>();
+  ThreadPoolExecutor runner = new ThreadPoolExecutor(1, 1, 15, TimeUnit.SECONDS, runnerTasks);
+  
+  private class StatusUpdateAction implements Runnable
+  {
+    private final int modifiedSize;
+    private final int allClassesSize;
+
+    public StatusUpdateAction(int modifiedSize, int allClassesSize)
+    {
+      this.modifiedSize = modifiedSize;
+      this.allClassesSize = allClassesSize;
+    }
+
+    @Override
+    public void run()
+    {
+      int newModifiedSize = modifiedClasses.size();
+      int newAllClassesSize = allClasses.size();
+      if (!bulkUpdateActive.get() &&
+          ((newModifiedSize != modifiedSize) ||
+           (newAllClassesSize != allClassesSize)))
+      {
+        broadcastStatus(modifiedClasses.size(), allClasses.size());
+      } 
+    }   
+  }
+  
   private void detectStatusUpdate(int modifiedSize, int allClassesSize)
   {
-    int newModifiedSize = modifiedClasses.size();
-    int newAllClassesSize = allClasses.size();
-    if (!bulkUpdateActive.get() &&
-        ((newModifiedSize != modifiedSize) ||
-         (newAllClassesSize != allClassesSize)))
-    {
-      broadcastStatus(modifiedClasses.size(), allClasses.size());
-    }
+    StatusUpdateAction action = new StatusUpdateAction(modifiedSize, allClassesSize);
+    runnerTasks.add(action);
   }
 
   private void writeClassBytes(byte[] newBytes, String className)
@@ -526,80 +543,39 @@ public class ClassTransformer implements ClassFileTransformer
     return unmodifiedKlasses;
   }
 
-  private InstruKlassesAction instruAction = null;
-  private final Object instruLock = new Object();
-  
-  public void instrumentKlasses(final Set<ComparableClass> klasses)
+  public void instrumentKlasses(Set<ComparableClass> klasses)
   {
-    synchronized (instruLock)
+    try
     {
-      if (instruAction != null)
+      bulkUpdateActive.set(true);
+      int countNumClasses = 0;
+      int totalNumClasses = klasses.size();
+      broadcastProgress(countNumClasses, totalNumClasses);
+      for (ComparableClass klass : klasses)
       {
-        instruAction.active = false;
-        instruAction = null;
-      }
-      instruAction = new InstruKlassesAction(klasses);
-      instruAction.start();
-    }
-  }
-  
-  private class InstruKlassesAction implements Runnable
-  {
-    public InstruKlassesAction(Set<ComparableClass> klasses)
-    {
-      this.klasses = klasses;
-    }
-
-    private final Set<ComparableClass> klasses;
-    public volatile boolean active = true;
-    
-    @Override
-    public void run()
-    {
-      try
-      {
-        bulkUpdateActive.set(true);
-        int countNumClasses = 0;
-        int totalNumClasses = klasses.size();
-        broadcastProgress(countNumClasses, totalNumClasses);
-        for (ComparableClass klass : klasses)
+        try
         {
-          if (!active)
+          inst.retransformClasses(klass.klass);
+  
+          countNumClasses++;
+          if ((countNumClasses % 10) == 0)
           {
-            break;
-          }
-          try
-          {
-            inst.retransformClasses(klass.klass);
-    
-            countNumClasses++;
-            if ((countNumClasses % 10) == 0)
-            {
-              broadcastProgress(countNumClasses, totalNumClasses);
-            }
-          }
-          catch (Throwable e)
-          {
-            // Write exception to stdout
-            System.out.println(klass.klass.getName());
-            e.printStackTrace();
+            broadcastProgress(countNumClasses, totalNumClasses);
           }
         }
-        broadcastProgress(totalNumClasses, totalNumClasses, true);
+        catch (Throwable e)
+        {
+          // Write exception to stdout
+          System.out.println(klass.klass.getName());
+          e.printStackTrace();
+        }
       }
-      finally
-      {
-        bulkUpdateActive.set(false);
-        broadcastStatus(modifiedClasses.size(), allClasses.size());
-      }      
+      broadcastProgress(totalNumClasses, totalNumClasses, true);
     }
-   
-    public void start()
+    finally
     {
-      Thread th = new Thread(this);
-      th.setName("instrumentKlasses");
-      th.setDaemon(true);
-      th.start();   
+      bulkUpdateActive.set(false);
+      broadcastStatus(modifiedClasses.size(), allClasses.size());
     }
   }
 
@@ -868,15 +844,6 @@ public class ClassTransformer implements ClassFileTransformer
                          + Integer.toHexString(klassloader.hashCode()) + ":";
       }
       return klassloaderStr + klass.getName();
-    }
-  }
-  public static final CriticalBlock CRITICAL_BLOCK = new CriticalBlock();
-  private static class CriticalBlock implements Thread.UncaughtExceptionHandler
-  {
-    @Override
-    public void uncaughtException(Thread t, Throwable e)
-    {
-      // Do nothing
     }
   }
 }
