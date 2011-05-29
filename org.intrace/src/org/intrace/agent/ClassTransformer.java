@@ -18,16 +18,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.intrace.agent.server.AgentClientConnection;
 import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
+import org.intrace.output.InstruRunnable;
 import org.intrace.output.trace.TraceHandler;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
@@ -219,8 +216,9 @@ public class ClassTransformer implements ClassFileTransformer
                           byte[] originalClassfile)
       throws IllegalClassFormatException
   {
-    // Touching the Thread and UncaughtExceptionHandler classes here is safe
-    // as they must already be loaded by the time we get here.
+    // Accessing the Thread to set the UncaughtExceptionHandler is safe as we
+    // have some specific exclusions in the isSensitiveClass method to block
+    // instrumentation of this class.
     Thread currentTh = Thread.currentThread();
     UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
     currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
@@ -229,7 +227,6 @@ public class ClassTransformer implements ClassFileTransformer
     {
       String className = internalClassName.replace('/', '.');
       ComparableClassName compclass = new ComparableClassName(className, loader);
-      System.out.println("!! Consider: " + compclass);
       int modifiedSize = modifiedClasses.size();
       int allClassesSize = allClasses.size();
   
@@ -268,11 +265,7 @@ public class ClassTransformer implements ClassFileTransformer
   
         modifiedClasses.add(compclass);
         
-        if (!isSensitiveClass(className))
-        {
-          // Only send updates if we aren't handling a "sensitive class"
-          detectStatusUpdate(modifiedSize, allClassesSize);
-        }
+        sendStatusUpdate(modifiedSize, allClassesSize);
               
         return newBytes;
       }
@@ -280,11 +273,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         modifiedClasses.remove(compclass);
         
-        if (!isSensitiveClass(className))
-        {
-          // Only send updates if we aren't handling a "sensitive class"
-          detectStatusUpdate(modifiedSize, allClassesSize);
-        }
+        sendStatusUpdate(modifiedSize, allClassesSize);
         return null;
       }
     }
@@ -294,38 +283,92 @@ public class ClassTransformer implements ClassFileTransformer
     }
   }
 
-  BlockingQueue<Runnable> runnerTasks = new LinkedBlockingQueue<Runnable>();
-  ThreadPoolExecutor runner = new ThreadPoolExecutor(1, 1, 15, TimeUnit.SECONDS, runnerTasks);
-  
-  private class StatusUpdateAction implements Runnable
+  private static class StatusUpdate
   {
-    private final int modifiedSize;
-    private final int allClassesSize;
-
-    public StatusUpdateAction(int modifiedSize, int allClassesSize)
+    public final int modifiedSize;
+    public final int allClassesSize;
+    
+    public StatusUpdate(int modifiedSize, int allClassesSize)
     {
       this.modifiedSize = modifiedSize;
       this.allClassesSize = allClassesSize;
     }
-
-    @Override
-    public void run()
-    {
-      int newModifiedSize = modifiedClasses.size();
-      int newAllClassesSize = allClasses.size();
-      if (!bulkUpdateActive.get() &&
-          ((newModifiedSize != modifiedSize) ||
-           (newAllClassesSize != allClassesSize)))
-      {
-        broadcastStatus(modifiedClasses.size(), allClasses.size());
-      } 
-    }   
   }
   
-  private void detectStatusUpdate(int modifiedSize, int allClassesSize)
+  private static class StatusHolder
   {
-    StatusUpdateAction action = new StatusUpdateAction(modifiedSize, allClassesSize);
-    runnerTasks.add(action);
+    private StatusUpdate update;
+    public synchronized void setStatus(StatusUpdate update)
+    {
+      this.update = update;
+      this.notifyAll();
+    }
+    
+    public synchronized StatusUpdate getStatus() throws InterruptedException
+    {
+      while (update == null)
+      {
+        this.wait();
+      }
+      
+      StatusUpdate retVal = update;
+      update = null;
+      
+      return retVal;
+    }
+  }
+  
+  private class StatusUpdateThread extends InstruRunnable
+  {    
+    // Need more than 1 slot to allow for recursive status calls
+    public final StatusHolder statusHolder = new StatusHolder();
+
+    public void runMethod()
+    {      
+      while (true)
+      {        
+        try
+        {
+          StatusUpdate update = statusHolder.getStatus();
+          int newModifiedSize = modifiedClasses.size();
+          int newAllClassesSize = allClasses.size();
+          if (!bulkUpdateActive.get() &&
+              ((newModifiedSize != update.modifiedSize) ||
+               (newAllClassesSize != update.allClassesSize)))
+          {
+            broadcastStatus(modifiedClasses.size(), allClasses.size());
+          }
+        }
+        catch (InterruptedException e)
+        {
+          // Ignore - exit this thread
+        }
+      }
+    }
+    
+    public StatusUpdateThread start()
+    {
+      Thread statusUpdateThread = new Thread(this);
+      statusUpdateThread.setDaemon(true);
+      statusUpdateThread.setName("Instrumentation Status Updates");
+      statusUpdateThread.start();
+      return this;
+    }
+  }
+  
+  private StatusUpdateThread statusUpdater = new StatusUpdateThread().start();
+  
+  /**
+   * Asynchronously send a status update to all connected clients.
+   * <p>
+   * We do this asynchronously as it was observed that attempting to send responses from
+   * the same thread that was doing the instrumentation caused problems.
+   * @param modifiedSize
+   * @param allClassesSize
+   */
+  private void sendStatusUpdate(int modifiedSize, int allClassesSize)
+  {
+    statusUpdater.statusHolder.setStatus(new StatusUpdate(modifiedSize, allClassesSize));
   }
 
   private void writeClassBytes(byte[] newBytes, String className)
@@ -545,6 +588,10 @@ public class ClassTransformer implements ClassFileTransformer
 
   public void instrumentKlasses(Set<ComparableClass> klasses)
   {
+    if (klasses.size() == 0)
+    {
+      return;
+    }
     try
     {
       bulkUpdateActive.set(true);

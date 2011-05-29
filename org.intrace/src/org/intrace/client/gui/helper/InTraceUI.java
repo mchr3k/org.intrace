@@ -492,8 +492,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
     private void setStatus(int instruClasses, int totalClasses)
     {
-      instrStatusLabel.setText("Instrumented/Total Loaded Classes: " + instruClasses + "/"
-          + totalClasses);
+      if (!sRoot.isDisposed())
+      {
+        instrStatusLabel.setText("Instrumented/Total Loaded Classes: " + instruClasses + "/"
+            + totalClasses);
+      }
     }
 
     private void setProgress(int progressClasses, int totalClasses, boolean done)

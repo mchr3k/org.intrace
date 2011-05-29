@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,21 +14,20 @@ import java.util.Set;
 
 import org.intrace.agent.ClassTransformer;
 import org.intrace.output.AgentHelper;
+import org.intrace.output.InstruRunnable;
 import org.intrace.shared.AgentConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
 /**
  * Server thread handling a single connected client.
  */
-public class AgentClientConnection implements Runnable
+public class AgentClientConnection extends InstruRunnable
 {
   private final Socket connectedClient;
   private final ClassTransformer transformer;
   private boolean traceConnEstablished = false;
   private final Object traceConnLock = new Object();
   
-  private volatile boolean connected = true;
-
   /**
    * cTor
    * 
@@ -71,23 +69,7 @@ public class AgentClientConnection implements Runnable
       }
     }
   }
-
-  @Override
-  public void run()
-  {
-    Thread currentTh = Thread.currentThread();
-    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
-    try
-    {
-      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
-      doRun();
-    }
-    finally
-    {
-      currentTh.setUncaughtExceptionHandler(handler);
-    }
-  }
-
+  
   /**
    * Main client loop
    * <ul>
@@ -99,7 +81,7 @@ public class AgentClientConnection implements Runnable
    * <li>help - Return a Set of all the supported commands
    * </ul>
    */
-  public void doRun()
+  public void runMethod()
   {
     try
     {
@@ -148,7 +130,6 @@ public class AgentClientConnection implements Runnable
       {
         System.out.println("## Control Connection Disconnected (Port: " + 
                            connectedClient.getPort() + ")");
-        connected = false;
       }
       connectedClient.close();
     }
@@ -191,13 +172,9 @@ public class AgentClientConnection implements Runnable
    */
   public void sendMessage(Object xiObject) throws IOException
   {
-    if (!connected)
+    synchronized (connectedClient)
     {
-      System.out.println("oh no!");
-    }
-    
-//    synchronized (connectedClient)
-    {
+      // System.out.println("Agent send message: " + xiObject);
       OutputStream out = connectedClient.getOutputStream();
       ObjectOutputStream objOut = new ObjectOutputStream(out);
       objOut.writeObject(xiObject);

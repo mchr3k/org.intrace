@@ -1,7 +1,6 @@
 package org.intrace.agent.server;
 
 import java.io.IOException;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,12 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.intrace.agent.AgentInit;
 import org.intrace.agent.ClassTransformer;
-import org.intrace.output.AgentHelper;
+import org.intrace.output.InstruRunnable;
 
 /**
  * TCP Server used for communication with Trace clients.
  */
-public class AgentServer implements Runnable
+public class AgentServer extends InstruRunnable
 {
   // CTor field
   private final ClassTransformer transformer;
@@ -104,27 +103,8 @@ public class AgentServer implements Runnable
       throw ex;
     }
   }
-
-  /**
-   * Main server loop
-   */
-  @Override
-  public void run()
-  {
-    Thread currentTh = Thread.currentThread();
-    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
-    try
-    {
-      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
-      doRun();
-    }
-    finally
-    {
-      currentTh.setUncaughtExceptionHandler(handler);
-    }
-  }
-    
-  public void doRun()
+  
+  public void runMethod()
   {
     // Server constants
 

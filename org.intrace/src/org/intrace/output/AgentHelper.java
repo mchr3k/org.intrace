@@ -551,12 +551,19 @@ public class AgentHelper
     if (handler != INSTRU_CRITICAL_BLOCK)
     {
       // Allow instrumentation call to proceed
-      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
+      currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);
       try
-      {      
+      {
         if (instrumentationHandler != null)
         {
-          instrumentationHandler.val(desc, className, methodName, objArg);
+          try
+          {
+            instrumentationHandler.val(desc, className, methodName, objArg);
+          }
+          catch (Throwable th)
+          {
+            instrumentationHandler.val(desc, className, methodName, "<Exception thrown: " + th.toString() + ">");
+          }
         }
       }
       finally
@@ -576,10 +583,17 @@ public class AgentHelper
       // Allow instrumentation call to proceed
       currentTh.setUncaughtExceptionHandler(INSTRU_CRITICAL_BLOCK);      
       try
-      {      
+      {  
         if (instrumentationHandler != null)
         {
-          instrumentationHandler.val(desc, className, methodName, objArrayArg);
+          try
+          {
+            instrumentationHandler.val(desc, className, methodName, objArrayArg);
+          }
+          catch (Throwable th)
+          {
+            instrumentationHandler.val(desc, className, methodName, "<Exception thrown: " + th.toString() + ">");
+          }
         }
       }
       finally

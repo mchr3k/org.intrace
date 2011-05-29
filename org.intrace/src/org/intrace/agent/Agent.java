@@ -44,7 +44,13 @@ public class Agent
       // Prepare boot classpath
       String agentPath = Agent.class.getProtectionDomain().getCodeSource()
           .getLocation().getPath();
-      System.out.println("Agent path: " + agentPath);
+      if (!agentPath.endsWith(".jar"))
+      {
+        System.err.println("InTrace agent must be loaded from a .jar file. Detected path: " + agentPath);
+        System.err.println("InTrace loading cancelled.");
+        return;
+      }
+      
       inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(agentPath)));
 
       // Class AgentInit in boot classloader

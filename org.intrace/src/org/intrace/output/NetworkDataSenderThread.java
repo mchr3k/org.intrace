@@ -2,7 +2,6 @@ package org.intrace.output;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
@@ -12,13 +11,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.intrace.agent.server.AgentClientConnection;
 
-public class NetworkDataSenderThread implements Runnable
+public class NetworkDataSenderThread extends InstruRunnable
 {
   private boolean alive = true;
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
-  private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(
-                                                                                     30);
+  private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(30);
   private Set<NetworkDataSenderThread> set;
   private final AgentClientConnection connection;
 
@@ -76,24 +74,8 @@ public class NetworkDataSenderThread implements Runnable
       // Throw away
     }
   }
-
-  @Override
-  public void run()
-  {
-    Thread currentTh = Thread.currentThread();
-    UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
-    try
-    {
-      currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
-      doRun();
-    }
-    finally
-    {
-      currentTh.setUncaughtExceptionHandler(handler);
-    }
-  }
   
-  public void doRun()
+  public void runMethod()
   {    
     try
     {

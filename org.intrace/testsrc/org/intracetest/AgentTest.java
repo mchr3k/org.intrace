@@ -541,12 +541,6 @@ public class AgentTest extends TestCase
     sender.sendMessage(configConstant + configValue);
     Object okResponse = receiver.incomingMessages.take();
     assertNotNull(okResponse);
-    while (okResponse instanceof Map<?,?>)
-    {
-      // Discard any status map
-      okResponse = receiver.incomingMessages.take();
-      assertNotNull(okResponse);
-    }
     assertTrue(okResponse instanceof String);
     assertEquals(okResponse, "OK");
 
@@ -688,21 +682,22 @@ public class AgentTest extends TestCase
         {
           ObjectInputStream objIn = new ObjectInputStream(inputStream);
           Object receivedMessage = objIn.readObject();
+          // System.out.println("Test received: " + receivedMessage);
           if (receivedMessage instanceof Map<?, ?>)
           {
             Map<?, ?> receivedMap = (Map<?, ?>) receivedMessage;
-            if (receivedMap.containsKey(AgentConfigConstants.NUM_PROGRESS_ID))
+            if (receivedMap.containsKey(AgentConfigConstants.NUM_PROGRESS_ID)||
+                receivedMap.containsKey(AgentConfigConstants.STID))
             {
               continue;
             }
-          }
-          System.out.println("Test received: " + receivedMessage);
+          }          
           incomingMessages.put(receivedMessage);
         }
       }
       catch (Exception e)
       {
-        // Do something
+        // Do nothing
       }
     }
   }
