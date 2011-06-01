@@ -2,7 +2,6 @@ package org.intrace.agent;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.intrace.shared.AgentConfigConstants;
 
@@ -22,8 +21,8 @@ public class AgentSettings
   private int actualServerPort = -1;
   
   // Dynamic settings
-  private Pattern classRegex = Pattern.compile("^$");
-  private Pattern excludeClassRegex = Pattern.compile("^$");
+  private String[] classRegex = new String[0];
+  private String[] excludeClassRegex = new String[0];
   private boolean instruEnabled = true;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;  
@@ -109,7 +108,7 @@ public class AgentSettings
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
-      classRegex = Pattern.compile(classRegexStr);
+      classRegex = classRegexStr.split("\\|");
     }
     else if (arg.startsWith(AgentConfigConstants.EXCLUDE_CLASS_REGEX))
     {
@@ -117,7 +116,7 @@ public class AgentSettings
                                        .replace(
                                                 AgentConfigConstants.EXCLUDE_CLASS_REGEX,
                                                 "");
-      excludeClassRegex = Pattern.compile(classExcludeRegexStr);
+      excludeClassRegex = classExcludeRegexStr.split("\\|");
     }
   }
 
@@ -146,12 +145,12 @@ public class AgentSettings
     return callbackPort;
   }
 
-  public Pattern getClassRegex()
+  public String[] getClassRegex()
   {
     return classRegex;
   }
 
-  public Pattern getExcludeClassRegex()
+  public String[] getExcludeClassRegex()
   {
     return excludeClassRegex;
   }
@@ -189,9 +188,10 @@ public class AgentSettings
     Map<String, String> settingsMap = new HashMap<String, String>();
     settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,
                     Boolean.toString(instruEnabled));
-    settingsMap.put(AgentConfigConstants.CLASS_REGEX, classRegex.pattern());
+    settingsMap.put(AgentConfigConstants.CLASS_REGEX, 
+                    getPatternString(classRegex));
     settingsMap.put(AgentConfigConstants.EXCLUDE_CLASS_REGEX,
-                    excludeClassRegex.pattern());
+                    getPatternString(excludeClassRegex));
     settingsMap.put(AgentConfigConstants.VERBOSE_MODE,
                     Boolean.toString(verboseMode));
     settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,
@@ -199,5 +199,19 @@ public class AgentSettings
     settingsMap.put(AgentConfigConstants.SERVER_PORT, Integer.toString(actualServerPort));
     settingsMap.put(AgentConfigConstants.START_WAIT, Boolean.toString(waitStart));
     return settingsMap;
+  }
+  
+  private String getPatternString(String[] parts)
+  {
+    StringBuilder strBuilder = new StringBuilder();
+    for (int ii = 0; ii < parts.length; ii++)
+    {
+      strBuilder.append(parts[ii]);
+      if (ii < (parts.length - 1))
+      {
+        strBuilder.append("|");
+      }
+    }
+    return strBuilder.toString();
   }
 }

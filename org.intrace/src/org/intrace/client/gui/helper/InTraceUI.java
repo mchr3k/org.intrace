@@ -9,7 +9,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import net.miginfocom.swt.MigLayout;
 
@@ -45,8 +44,8 @@ import org.eclipse.swt.widgets.Text;
 import org.intrace.client.gui.helper.Connection.ConnectState;
 import org.intrace.client.gui.helper.Connection.ISocketCallback;
 import org.intrace.client.gui.helper.ControlConnectionThread.IControlConnectionListener;
+import org.intrace.client.gui.helper.IncludeExcludeWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.NetworkDataReceiverThread.INetworkOutputConfig;
-import org.intrace.client.gui.helper.PatternInputWindow.PatternInputCallback;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 import org.intrace.shared.AgentConfigConstants;
@@ -447,8 +446,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             @Override
             public void widgetSelected(SelectionEvent arg0)
             {
-              PatternInputWindow regexInput = new PatternInputWindow(
-                  "Set Class Regex", helpText, new PatternInputCallback()
+              IncludeExcludeWindow regexInput = new IncludeExcludeWindow(
+                  "Classes to Instrument", helpText, mode,
+                  new PatternInputCallback()
                   {
                     private String includePattern = null;
                     private String excludePattern = null;
@@ -787,52 +787,52 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             {
               Menu textMenu = new Menu(sWindow, SWT.POP_UP);
               MenuItem includeItem = new MenuItem(textMenu, SWT.PUSH);
-              includeItem.setText("Include: " + getDisplayPatternFromText(selectedText));
+              includeItem.setText("Include: " + selectedText);
               includeItem.addSelectionListener(new SelectionAdapter()
               {
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  String existingIncludePattern = lastEnteredIncludeFilterPattern.pattern() + "|";
+                  String existingIncludePattern = lastEnteredIncludeFilterPattern + "|";
                   if (lastEnteredIncludeFilterPattern == TraceFilterThread.MATCH_ALL)
                   {
                     existingIncludePattern = "";
                   }
-                  String newPattern = getPatternFromText(selectedText);
+                  String newPattern = selectedText;
                   if (!existingIncludePattern.contains(newPattern))
                   {
                     String newIncludePatternStr = existingIncludePattern + newPattern;
-                    lastEnteredIncludeFilterPattern = Pattern.compile(newIncludePatternStr);
+                    lastEnteredIncludeFilterPattern = newIncludePatternStr;
                     if (enableFilter.getSelection())
                     {
-                      applyPatterns(lastEnteredIncludeFilterPattern.pattern(), 
-                                    lastEnteredExcludeFilterPattern.pattern(), false);
+                      applyPatterns(lastEnteredIncludeFilterPattern, 
+                                    lastEnteredExcludeFilterPattern, false);
                     }
                   }
                 }
               });
               
               MenuItem excludeItem = new MenuItem(textMenu, SWT.PUSH);
-              excludeItem.setText("Exclude: " + getDisplayPatternFromText(selectedText));
+              excludeItem.setText("Exclude: " + selectedText);
               excludeItem.addSelectionListener(new SelectionAdapter()
               {
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  String existingExcludePattern = lastEnteredExcludeFilterPattern.pattern() + "|";
+                  String existingExcludePattern = lastEnteredExcludeFilterPattern + "|";
                   if (lastEnteredExcludeFilterPattern == TraceFilterThread.MATCH_NONE)
                   {
                     existingExcludePattern = "";
                   }
-                  String newPattern = getPatternFromText(selectedText);
+                  String newPattern = selectedText;
                   if (!existingExcludePattern.contains(newPattern))
                   {
                     String newExcludePatternStr = existingExcludePattern + newPattern;
-                    lastEnteredExcludeFilterPattern = Pattern.compile(newExcludePatternStr);
+                    lastEnteredExcludeFilterPattern = newExcludePatternStr;
                     if (enableFilter.getSelection())
                     {
-                      applyPatterns(lastEnteredIncludeFilterPattern.pattern(), 
-                                    lastEnteredExcludeFilterPattern.pattern(), false);
+                      applyPatterns(lastEnteredIncludeFilterPattern, 
+                                    lastEnteredExcludeFilterPattern, false);
                     }
                   }
                 }
@@ -993,8 +993,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           if ((includePattern != null) && (excludePattern != null))
           {
-            lastEnteredIncludeFilterPattern = getPattern(includePattern);
-            lastEnteredExcludeFilterPattern = getPattern(excludePattern);
+            lastEnteredIncludeFilterPattern = includePattern;
+            lastEnteredExcludeFilterPattern = excludePattern;
             if (enableFilter.getSelection())
             {
               applyPatterns(includePattern, excludePattern, false);
@@ -1009,10 +1009,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             @Override
             public void widgetSelected(SelectionEvent arg0)
             {
-              PatternInputWindow regexInput;
-              regexInput = new PatternInputWindow("Set Text Filter", helpText,
-                  patternCallback, lastEnteredIncludeFilterPattern.pattern(),
-                  lastEnteredExcludeFilterPattern.pattern());
+              IncludeExcludeWindow regexInput;
+              regexInput = new IncludeExcludeWindow("Output Filter", helpText, mode,
+                  patternCallback, lastEnteredIncludeFilterPattern,
+                  lastEnteredExcludeFilterPattern);
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
@@ -1025,13 +1025,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           if (enableFilter.getSelection())
           {
-            applyPatterns(lastEnteredIncludeFilterPattern.pattern(), 
-                          lastEnteredExcludeFilterPattern.pattern(), true);
+            applyPatterns(lastEnteredIncludeFilterPattern, 
+                          lastEnteredExcludeFilterPattern, true);
           }
           else
           {
-            applyPatterns(TraceFilterThread.MATCH_ALL.pattern(), 
-                          TraceFilterThread.MATCH_NONE.pattern(), true);
+            applyPatterns(TraceFilterThread.MATCH_ALL, 
+                          TraceFilterThread.MATCH_NONE, true);
           }
         }
       });
@@ -1114,20 +1114,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }      
     }
     
-    private String getDisplayPatternFromText(String text)
-    {
-      String pattern = "*" + text + "*";;
-      return pattern;
-    }
-    
-    private String getPatternFromText(String text)
-    {
-      String pattern = ".*" + text + ".*";;
-      pattern = pattern.replace("[", "\\[");
-      pattern = pattern.replace("]", "\\]");
-      return pattern;
-    }
-    
     private void doFind(final boolean down)
     {
       if (!sRoot.isDisposed())
@@ -1194,28 +1180,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }    
     }
 
-    private Pattern getPattern(String patternString)
-    {
-      Pattern retPattern;
-      if (patternString.equals(".*"))
-      {
-        retPattern = TraceFilterThread.MATCH_ALL;
-      } else if (patternString.equals(""))
-      {
-        retPattern = TraceFilterThread.MATCH_NONE;
-      } else
-      {
-        retPattern = Pattern.compile(patternString, Pattern.DOTALL);
-      }
-      return retPattern;
-    }
-
     private void applyPatterns(String newIncludePattern,
                                String newExcludePattern,
                                final boolean isToggle)
     {
-      if (newIncludePattern.equals(activeIncludeFilterPattern.pattern())
-          && newExcludePattern.equals(activeExcludeFilterPattern.pattern()))
+      if (newIncludePattern.equals(activeIncludeFilterPattern)
+          && newExcludePattern.equals(activeExcludeFilterPattern))
       {
         return;
       } else
@@ -1223,8 +1193,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         oldIncludeFilterPattern = activeIncludeFilterPattern;
         oldExcludeFilterPattern = activeExcludeFilterPattern;
 
-        activeIncludeFilterPattern = getPattern(newIncludePattern);
-        activeExcludeFilterPattern = getPattern(newExcludePattern);
+        activeIncludeFilterPattern = newIncludePattern;
+        activeExcludeFilterPattern = newExcludePattern;
       }
       if (sRoot.isDisposed())
         return;
@@ -1251,8 +1221,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
           cancelButton.addSelectionListener(cancelListener);
 
-          final Pattern newIncludePattern = activeIncludeFilterPattern;
-          final Pattern newExcludePattern = activeExcludeFilterPattern;
+          final String newIncludePattern = activeIncludeFilterPattern;
+          final String newExcludePattern = activeExcludeFilterPattern;
 
           final TraceFilterProgressHandler progressHandler = new TraceFilterProgressHandler()
           {
@@ -1292,13 +1262,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             }
 
             @Override
-            public Pattern getIncludePattern()
+            public String getIncludePattern()
             {
               return newIncludePattern;
             }
 
             @Override
-            public Pattern getExcludePattern()
+            public String getExcludePattern()
             {
               return newExcludePattern;
             }
@@ -1393,13 +1363,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private ParsedSettingsData settingsData = new ParsedSettingsData(
       new HashMap<String, String>());
   
-  private Pattern lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_NONE;  
-  private Pattern activeIncludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private Pattern oldIncludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private String lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_ALL;  
+  private String activeIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
+  private String oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   
-  private Pattern lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private Pattern activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private Pattern oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private String lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private String activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private String oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   
   private boolean autoScroll = true;
   private boolean fixedConnection = false;

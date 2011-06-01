@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,16 @@ import org.objectweb.asm.ClassReader;
  */
 public class ClassTransformer implements ClassFileTransformer
 {
+  /**
+   * Pattern which matches anything
+   */
+  public static final String MATCH_ALL = "*";
+
+  /**
+   * Pattern which matches nothing
+   */
+  public static final String MATCH_NONE = "";
+  
   /**
    * Set of modified class names
    */
@@ -167,7 +178,7 @@ public class ClassTransformer implements ClassFileTransformer
     
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
-        || settings.getExcludeClassRegex().matcher(className).matches())
+        || matches(settings.getExcludeClassRegex(), className))
     {
       if (settings.isVerboseMode())
       {
@@ -179,7 +190,7 @@ public class ClassTransformer implements ClassFileTransformer
 
     // Don't modify classes which fail to match the regex
     if ((settings.getClassRegex() == null)
-        || !settings.getClassRegex().matcher(className).matches())
+        || !matches(settings.getClassRegex(), className))
     {
       if (settings.isVerboseMode())
       {
@@ -191,6 +202,23 @@ public class ClassTransformer implements ClassFileTransformer
 
     // All checks passed - class can be instrumented
     return true;
+  }
+  
+  private boolean matches(String[] strs, String target)
+  {
+    for (String str : strs)
+    {
+      if (str.equals(MATCH_NONE))
+      {
+        continue;
+      }
+      else if (str.equals(MATCH_ALL) || 
+               target.contains(str))
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean isSensitiveClass(String className)
@@ -475,8 +503,15 @@ public class ClassTransformer implements ClassFileTransformer
       System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
-    else if (!oldSettings.getClassRegex().pattern()
-                         .equals(settings.getClassRegex().pattern()))
+    else if (Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
+    {
+      System.out.println("## Settings Changed");
+      Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
+      modifiedClasses.clear();
+      klasses.addAll(getLoadedClassesForModification());
+      instrumentKlasses(klasses);
+    }
+    else if (Arrays.equals(oldSettings.getExcludeClassRegex(), settings.getExcludeClassRegex()))
     {
       System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());

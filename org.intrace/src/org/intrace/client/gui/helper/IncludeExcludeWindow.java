@@ -3,35 +3,46 @@ package org.intrace.client.gui.helper;
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
+import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
-public class PatternInputWindow
+public class IncludeExcludeWindow
 {
   public final Shell sWindow;
 
+  private final TabFolder tabs;  
+  private final CTabFolder ctabs;
+  
   private final PatternInputCallback callback;
 
-  private final PatternInput includePatterns;
+  private PatternInput includePatterns;
 
-  private final PatternInput excludePatterns;
+  private PatternInput excludePatterns;
 
   private final SaveCancelButtons saveCancelButtons;
 
-  public PatternInputWindow(String windowTitle, String helpText,
+  public IncludeExcludeWindow(String windowTitle, String helpText,
+      UIMode mode,
       PatternInputCallback callback, String initIncludePatterns,
       String initExcludePatterns)
   {
     this.callback = callback;
     MigLayout windowLayout = new MigLayout("fill", "[grow][100][100][grow]",
-                                           "[grow][grow][25]");
+                                           "[grow][25]");
     if (initExcludePatterns == null)
     {
       windowLayout.setRowConstraints("[grow][25]");
@@ -41,56 +52,114 @@ public class PatternInputWindow
                         | SWT.RESIZE);
     sWindow.setText(windowTitle);
     sWindow.setLayout(windowLayout);
-    if (initExcludePatterns != null)
-    {
-      sWindow.setSize(new Point(400, 600));
-      sWindow.setMinimumSize(new Point(400, 600));
-    }
-    else
-    {
-      sWindow.setSize(new Point(400, 300));
-      sWindow.setMinimumSize(new Point(400, 300));
-    }
+    sWindow.setSize(new Point(400, 400));
+    sWindow.setMinimumSize(new Point(400, 400));
+    
 
-    includePatterns = new PatternInput(sWindow, "Include", helpText,
-                                       initIncludePatterns);
-    if (initExcludePatterns != null)
+    if (mode == UIMode.STANDALONE)
     {
-      excludePatterns = new PatternInput(sWindow, "Exclude", helpText,
-                                         initExcludePatterns);
+      ctabs = null;           
+      tabs = new TabFolder(sWindow, SWT.NONE);
+      tabs.setLayoutData("grow,wrap,wmin 0,spanx 4");      
+      fillTabs(tabs, initIncludePatterns, initExcludePatterns, helpText);
     }
     else
     {
-      excludePatterns = null;
+      tabs = null;      
+      ctabs = new CTabFolder(sWindow, SWT.TOP | SWT.BORDER);
+      ctabs.setSimple(false);
+      ctabs.setLayoutData("grow,wrap,wmin 0,spanx 4");
+      fillCTabs(ctabs, initIncludePatterns, initExcludePatterns, helpText);
+      ctabs.setSelection(0);
     }
 
     saveCancelButtons = new SaveCancelButtons(sWindow);
 
+  }  
+
+  private void fillTabs(TabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
+  {
+    TabItem includeTabItem = new TabItem(tabFolder, SWT.NONE);
+    includeTabItem.setText("Include");
+    includePatterns = new PatternInput(tabFolder, initIncludePatterns);        
+    includeTabItem.setControl(includePatterns.patternInputComp);
+
+    TabItem excludeTabItem = new TabItem(tabFolder, SWT.NONE);
+    excludeTabItem.setText("Exclude");
+    excludePatterns = new PatternInput(tabFolder, initExcludePatterns);
+    excludeTabItem.setControl(excludePatterns.patternInputComp);
+    
+    TabItem helpTabItem = new TabItem(tabFolder, SWT.NONE);
+    helpTabItem.setText("Help");
+    HelpOutputTab helpOutputTab = new HelpOutputTab(tabFolder, helpText);
+    helpTabItem.setControl(helpOutputTab.composite);
+  }
+  
+
+  private void fillCTabs(CTabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
+  {
+    CTabItem includeTabItem = new CTabItem(tabFolder, SWT.NONE);
+    includeTabItem.setText("Include");
+    includePatterns = new PatternInput(tabFolder, initIncludePatterns);        
+    includeTabItem.setControl(includePatterns.patternInputComp);
+    
+    CTabItem excludeTabItem = new CTabItem(tabFolder, SWT.NONE);
+    excludeTabItem.setText("Exclude");
+    excludePatterns = new PatternInput(tabFolder, initExcludePatterns);
+    excludeTabItem.setControl(excludePatterns.patternInputComp);
+
+    CTabItem helpTabItem = new CTabItem(tabFolder, SWT.NONE);
+    helpTabItem.setText("Help");
+    HelpOutputTab helpOutputTab = new HelpOutputTab(tabFolder, helpText);
+    helpTabItem.setControl(helpOutputTab.composite);
+  }
+  
+  private class HelpOutputTab
+  {
+    final StyledText textOutput;
+    final Composite composite;
+
+    private HelpOutputTab(Composite parent, String helpStr)
+    {
+      MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
+          "[grow]", "[grow]");
+
+      composite = new Composite(parent, SWT.NONE);
+      composite.setLayout(windowLayout);
+      
+      textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
+          | SWT.BORDER | SWT.WRAP);
+      textOutput.setEditable(false);
+      textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
+      textOutput.setBackground(Display.getCurrent().getSystemColor(
+          SWT.COLOR_WHITE));
+      
+      textOutput.setText(helpStr);
+    }
   }
 
   private class PatternInput
   {
     private final NewPattern newPattern;
     private final PatternList patternList;
+    private final Composite patternInputComp;
 
-    public PatternInput(Composite parent, String patternText, String helpText,
-        String initPatterns)
+    public PatternInput(Composite parent, String initPatterns)
     {
-      Group patternInputGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
-      MigLayout connGroupLayout = new MigLayout("fill", "[grow]", "[25][grow]");
-      patternInputGroup.setLayout(connGroupLayout);
-      patternInputGroup.setText(patternText);
-      patternInputGroup.setLayoutData("grow,wrap,spanx");
+      patternInputComp = new Composite(parent, SWT.NONE);
+      MigLayout inputLayout = new MigLayout("fill", "[grow]", "[25][grow]");
+      patternInputComp.setLayout(inputLayout);
+      patternInputComp.setLayoutData("grow,wrap,spanx");
 
-      newPattern = new NewPattern(patternInputGroup, helpText);
-      patternList = new PatternList(patternInputGroup, initPatterns);
+      newPattern = new NewPattern(patternInputComp);
+      patternList = new PatternList(patternInputComp, initPatterns);
     }
 
     private class NewPattern
     {
       private final Text patternInput;
 
-      private NewPattern(Composite parent, String helpText)
+      private NewPattern(Composite parent)
       {
         Group newPatternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         newPatternGroup.setLayoutData("grow,wrap");
@@ -105,7 +174,6 @@ public class PatternInputWindow
         addButton.setText("Add");
         addButton.setAlignment(SWT.CENTER);
         addButton.setLayoutData("grow");
-        addButton.setToolTipText("Help: " + helpText);
 
         Button removeButton = new Button(newPatternGroup, SWT.PUSH);
         removeButton.setText("Remove");
@@ -172,25 +240,19 @@ public class PatternInputWindow
 
       private void parsePatternSet(String initPattern)
       {
-        if (initPattern.indexOf("|") > -1)
+        String[] initPatterns = initPattern.split("\\|");
+        for (String pattern : initPatterns)
         {
-          String[] initPatterns = initPattern.split("\\|");
-          for (String pattern : initPatterns)
-          {
-            parsePattern(pattern);
-          }
-        }
-        else
-        {
-          parsePattern(initPattern);
+          parsePattern(pattern);
         }
       }
 
       private void parsePattern(String pattern)
       {
-        if ((pattern != null) && (pattern.length() > 0))
+        if ((pattern != null) && 
+            (pattern.length() > 0) &&
+            (!pattern.equals(TraceFilterThread.MATCH_ALL)))
         {
-          pattern = pattern.replace(".*", "*").replace("\\.", ".");
           addItem(pattern);
         }
       }
@@ -204,8 +266,7 @@ public class PatternInputWindow
 
       private void addItem(String newItem)
       {
-        if (!newItem.equals("")
-            && !newItem.equals(TraceFilterThread.MATCH_NONE.pattern()))
+        if (!newItem.equals(TraceFilterThread.MATCH_NONE))
         {
           boolean addItem = true;
           for (String item : patternSet.getItems())
@@ -263,7 +324,7 @@ public class PatternInputWindow
       String newPatternStr = newPattern.patternInput.getText();
       if (newPatternStr.length() > 0)
       {
-        pattern.append(newPatternStr.replace(".", "\\.").replace("*", ".*"));
+        pattern.append(newPatternStr);
         pattern.append("|");
         gotPattern = true;
       }
@@ -273,7 +334,7 @@ public class PatternInputWindow
       {
         for (String item : items)
         {
-          pattern.append(item.replace(".", "\\.").replace("*", ".*"));
+          pattern.append(item);
           pattern.append("|");
         }
         gotPattern = true;
@@ -311,7 +372,12 @@ public class PatternInputWindow
                   @Override
                   public void widgetSelected(SelectionEvent arg0)
                   {
-                    callback.setIncludePattern(includePatterns.getPattern());
+                    String includePattern = includePatterns.getPattern();
+                    if (includePattern.length() == 0)
+                    {
+                      includePattern = TraceFilterThread.MATCH_ALL;
+                    }
+                    callback.setIncludePattern(includePattern);
                     if (excludePatterns != null)
                     {
                       callback.setExcludePattern(excludePatterns.getPattern());

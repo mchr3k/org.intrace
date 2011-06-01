@@ -205,7 +205,7 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.CLASS_REGEX, ".*BranchPatterns.*");
+    testSetting(AgentConfigConstants.CLASS_REGEX, "BranchPatterns");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
@@ -320,7 +320,7 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.CLASS_REGEX, ".*ArgumentTypes.*");
+    testSetting(AgentConfigConstants.CLASS_REGEX, "ArgumentTypes");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");

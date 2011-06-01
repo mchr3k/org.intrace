@@ -36,6 +36,7 @@ public class TraceExample
       Thread.sleep(Long.parseLong(arg));
       InnerTestClass.foo();
       workMethod("foobar");
+      new InnerTestClass().boolMethod(true);
     }
   }
 
@@ -88,10 +89,14 @@ public class TraceExample
       System.setProperty("a", "foobar");
     }
     
+    private void boolMethod(boolean xiArg)
+    {
+      System.out.println(Boolean.toString(xiArg));
+    }
+    
     private static void foo()
     {
       System.setProperty("a", "bar");
     }
   }
-
 }

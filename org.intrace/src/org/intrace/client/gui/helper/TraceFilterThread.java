@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
@@ -37,9 +36,9 @@ public class TraceFilterThread implements Runnable
   {
     boolean setProgress(int percent);
 
-    Pattern getIncludePattern();
+    String getIncludePattern();
 
-    Pattern getExcludePattern();
+    String getExcludePattern();
   }
 
   /**
@@ -55,13 +54,12 @@ public class TraceFilterThread implements Runnable
   /**
    * Pattern which matches anything
    */
-  public static final Pattern MATCH_ALL = Pattern.compile(".*", Pattern.DOTALL);
+  public static final String MATCH_ALL = "*";
 
   /**
    * Pattern which matches nothing
    */
-  public static final Pattern MATCH_NONE = Pattern
-                                                  .compile("^$", Pattern.DOTALL);
+  public static final String MATCH_NONE = "";
 
   /**
    * Queue of filters to apply - this should usually only contain zero or one
@@ -187,8 +185,8 @@ public class TraceFilterThread implements Runnable
     boolean doClearTrace = false;
     boolean lowMemorySignalled = false;
     TraceFilterProgressHandler patternProgress = null;
-    Pattern activeIncludePattern = MATCH_ALL;
-    Pattern activeExcludePattern = MATCH_NONE;
+    String[] activeIncludePattern = MATCH_ALL.split("\\|");
+    String[] activeExcludePattern = MATCH_NONE.split("\\|");
     try
     {
       while (true)
@@ -197,8 +195,8 @@ public class TraceFilterThread implements Runnable
         {
           if (patternProgress != null)
           {
-            activeIncludePattern = patternProgress.getIncludePattern();
-            activeExcludePattern = patternProgress.getExcludePattern();
+            activeIncludePattern = patternProgress.getIncludePattern().split("\\|");
+            activeExcludePattern = patternProgress.getExcludePattern().split("\\|");
             applyPattern(patternProgress);
             patternProgress = null;
           }
@@ -242,9 +240,9 @@ public class TraceFilterThread implements Runnable
             traceLines.add(newTraceLine);
             totalLines.incrementAndGet();
             callback.setStatus(displayedLines.get(), totalLines.get());
-            if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX)
-                || (!activeExcludePattern.matcher(newTraceLine).matches() && activeIncludePattern
-                    .matcher(newTraceLine).matches()))
+            if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
+                (!matches(activeExcludePattern, newTraceLine) &&
+                  matches(activeIncludePattern, newTraceLine)))
             {
               displayedLines.incrementAndGet();
               callback.appendText(newTraceLine);
@@ -279,11 +277,28 @@ public class TraceFilterThread implements Runnable
     }
     System.out.println("Filter thread quitting");
   }
+  
+  private boolean matches(String[] strs, String target)
+  {
+    for (String str : strs)
+    {
+      if (str.equals(MATCH_NONE))
+      {
+        continue;
+      }
+      else if (str.equals(MATCH_ALL) || 
+               target.contains(str))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private void applyPattern(TraceFilterProgressHandler progressCallback)
   {
-    Pattern includePattern = progressCallback.getIncludePattern();
-    Pattern excludePattern = progressCallback.getExcludePattern();
+    String[] includePattern = progressCallback.getIncludePattern().split("\\|");
+    String[] excludePattern = progressCallback.getExcludePattern().split("\\|");
     int numLines = traceLines.size();
     int handledLines = 0;
     double lastPercentage = 0;
@@ -296,11 +311,9 @@ public class TraceFilterThread implements Runnable
     {
       for (String traceLine : traceLines)
       {
-        if (traceLine.startsWith(SYSTEM_TRACE_PREFIX)
-            || (!excludePattern.matcher(traceLine).matches() && includePattern
-                                                                              .matcher(
-                                                                                       traceLine)
-                                                                              .matches()))
+        if (traceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
+            (!matches(excludePattern, traceLine) &&
+              matches(includePattern, traceLine)))
         {
           displayedLines.incrementAndGet();
           traceText.append(traceLine);

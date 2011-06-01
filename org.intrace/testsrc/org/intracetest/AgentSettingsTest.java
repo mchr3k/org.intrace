@@ -13,20 +13,26 @@ public class AgentSettingsTest extends TestCase
   {
     AgentSettings as = new AgentSettings(
                                          AgentConfigConstants.CLASS_REGEX
-                                             + ".*"
+                                             + "foo|bar"
                                              + AgentConfigConstants.INSTRU_ENABLED
                                              + "true"
                                              + AgentConfigConstants.SAVE_TRACED_CLASSFILES
                                              + "true"
                                              + AgentConfigConstants.VERBOSE_MODE
                                              + "true");
-    assertEquals(as.getClassRegex().pattern(), ".*");
+    assertNotNull(as.getClassRegex());
+    assertEquals(as.getClassRegex().length, 2);
+    assertEquals(as.getClassRegex()[0], "foo");
+    assertEquals(as.getClassRegex()[1], "bar");
     assertEquals(as.isInstrumentationEnabled(), true);
     assertEquals(as.saveTracedClassfiles(), true);
     assertEquals(as.isVerboseMode(), true);
 
     as = new AgentSettings(as);
-    assertEquals(as.getClassRegex().pattern(), ".*");
+    assertNotNull(as.getClassRegex());
+    assertEquals(as.getClassRegex().length, 2);
+    assertEquals(as.getClassRegex()[0], "foo");
+    assertEquals(as.getClassRegex()[1], "bar");
     assertEquals(as.isInstrumentationEnabled(), true);
     assertEquals(as.saveTracedClassfiles(), true);
     assertEquals(as.isVerboseMode(), true);
@@ -35,7 +41,7 @@ public class AgentSettingsTest extends TestCase
     assertNotNull(toString);
 
     Map<String, String> settingsMap = as.getSettingsMap();
-    assertEquals(settingsMap.get(AgentConfigConstants.CLASS_REGEX), ".*");
+    assertEquals(settingsMap.get(AgentConfigConstants.CLASS_REGEX), "foo|bar");
     assertEquals(settingsMap.get(AgentConfigConstants.INSTRU_ENABLED), "true");
     assertEquals(settingsMap.get(AgentConfigConstants.SAVE_TRACED_CLASSFILES),
                  "true");
