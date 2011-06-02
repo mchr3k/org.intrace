@@ -29,9 +29,7 @@ public class IncludeExcludeWindow
   
   private final PatternInputCallback callback;
 
-  private PatternInput includePatterns;
-
-  private PatternInput excludePatterns;
+  private PatternInput patterns;
 
   private final SaveCancelButtons saveCancelButtons;
 
@@ -79,34 +77,23 @@ public class IncludeExcludeWindow
 
   private void fillTabs(TabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
   {
-    TabItem includeTabItem = new TabItem(tabFolder, SWT.NONE);
-    includeTabItem.setText("Include");
-    includePatterns = new PatternInput(tabFolder, initIncludePatterns);        
-    includeTabItem.setControl(includePatterns.patternInputComp);
+    TabItem patternsTabItem = new TabItem(tabFolder, SWT.NONE);
+    patternsTabItem.setText("Include/Exclude");
+    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);        
+    patternsTabItem.setControl(patterns.patternInputComp);
 
-    TabItem excludeTabItem = new TabItem(tabFolder, SWT.NONE);
-    excludeTabItem.setText("Exclude");
-    excludePatterns = new PatternInput(tabFolder, initExcludePatterns);
-    excludeTabItem.setControl(excludePatterns.patternInputComp);
-    
     TabItem helpTabItem = new TabItem(tabFolder, SWT.NONE);
     helpTabItem.setText("Help");
     HelpOutputTab helpOutputTab = new HelpOutputTab(tabFolder, helpText);
     helpTabItem.setControl(helpOutputTab.composite);
-  }
-  
+  }  
 
   private void fillCTabs(CTabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
   {
-    CTabItem includeTabItem = new CTabItem(tabFolder, SWT.NONE);
-    includeTabItem.setText("Include");
-    includePatterns = new PatternInput(tabFolder, initIncludePatterns);        
-    includeTabItem.setControl(includePatterns.patternInputComp);
-    
-    CTabItem excludeTabItem = new CTabItem(tabFolder, SWT.NONE);
-    excludeTabItem.setText("Exclude");
-    excludePatterns = new PatternInput(tabFolder, initExcludePatterns);
-    excludeTabItem.setControl(excludePatterns.patternInputComp);
+    CTabItem patternsTabItem = new CTabItem(tabFolder, SWT.NONE);
+    patternsTabItem.setText("Include/Exclude");
+    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);        
+    patternsTabItem.setControl(patterns.patternInputComp);
 
     CTabItem helpTabItem = new CTabItem(tabFolder, SWT.NONE);
     helpTabItem.setText("Help");
@@ -144,7 +131,9 @@ public class IncludeExcludeWindow
     private final PatternList patternList;
     private final Composite patternInputComp;
 
-    public PatternInput(Composite parent, String initPatterns)
+    public PatternInput(Composite parent, 
+                        String initIncludePatterns, 
+                        String initExcludePatterns)
     {
       patternInputComp = new Composite(parent, SWT.NONE);
       MigLayout inputLayout = new MigLayout("fill", "[grow]", "[25][grow]");
@@ -152,23 +141,35 @@ public class IncludeExcludeWindow
       patternInputComp.setLayoutData("grow,wrap,spanx");
 
       newPattern = new NewPattern(patternInputComp);
-      patternList = new PatternList(patternInputComp, initPatterns);
+      patternList = new PatternList(patternInputComp, 
+                                    initIncludePatterns,
+                                    initExcludePatterns);
     }
 
     private class NewPattern
     {
       private final Text patternInput;
+      private final Button includeButton;
+      private final Button excludeButton;
 
       private NewPattern(Composite parent)
       {
         Group newPatternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         newPatternGroup.setLayoutData("grow,wrap");
-        MigLayout newPatternLayout = new MigLayout("fill", "[grow][60]");
+        MigLayout newPatternLayout = new MigLayout("fill", "[grow][grow][60][60]", "[][]");
         newPatternGroup.setLayout(newPatternLayout);
         newPatternGroup.setText("New Pattern");
 
+        includeButton = new Button(newPatternGroup, SWT.RADIO);
+        includeButton.setText("Include");
+        includeButton.setSelection(true);
+        
+        excludeButton = new Button(newPatternGroup, SWT.RADIO);
+        excludeButton.setText("Exclude");
+        excludeButton.setLayoutData("wrap");
+        
         patternInput = new Text(newPatternGroup, SWT.BORDER);
-        patternInput.setLayoutData("grow");
+        patternInput.setLayoutData("grow,spanx 2");
 
         final Button addButton = new Button(newPatternGroup, SWT.PUSH);
         addButton.setText("Add");
@@ -213,9 +214,17 @@ public class IncludeExcludeWindow
 
     private class PatternList
     {
+      private static final String INCLUDE_TITLE = "Include:";      
+      private static final String EXCLUDE_TITLE = "Exclude:";
+      
+      private int includeIndex = -1;
+      private int excludeIndex = -1;
+      
       private final List patternSet;
 
-      private PatternList(Composite parent, String initPatterns)
+      private PatternList(Composite parent, 
+                          String initIncludePatterns,
+                          String initExcludePatterns)
       {
         Group patternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         patternGroup.setLayoutData("grow");
@@ -235,51 +244,89 @@ public class IncludeExcludeWindow
           }
         });
 
-        parsePatternSet(initPatterns);
+        parsePatternSet(true, initIncludePatterns);
+        parsePatternSet(false, initExcludePatterns);
       }
 
-      private void parsePatternSet(String initPattern)
+      private void parsePatternSet(boolean xiInclude, String initPattern)
       {
         String[] initPatterns = initPattern.split("\\|");
         for (String pattern : initPatterns)
         {
-          parsePattern(pattern);
+          parsePattern(xiInclude, pattern);
         }
       }
 
-      private void parsePattern(String pattern)
+      private void parsePattern(boolean xiInclude, String pattern)
       {
         if ((pattern != null) && 
             (pattern.length() > 0) &&
             (!pattern.equals(TraceFilterThread.MATCH_ALL)))
         {
-          addItem(pattern);
+          addItem(xiInclude, pattern);
         }
       }
 
       private void addItem()
       {
         String newItem = newPattern.patternInput.getText();
-        addItem(newItem);
+        boolean includeItem = newPattern.includeButton.getSelection();
+        addItem(includeItem, newItem);
         newPattern.patternInput.setText("");
       }
 
-      private void addItem(String newItem)
+      private void addItem(boolean xiInclude, String newItem)
       {
         if (!newItem.equals(TraceFilterThread.MATCH_NONE))
         {
           boolean addItem = true;
-          for (String item : patternSet.getItems())
+          
+          // Add headers
+          if (xiInclude && (includeIndex == -1))
           {
+            patternSet.add(INCLUDE_TITLE, 0);
+            includeIndex = 0;
+          }
+          else if (!xiInclude && (excludeIndex == -1))
+          {
+            patternSet.add("");
+            patternSet.add(EXCLUDE_TITLE);
+            excludeIndex = patternSet.getItemCount() - 1;
+          }
+          
+          String[] currentItems = patternSet.getItems();
+          int startItem, endItem;
+          if (xiInclude)
+          {
+            startItem = 1;
+            if (excludeIndex == -1)
+            {
+              endItem = currentItems.length;
+            }
+            else
+            {
+              endItem = excludeIndex;
+            }
+          }
+          else
+          {
+            startItem = excludeIndex + 1;
+            endItem = currentItems.length;
+          }
+          
+          for (int ii = startItem; ii < endItem; ii++)
+          {
+            String item = currentItems[ii];
             if (item.equals(newItem))
             {
               addItem = false;
               break;
             }
           }
+          
           if (addItem)
           {
-            patternSet.add(newItem);
+            patternSet.add("   " + newItem, endItem);
           }
         }
       }
@@ -315,7 +362,7 @@ public class IncludeExcludeWindow
       }
     }
 
-    private String getPattern()
+    private String getIncludePattern()
     {
       StringBuffer pattern = new StringBuffer("");
       String patternStr = pattern.toString();
@@ -348,6 +395,12 @@ public class IncludeExcludeWindow
 
       return patternStr;
     }
+
+    public String getExcludePattern()
+    {
+      // TODO Auto-generated method stub
+      return null;
+    }
   }
 
   private class SaveCancelButtons
@@ -372,16 +425,15 @@ public class IncludeExcludeWindow
                   @Override
                   public void widgetSelected(SelectionEvent arg0)
                   {
-                    String includePattern = includePatterns.getPattern();
+                    String includePattern = patterns.getIncludePattern();
                     if (includePattern.length() == 0)
                     {
                       includePattern = TraceFilterThread.MATCH_ALL;
                     }
                     callback.setIncludePattern(includePattern);
-                    if (excludePatterns != null)
-                    {
-                      callback.setExcludePattern(excludePatterns.getPattern());
-                    }
+                    
+                    callback.setExcludePattern(patterns.getExcludePattern());
+                    
                     sWindow.close();
                   }
                 });
