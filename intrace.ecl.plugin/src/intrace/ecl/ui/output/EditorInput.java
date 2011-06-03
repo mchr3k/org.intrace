@@ -45,7 +45,7 @@ public class EditorInput implements IEditorInput
   @Override
   public String getName()
   {
-    return "InTraceInput";
+    return "InTrace";
   }
 
   @Override
@@ -57,6 +57,6 @@ public class EditorInput implements IEditorInput
   @Override
   public String getToolTipText()
   {
-    return "InTraceInput";
+    return "InTrace";
   }
 }

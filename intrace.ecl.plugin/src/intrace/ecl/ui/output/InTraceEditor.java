@@ -49,6 +49,7 @@ public class InTraceEditor extends EditorPart
             public void run()
             {
               setPartName("InTrace: " + state.str);
+              setContentDescription("InTrace: " + state.str);
             }
           });
         }

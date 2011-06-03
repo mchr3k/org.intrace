@@ -131,6 +131,9 @@ public class IncludeExcludeWindow
     private final PatternList patternList;
     private final Composite patternInputComp;
 
+    private int includeIndex = -1;
+    private int excludeIndex = -1;    
+    
     public PatternInput(Composite parent, 
                         String initIncludePatterns, 
                         String initExcludePatterns)
@@ -217,9 +220,6 @@ public class IncludeExcludeWindow
       private static final String INCLUDE_TITLE = "Include:";      
       private static final String EXCLUDE_TITLE = "Exclude:";
       
-      private int includeIndex = -1;
-      private int excludeIndex = -1;
-      
       private final List patternSet;
 
       private PatternList(Composite parent, 
@@ -305,7 +305,7 @@ public class IncludeExcludeWindow
             }
             else
             {
-              endItem = excludeIndex;
+              endItem = excludeIndex - 1;
             }
           }
           else
@@ -316,7 +316,7 @@ public class IncludeExcludeWindow
           
           for (int ii = startItem; ii < endItem; ii++)
           {
-            String item = currentItems[ii];
+            String item = currentItems[ii].trim();
             if (item.equals(newItem))
             {
               addItem = false;
@@ -327,6 +327,11 @@ public class IncludeExcludeWindow
           if (addItem)
           {
             patternSet.add("   " + newItem, endItem);
+            
+            if ((excludeIndex != -1) && (endItem < excludeIndex))
+            {
+              excludeIndex++;
+            }
           }
         }
       }
@@ -337,7 +342,18 @@ public class IncludeExcludeWindow
 
         if (selectedItems.length == 1)
         {
-          patternSet.remove(selectedItems[0]);
+          int selectedItem = selectedItems[0];
+          if ((selectedItem == includeIndex) ||
+              (selectedItem == excludeIndex) ||
+              (selectedItem == (excludeIndex - 1)))
+          {
+            // Ignore
+          }
+          else
+          {
+            patternSet.remove(selectedItem);
+            removeIndex(selectedItem);
+          }
         }
         else if (newPattern.patternInput.getText().length() > 0)
         {
@@ -351,13 +367,56 @@ public class IncludeExcludeWindow
 
         if (selectedItems.length == 1)
         {
-          newPattern.patternInput.setText(patternSet.getItem(selectedItems[0]));
-          patternSet.remove(selectedItems[0]);
-          newPattern.patternInput.setFocus();
-          newPattern.patternInput
-                                 .setSelection(newPattern.patternInput
-                                                                      .getText()
-                                                                      .length());
+          int selectedItem = selectedItems[0];
+          if ((selectedItem == includeIndex) ||
+              (selectedItem == excludeIndex) ||
+              (selectedItem == (excludeIndex - 1)))
+          {
+            // Ignore
+          }
+          else
+          {
+            newPattern.patternInput.setText(patternSet.getItem(selectedItem).trim());
+            patternSet.remove(selectedItem);
+            removeIndex(selectedItem);
+            newPattern.patternInput.setFocus();
+            newPattern.patternInput
+                                   .setSelection(newPattern.patternInput
+                                                                        .getText()
+                                                                        .length());
+          }
+        }
+      }
+      
+      private void removeIndex(int index)
+      {
+        int count = patternSet.getItemCount();
+        
+        if ((excludeIndex != -1) && (index < excludeIndex))
+        {
+          // Removed an item above the exclude header
+          excludeIndex--;
+        }
+        
+        if ((includeIndex != -1) && 
+            ((excludeIndex == 2) || (count == 1)))
+        {
+          // We have the include: header and no include
+          // items. We detect this either by the position
+          // of the exclude header or the overall count
+          // of items
+          patternSet.remove(includeIndex);
+          includeIndex = -1;          
+        }
+        
+        if ((excludeIndex != -1) && 
+            (excludeIndex == (count - 1)))
+        {
+          // We have the exclude: header and the index
+          // of the last entry is the same as the index
+          // of the exclude header
+          patternSet.remove(excludeIndex);
+          excludeIndex = -1;
         }
       }
     }
@@ -366,40 +425,76 @@ public class IncludeExcludeWindow
     {
       StringBuffer pattern = new StringBuffer("");
       String patternStr = pattern.toString();
-      boolean gotPattern = false;
 
-      String newPatternStr = newPattern.patternInput.getText();
-      if (newPatternStr.length() > 0)
+      if (includeIndex != -1)
       {
-        pattern.append(newPatternStr);
-        pattern.append("|");
-        gotPattern = true;
-      }
-
-      String[] items = patternList.patternSet.getItems();
-      if (items.length > 0)
-      {
-        for (String item : items)
+        String[] items = patternList.patternSet.getItems();
+        int endIndex = patternList.patternSet.getItemCount();
+        if (excludeIndex != -1)
         {
+          endIndex = excludeIndex - 1;
+        }
+        for (int ii = 1; ii < endIndex; ii++)
+        {
+          String item = items[ii].trim();
           pattern.append(item);
           pattern.append("|");
         }
-        gotPattern = true;
+      }
+      
+      if (newPattern.includeButton.getSelection())
+      {
+        String newPatternStr = newPattern.patternInput.getText();
+        if (newPatternStr.length() > 0)
+        {
+          pattern.append(newPatternStr);
+          pattern.append("|");
+        }
       }
 
-      if (gotPattern)
+      patternStr = pattern.toString();
+      if (patternStr.length() > 0)
       {
-        patternStr = pattern.toString();
         patternStr = patternStr.substring(0, patternStr.length() - 1);
       }
 
       return patternStr;
     }
 
-    public String getExcludePattern()
+    private String getExcludePattern()
     {
-      // TODO Auto-generated method stub
-      return null;
+      StringBuffer pattern = new StringBuffer("");
+      String patternStr = pattern.toString();
+
+      if (excludeIndex != -1)
+      {
+        String[] items = patternList.patternSet.getItems();
+        int endIndex = patternList.patternSet.getItemCount();
+        for (int ii = (excludeIndex + 1); ii < endIndex; ii++)
+        {
+          String item = items[ii].trim();
+          pattern.append(item);
+          pattern.append("|");
+        }
+      }
+      
+      if (newPattern.excludeButton.getSelection())
+      {
+        String newPatternStr = newPattern.patternInput.getText();
+        if (newPatternStr.length() > 0)
+        {
+          pattern.append(newPatternStr);
+          pattern.append("|");
+        }
+      }
+
+      patternStr = pattern.toString();
+      if (patternStr.length() > 0)
+      {
+        patternStr = patternStr.substring(0, patternStr.length() - 1);
+      }
+
+      return patternStr;
     }
   }
 

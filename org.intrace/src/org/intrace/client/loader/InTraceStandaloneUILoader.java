@@ -27,7 +27,8 @@ public class InTraceStandaloneUILoader
       {
         if (ex.getCause() instanceof UnsatisfiedLinkError)
         {
-          System.err.println("Launch failed: (UnsatisfiedLinkError)");
+          UnsatisfiedLinkError linkError = (UnsatisfiedLinkError)ex.getCause();
+          System.err.println("Launch failed: (UnsatisfiedLinkError: " + linkError.getMessage() + ")");
           String arch = getArch();
           if ("32".equals(arch))
           {
