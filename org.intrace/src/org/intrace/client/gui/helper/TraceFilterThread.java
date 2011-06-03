@@ -36,9 +36,9 @@ public class TraceFilterThread implements Runnable
   {
     boolean setProgress(int percent);
 
-    String getIncludePattern();
+    List<String> getIncludePattern();
 
-    String getExcludePattern();
+    List<String> getExcludePattern();
   }
 
   /**
@@ -52,14 +52,23 @@ public class TraceFilterThread implements Runnable
   private static final String LOW_MEMORY = "Warning: Low memory - no further trace will be collected. StdOut or File output will continue if enabled.";
 
   /**
+   * Match all val
+   */
+  public static final String MATCH_ALL_VAL = "*";
+  
+  /**
    * Pattern which matches anything
    */
-  public static final String MATCH_ALL = "*";
+  public static final List<String> MATCH_ALL = new ArrayList<String>(1);
+  static
+  {
+    MATCH_ALL.add(MATCH_ALL_VAL);
+  }
 
   /**
    * Pattern which matches nothing
    */
-  public static final String MATCH_NONE = "";
+  public static final List<String> MATCH_NONE = new ArrayList<String>(0);
 
   /**
    * Queue of filters to apply - this should usually only contain zero or one
@@ -107,6 +116,9 @@ public class TraceFilterThread implements Runnable
    */
   private boolean clearTrace = false;
 
+  /**
+   * UIMode being used
+   */
   private final UIMode mode;
 
   /**
@@ -185,8 +197,8 @@ public class TraceFilterThread implements Runnable
     boolean doClearTrace = false;
     boolean lowMemorySignalled = false;
     TraceFilterProgressHandler patternProgress = null;
-    String[] activeIncludePattern = MATCH_ALL.split("\\|");
-    String[] activeExcludePattern = MATCH_NONE.split("\\|");
+    List<String> activeIncludePattern = MATCH_ALL;
+    List<String> activeExcludePattern = MATCH_NONE;
     try
     {
       while (true)
@@ -195,8 +207,8 @@ public class TraceFilterThread implements Runnable
         {
           if (patternProgress != null)
           {
-            activeIncludePattern = patternProgress.getIncludePattern().split("\\|");
-            activeExcludePattern = patternProgress.getExcludePattern().split("\\|");
+            activeIncludePattern = patternProgress.getIncludePattern();
+            activeExcludePattern = patternProgress.getExcludePattern();
             applyPattern(patternProgress);
             patternProgress = null;
           }
@@ -278,16 +290,12 @@ public class TraceFilterThread implements Runnable
     System.out.println("Filter thread quitting");
   }
   
-  private boolean matches(String[] strs, String target)
+  private boolean matches(List<String> strs, String target)
   {
     for (String str : strs)
     {
-      if (str.equals(MATCH_NONE))
-      {
-        continue;
-      }
-      else if (str.equals(MATCH_ALL) || 
-               target.contains(str))
+      if (str.equals(MATCH_ALL_VAL) || 
+          target.contains(str))
       {
         return true;
       }
@@ -297,8 +305,8 @@ public class TraceFilterThread implements Runnable
 
   private void applyPattern(TraceFilterProgressHandler progressCallback)
   {
-    String[] includePattern = progressCallback.getIncludePattern().split("\\|");
-    String[] excludePattern = progressCallback.getExcludePattern().split("\\|");
+    List<String> includePattern = progressCallback.getIncludePattern();
+    List<String> excludePattern = progressCallback.getExcludePattern();
     int numLines = traceLines.size();
     int handledLines = 0;
     double lastPercentage = 0;

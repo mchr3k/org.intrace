@@ -1,5 +1,7 @@
 package org.intrace.client.gui.helper;
 
+import java.util.ArrayList;
+
 import net.miginfocom.swt.MigLayout;
 
 import org.eclipse.swt.SWT;
@@ -12,8 +14,10 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
@@ -35,8 +39,9 @@ public class IncludeExcludeWindow
 
   public IncludeExcludeWindow(String windowTitle, String helpText,
       UIMode mode,
-      PatternInputCallback callback, String initIncludePatterns,
-      String initExcludePatterns)
+      PatternInputCallback callback, 
+      java.util.List<String> initIncludePatterns,
+      java.util.List<String> initExcludePatterns)
   {
     this.callback = callback;
     MigLayout windowLayout = new MigLayout("fill", "[grow][100][100][grow]",
@@ -52,7 +57,17 @@ public class IncludeExcludeWindow
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(400, 400));
     sWindow.setMinimumSize(new Point(400, 400));
-    
+    sWindow.addListener(SWT.Traverse, new Listener() {
+      public void handleEvent(Event event) {
+        switch (event.detail) {
+        case SWT.TRAVERSE_ESCAPE:
+          sWindow.close();
+          event.detail = SWT.TRAVERSE_NONE;
+          event.doit = false;
+          break;
+        }
+      }
+    });
 
     if (mode == UIMode.STANDALONE)
     {
@@ -72,10 +87,14 @@ public class IncludeExcludeWindow
     }
 
     saveCancelButtons = new SaveCancelButtons(sWindow);
-
+    
+    // Focus on text input
+    patterns.newPattern.patternInput.setFocus();
   }  
 
-  private void fillTabs(TabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
+  private void fillTabs(TabFolder tabFolder, 
+      java.util.List<String> initIncludePatterns, 
+      java.util.List<String> initExcludePatterns, String helpText)
   {
     TabItem patternsTabItem = new TabItem(tabFolder, SWT.NONE);
     patternsTabItem.setText("Include/Exclude");
@@ -88,7 +107,9 @@ public class IncludeExcludeWindow
     helpTabItem.setControl(helpOutputTab.composite);
   }  
 
-  private void fillCTabs(CTabFolder tabFolder, String initIncludePatterns, String initExcludePatterns, String helpText)
+  private void fillCTabs(CTabFolder tabFolder, 
+      java.util.List<String> initIncludePatterns, 
+      java.util.List<String> initExcludePatterns, String helpText)
   {
     CTabItem patternsTabItem = new CTabItem(tabFolder, SWT.NONE);
     patternsTabItem.setText("Include/Exclude");
@@ -135,8 +156,8 @@ public class IncludeExcludeWindow
     private int excludeIndex = -1;    
     
     public PatternInput(Composite parent, 
-                        String initIncludePatterns, 
-                        String initExcludePatterns)
+        java.util.List<String> initIncludePatterns, 
+        java.util.List<String> initExcludePatterns)
     {
       patternInputComp = new Composite(parent, SWT.NONE);
       MigLayout inputLayout = new MigLayout("fill", "[grow]", "[25][grow]");
@@ -223,8 +244,8 @@ public class IncludeExcludeWindow
       private final List patternSet;
 
       private PatternList(Composite parent, 
-                          String initIncludePatterns,
-                          String initExcludePatterns)
+          java.util.List<String> initIncludePatterns,
+          java.util.List<String> initExcludePatterns)
       {
         Group patternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         patternGroup.setLayoutData("grow");
@@ -248,10 +269,10 @@ public class IncludeExcludeWindow
         parsePatternSet(false, initExcludePatterns);
       }
 
-      private void parsePatternSet(boolean xiInclude, String initPattern)
+      private void parsePatternSet(boolean xiInclude, 
+                    java.util.List<String> initPattern)
       {
-        String[] initPatterns = initPattern.split("\\|");
-        for (String pattern : initPatterns)
+        for (String pattern : initPattern)
         {
           parsePattern(xiInclude, pattern);
         }
@@ -277,63 +298,60 @@ public class IncludeExcludeWindow
 
       private void addItem(boolean xiInclude, String newItem)
       {
-        if (!newItem.equals(TraceFilterThread.MATCH_NONE))
+        boolean addItem = true;
+        
+        // Add headers
+        if (xiInclude && (includeIndex == -1))
         {
-          boolean addItem = true;
-          
-          // Add headers
-          if (xiInclude && (includeIndex == -1))
+          patternSet.add(INCLUDE_TITLE, 0);
+          includeIndex = 0;
+        }
+        else if (!xiInclude && (excludeIndex == -1))
+        {
+          patternSet.add("");
+          patternSet.add(EXCLUDE_TITLE);
+          excludeIndex = patternSet.getItemCount() - 1;
+        }
+        
+        String[] currentItems = patternSet.getItems();
+        int startItem, endItem;
+        if (xiInclude)
+        {
+          startItem = 1;
+          if (excludeIndex == -1)
           {
-            patternSet.add(INCLUDE_TITLE, 0);
-            includeIndex = 0;
-          }
-          else if (!xiInclude && (excludeIndex == -1))
-          {
-            patternSet.add("");
-            patternSet.add(EXCLUDE_TITLE);
-            excludeIndex = patternSet.getItemCount() - 1;
-          }
-          
-          String[] currentItems = patternSet.getItems();
-          int startItem, endItem;
-          if (xiInclude)
-          {
-            startItem = 1;
-            if (excludeIndex == -1)
-            {
-              endItem = currentItems.length;
-            }
-            else
-            {
-              endItem = excludeIndex - 1;
-            }
+            endItem = currentItems.length;
           }
           else
           {
-            startItem = excludeIndex + 1;
-            endItem = currentItems.length;
-          }
-          
-          for (int ii = startItem; ii < endItem; ii++)
-          {
-            String item = currentItems[ii].trim();
-            if (item.equals(newItem))
-            {
-              addItem = false;
-              break;
-            }
-          }
-          
-          if (addItem)
-          {
-            patternSet.add("   " + newItem, endItem);
-            
-            if ((excludeIndex != -1) && (endItem < excludeIndex))
-            {
-              excludeIndex++;
-            }
+            endItem = excludeIndex - 1;
           }
         }
+        else
+        {
+          startItem = excludeIndex + 1;
+          endItem = currentItems.length;
+        }
+        
+        for (int ii = startItem; ii < endItem; ii++)
+        {
+          String item = currentItems[ii].trim();
+          if (item.equals(newItem))
+          {
+            addItem = false;
+            break;
+          }
+        }
+        
+        if (addItem)
+        {
+          patternSet.add("   " + newItem, endItem);
+          
+          if ((excludeIndex != -1) && (endItem < excludeIndex))
+          {
+            excludeIndex++;
+          }
+          }
       }
 
       private void removeItem()
@@ -421,10 +439,9 @@ public class IncludeExcludeWindow
       }
     }
 
-    private String getIncludePattern()
+    private java.util.List<String> getIncludePattern()
     {
-      StringBuffer pattern = new StringBuffer("");
-      String patternStr = pattern.toString();
+      java.util.List<String> includes = new ArrayList<String>();
 
       if (includeIndex != -1)
       {
@@ -437,8 +454,7 @@ public class IncludeExcludeWindow
         for (int ii = 1; ii < endIndex; ii++)
         {
           String item = items[ii].trim();
-          pattern.append(item);
-          pattern.append("|");
+          includes.add(item);
         }
       }
       
@@ -447,24 +463,16 @@ public class IncludeExcludeWindow
         String newPatternStr = newPattern.patternInput.getText();
         if (newPatternStr.length() > 0)
         {
-          pattern.append(newPatternStr);
-          pattern.append("|");
+          includes.add(newPatternStr);
         }
       }
 
-      patternStr = pattern.toString();
-      if (patternStr.length() > 0)
-      {
-        patternStr = patternStr.substring(0, patternStr.length() - 1);
-      }
-
-      return patternStr;
+      return includes;
     }
 
-    private String getExcludePattern()
+    private java.util.List<String> getExcludePattern()
     {
-      StringBuffer pattern = new StringBuffer("");
-      String patternStr = pattern.toString();
+      java.util.List<String> excludes = new ArrayList<String>();
 
       if (excludeIndex != -1)
       {
@@ -473,8 +481,7 @@ public class IncludeExcludeWindow
         for (int ii = (excludeIndex + 1); ii < endIndex; ii++)
         {
           String item = items[ii].trim();
-          pattern.append(item);
-          pattern.append("|");
+          excludes.add(item);
         }
       }
       
@@ -483,18 +490,11 @@ public class IncludeExcludeWindow
         String newPatternStr = newPattern.patternInput.getText();
         if (newPatternStr.length() > 0)
         {
-          pattern.append(newPatternStr);
-          pattern.append("|");
+          excludes.add(newPatternStr);
         }
       }
 
-      patternStr = pattern.toString();
-      if (patternStr.length() > 0)
-      {
-        patternStr = patternStr.substring(0, patternStr.length() - 1);
-      }
-
-      return patternStr;
+      return excludes;
     }
   }
 
@@ -520,13 +520,7 @@ public class IncludeExcludeWindow
                   @Override
                   public void widgetSelected(SelectionEvent arg0)
                   {
-                    String includePattern = patterns.getIncludePattern();
-                    if (includePattern.length() == 0)
-                    {
-                      includePattern = TraceFilterThread.MATCH_ALL;
-                    }
-                    callback.setIncludePattern(includePattern);
-                    
+                    callback.setIncludePattern(patterns.getIncludePattern());                    
                     callback.setExcludePattern(patterns.getExcludePattern());
                     
                     sWindow.close();
@@ -546,8 +540,8 @@ public class IncludeExcludeWindow
 
   public static interface PatternInputCallback
   {
-    public void setIncludePattern(String newIncludePattern);
+    public void setIncludePattern(java.util.List<String> newIncludePattern);
 
-    public void setExcludePattern(String newExcludePattern);
+    public void setExcludePattern(java.util.List<String> newExcludePattern);
   }
 }

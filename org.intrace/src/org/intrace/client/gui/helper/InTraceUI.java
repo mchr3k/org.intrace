@@ -7,7 +7,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.miginfocom.swt.MigLayout;
@@ -15,6 +17,7 @@ import net.miginfocom.swt.MigLayout;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
@@ -437,9 +440,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       listClasses.setAlignment(SWT.CENTER);
       listClasses.setLayoutData("gapy 5px");
 
-      final String helpText = "Enter pattern in the form "
-          + "\"mypack.mysubpack.MyClass\" or using wildcards "
-          + "\"mypack.*.MyClass\" or \"*MyClass\" etc";
+      final String helpText = "Enter complete or partial class names.\n\n "
+          + "e.g.\n"
+          + "\"mypack.mysubpack.MyClass\"\n"
+          + "\"MyClass\"";
       classRegex
           .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
           {
@@ -450,18 +454,18 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                   "Classes to Instrument", helpText, mode,
                   new PatternInputCallback()
                   {
-                    private String includePattern = null;
-                    private String excludePattern = null;
+                    private List<String> includePattern = null;
+                    private List<String> excludePattern = null;
 
                     @Override
-                    public void setIncludePattern(String newIncludePattern)
+                    public void setIncludePattern(List<String> newIncludePattern)
                     {
                       includePattern = newIncludePattern;
                       savePatterns();
                     }
 
                     @Override
-                    public void setExcludePattern(String newExcludePattern)
+                    public void setExcludePattern(List<String> newExcludePattern)
                     {
                       excludePattern = newExcludePattern;
                       savePatterns();
@@ -471,10 +475,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                     {
                       if ((includePattern != null) && (excludePattern != null))
                       {
-                        setRegex(includePattern, excludePattern);
+                        setRegex(getStringFromList(includePattern), 
+                                 getStringFromList(excludePattern));
                       }
                     }
-                  }, settingsData.classRegex, settingsData.classExcludeRegex);
+                  }, 
+                  getListFromString(settingsData.classRegex), 
+                  getListFromString(settingsData.classExcludeRegex));
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
@@ -490,6 +497,34 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
     }
 
+    private List<String> getListFromString(String pattern)
+    {
+      List<String> items = new ArrayList<String>();
+      String[] patternParts = pattern.split("\\|");
+      for (String part : patternParts)
+      {
+        items.add(part);
+      }
+      return items;
+    }
+    
+    private String getStringFromList(List<String> list)
+    {
+      StringBuilder str = new StringBuilder();
+      
+      for (int ii = 0; ii < list.size(); ii++)
+      {
+        String item = list.get(ii);
+        str.append(item);
+        if (ii < (list.size() - 1))
+        {
+          str.append("|");
+        }
+      }
+      
+      return str.toString();
+    }
+    
     private void setStatus(int instruClasses, int totalClasses)
     {
       if (!sRoot.isDisposed())
@@ -773,7 +808,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0,wrap");
       textOutput.setBackground(Display.getCurrent().getSystemColor(
-          SWT.COLOR_WHITE));          
+          SWT.COLOR_WHITE)); 
+      textOutput.setKeyBinding(SWT.PAGE_UP, ST.PAGE_UP);
+      textOutput.setKeyBinding(SWT.PAGE_DOWN, ST.PAGE_DOWN);
       
       textOutput.addMenuDetectListener(new MenuDetectListener()
       {        
@@ -793,16 +830,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  String existingIncludePattern = lastEnteredIncludeFilterPattern + "|";
-                  if (lastEnteredIncludeFilterPattern == TraceFilterThread.MATCH_ALL)
+                  List<String> newIncludePattern = new ArrayList<String>(lastEnteredIncludeFilterPattern);
+                  if (lastEnteredIncludeFilterPattern.equals(TraceFilterThread.MATCH_ALL))
                   {
-                    existingIncludePattern = "";
+                    newIncludePattern.clear();
                   }
                   String newPattern = selectedText;
-                  if (!existingIncludePattern.contains(newPattern))
+                  if (!newIncludePattern.contains(newPattern))
                   {
-                    String newIncludePatternStr = existingIncludePattern + newPattern;
-                    lastEnteredIncludeFilterPattern = newIncludePatternStr;
+                    newIncludePattern.add(newPattern);
+                    lastEnteredIncludeFilterPattern = newIncludePattern;
                     if (enableFilter.getSelection())
                     {
                       applyPatterns(lastEnteredIncludeFilterPattern, 
@@ -819,16 +856,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  String existingExcludePattern = lastEnteredExcludeFilterPattern + "|";
-                  if (lastEnteredExcludeFilterPattern == TraceFilterThread.MATCH_NONE)
-                  {
-                    existingExcludePattern = "";
-                  }
+                  List<String> newExcludePattern = new ArrayList<String>(lastEnteredExcludeFilterPattern);
+                  
                   String newPattern = selectedText;
-                  if (!existingExcludePattern.contains(newPattern))
+                  if (!newExcludePattern.contains(newPattern))
                   {
-                    String newExcludePatternStr = existingExcludePattern + newPattern;
-                    lastEnteredExcludeFilterPattern = newExcludePatternStr;
+                    newExcludePattern.add(newPattern);
+                    lastEnteredExcludeFilterPattern = newExcludePattern;
                     if (enableFilter.getSelection())
                     {
                       applyPatterns(lastEnteredIncludeFilterPattern, 
@@ -967,23 +1001,25 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
 
-      final String helpText = "Enter pattern in the form "
-          + "\"text\" or using wildcards " + "\"tex*\" or \"*ext\" etc";
-
+      final String helpText = "Enter text to match against trace lines. " +
+      		"You can match any part of the line. " +
+      		"\n\nYou can also select some text and right click the " +
+      		"selection to quickly add an include or exclude filter.\n";
+      
       final PatternInputCallback patternCallback = new PatternInputCallback()
       {
-        private String includePattern = null;
-        private String excludePattern = null;
+        private List<String> includePattern = null;
+        private List<String> excludePattern = null;
 
         @Override
-        public void setIncludePattern(String newIncludePattern)
+        public void setIncludePattern(List<String> newIncludePattern)
         {
           includePattern = newIncludePattern;
           savePatterns();
         }
 
         @Override
-        public void setExcludePattern(String newExcludePattern)
+        public void setExcludePattern(List<String> newExcludePattern)
         {
           excludePattern = newExcludePattern;
           savePatterns();
@@ -1180,15 +1216,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }    
     }
 
-    private void applyPatterns(String newIncludePattern,
-                               String newExcludePattern,
+    private void applyPatterns(List<String> newIncludePattern,
+                               List<String> newExcludePattern,
                                final boolean isToggle)
     {
       if (newIncludePattern.equals(activeIncludeFilterPattern)
           && newExcludePattern.equals(activeExcludeFilterPattern))
       {
         return;
-      } else
+      } 
+      else
       {
         oldIncludeFilterPattern = activeIncludeFilterPattern;
         oldExcludeFilterPattern = activeExcludeFilterPattern;
@@ -1221,8 +1258,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
           cancelButton.addSelectionListener(cancelListener);
 
-          final String newIncludePattern = activeIncludeFilterPattern;
-          final String newExcludePattern = activeExcludeFilterPattern;
+          final List<String> newIncludePattern = activeIncludeFilterPattern;
+          final List<String> newExcludePattern = activeExcludeFilterPattern;
 
           final TraceFilterProgressHandler progressHandler = new TraceFilterProgressHandler()
           {
@@ -1262,13 +1299,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             }
 
             @Override
-            public String getIncludePattern()
+            public List<String> getIncludePattern()
             {
               return newIncludePattern;
             }
 
             @Override
-            public String getExcludePattern()
+            public List<String> getExcludePattern()
             {
               return newExcludePattern;
             }
@@ -1363,13 +1400,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private ParsedSettingsData settingsData = new ParsedSettingsData(
       new HashMap<String, String>());
   
-  private String lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_ALL;  
-  private String activeIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
-  private String oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
+  private List<String> lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_ALL;  
+  private List<String> activeIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
+  private List<String> oldIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   
-  private String lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private String activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
-  private String oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private List<String> lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private List<String> activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private List<String> oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
