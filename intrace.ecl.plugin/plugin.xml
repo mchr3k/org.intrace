@@ -140,7 +140,7 @@
             targetID="org.eclipse.debug.ui.DebugView">
          <action
                class="intrace.ecl.ui.launching.ShowInTraceOutputAction"
-               icon="icons/intrace-editor.gif"
+               icon="icons/runintrace.gif"
                id="intrace.ecl.ui.inTraceOutputAction"
                label="Open InTrace Output"
                menubarPath="launchGroup">
