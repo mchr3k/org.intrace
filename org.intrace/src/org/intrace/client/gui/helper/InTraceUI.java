@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.miginfocom.swt.MigLayout;
 
@@ -61,6 +63,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   }
   
   public static String NEWLINE = System.getProperty("line.separator");
+  
+  private static final Pattern TRACE_LINE = Pattern.compile("^\\[[^\\]]+]:(\\[[^\\]]+\\]:([^:]+:[^:]+)):.*");
 
   public void open()
   {
@@ -819,10 +823,59 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           if (e.widget == textOutput)
           {
-            final String selectedText = textOutput.getSelectionText();
-            if (selectedText.length() > 0)
+            Menu textMenu = new Menu(sWindow, SWT.POP_UP);
+            
+            // Extract current line of text
+            Point linePoint = textOutput.getSelection();
+            int lineOffset = linePoint.x;
+            String line = "";
+            
+            if (lineOffset != -1)
             {
-              Menu textMenu = new Menu(sWindow, SWT.POP_UP);
+              String text = textOutput.getText();
+              String earlierText = text.substring(0, lineOffset);
+              int startIndex = earlierText.lastIndexOf("\n");
+              int endIndex = text.indexOf("\n", lineOffset);
+              if ((startIndex != -1) && (endIndex != -1))
+              {
+                line = text.substring(startIndex + 1, endIndex - 1);
+              }
+            }
+            
+            // Check if it is a trace line
+            Matcher traceLineMatcher = TRACE_LINE.matcher(line);
+            if (traceLineMatcher.matches())
+            {
+              // TODO
+              final String matchStr = traceLineMatcher.group(1);
+              final String methodStr = traceLineMatcher.group(2);
+              
+              MenuItem entryItem = new MenuItem(textMenu, SWT.PUSH);
+              entryItem.setText("Find method entry: " + methodStr + ": {");
+              entryItem.addSelectionListener(new SelectionAdapter()
+              {
+                @Override
+                public void widgetSelected(SelectionEvent e)
+                {
+                  doFind(false, matchStr + ": {");
+                }
+              });
+              
+              MenuItem excludeItem = new MenuItem(textMenu, SWT.PUSH);
+              excludeItem.setText("Find method exit: " + methodStr + ": }");
+              excludeItem.addSelectionListener(new SelectionAdapter()
+              {
+                @Override
+                public void widgetSelected(SelectionEvent e)
+                {
+                  doFind(true, matchStr + ": }");
+                }
+              });
+            }
+            
+            final String selectedText = textOutput.getSelectionText();
+            if ((selectedText.length() > 0) && !selectedText.contains("\n"))
+            {
               MenuItem includeItem = new MenuItem(textMenu, SWT.PUSH);
               includeItem.setText("Include: " + selectedText);
               includeItem.addSelectionListener(new SelectionAdapter()
@@ -871,7 +924,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                   }
                 }
               });
-              
+            }
+            
+            if (textMenu.getItemCount() > 0)
+            {
               textOutput.setMenu(textMenu);
             }
             else
@@ -1160,6 +1216,21 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           public void run()
           {
             String searchText = findInput.getText();
+            doFind(down, searchText);
+          }
+        });
+      }
+    }
+    
+    private void doFind(final boolean down, final String searchText)
+    {
+      if (!sRoot.isDisposed())
+      {
+        sWindow.getDisplay().asyncExec(new Runnable()
+        {
+          @Override
+          public void run()
+          {
             if ((searchText != null) &&
                 (searchText.length() > 0) &&
                 (textOutput.getCharCount() > 0))
