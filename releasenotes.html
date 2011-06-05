@@ -6,6 +6,7 @@ title: InTrace - Release Notes
 
 <ul>
 <li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/latest_release/">Latest Release</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_14/">Release 14</a></li>
 	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_13/">Release 13</a></li>
 
 	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_12/">Release 12</a></li>
@@ -17,7 +18,48 @@ title: InTrace - Release Notes
 
 	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_1/">Release 1</a></li>
 	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/latest_development/">Latest Development Build</a></li>
-</ul><h2>Release 13, Eclipse V0.0.0.3 (21/05/2011)</h2>
+</ul>
+<h2>Release 14, Eclipse V0.0.4</h2>
+
+<ul>
+<li>Agent
+	<ul>
+<li>Change “## Listening on port 9123” to “## InTrace listening on port 9123”</li>
+		<li>Allow Java standard library to be instrumented with minor exclusions:
+		<ul>
+<li>java.lang.Thread</li>
+			<li>java.lang.SecurityManager</li>
+		</ul>
+</li>
+	</ul>
+
+</li>
+	<li>UI
+	<ul>
+<li>Update inclusion/exclusion UI to use .contains(…) rather than pattern matching
+		<ul>
+<li>Ensure UI only allows entry of appropriate text</li>
+		</ul>
+</li>
+		<li>Allow include/exclude window to be closed by escape key</li>
+		<li>Add Page Up/Page Down key handlers to trace output</li>
+
+		<li>Add content menu “Jump to Enter/Exit”
+		<ul><li>Add keyboard shortcuts</li></ul></li>
+		<li>Fix default text include filter so that a single exclusion filter doesn’t hide all lines of text</li>
+		<li>Add search feedback to show when no matches were found</li>
+		<li>Fix Eclipse editor window title text</li>
+		<li>Add proper icon to standalone UI</li>
+		<li>Fix standalone UI launcher to print the message from an unsatisfiedlinkerror</li>
+	</ul>
+</li>
+	<li>Eclipse
+	<ul>
+<li>Auto instrument the launched class</li>
+	</ul>
+</li>
+
+<h2>Release 13, Eclipse V0.0.0.3 (21/05/2011)</h2>
 <ul>
 <li>Fix bug in broadcast of the number of instrumented classes.</li>
 </ul><h2>Release 12, Eclipse V0.0.0.2 (20/05/2011)</h2>
