@@ -75,3 +75,9 @@ pre
     overflow: auto;
     padding: 6px 10px;
 }
+
+p
+{
+    margin: 16px 0 0;
+    padding: 0;
+}
