@@ -19,7 +19,7 @@ body
 	background:#fff;
 	min-width:600px;    /* Minimum width of layout - remove line if not required */
 						/* The min-width property does not work in old versions of Internet Explorer */
-	font: helvetica,arial,freesans,clean,sans-serif;
+	font: 90% helvetica,arial,freesans,clean,sans-serif;
 }
 
 /* column container */
