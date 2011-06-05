@@ -1,6 +1,68 @@
 /* CSS Document */
 
-body  { font: 11px Verdana, Arial, sans-serif; }
+#title
+{
+	height:100px;
+	border-color:#97CBFF;
+	border-width:1px;
+	border-style:solid;
+	margin: 5px 15px;
+}
+
+/* General styles */
+body 
+{
+	margin:0;
+	padding:0;
+	border:0;			/* This removes the border around the viewport in old versions of IE */
+	width:100%;
+	background:#fff;
+	min-width:600px;    /* Minimum width of layout - remove line if not required */
+						/* The min-width property does not work in old versions of Internet Explorer */
+	font-size:90%;
+}
+
+/* column container */
+.colmask 
+{
+	position:relative;		/* This fixes the IE7 overflow hidden bug and stops the layout jumping out of place */
+	clear:both;
+	float:left;
+	width:100%;			/* width of whole page */
+	overflow:hidden;	/* This chops off any overhanging divs */
+}
+.leftmenu .colright 
+{
+	float:left;
+	width:200%;
+	position:relative;
+	left:200px;
+	background:#fff;
+}
+.leftmenu .col1wrap 
+{
+	float:right;
+	width:50%;
+	position:relative;
+	right:200px;
+	padding-bottom:1em;
+}
+
+.leftmenu .col1 
+{
+	margin:0 15px 0 200px;
+	position:relative;
+	right:100%;
+	overflow:hidden;
+	padding: 8px;
+}
+.leftmenu .col2 
+{
+	float:left;
+	width:170px;
+	position:relative;
+	right:185px;
+}
 
 a 
 {
@@ -9,52 +71,6 @@ a
 }
 
 a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
-
-#bodywrapper 
-{
-	margin:auto;
-	width: 700px;
-	background: #ffffff;
-}
-	
-#title
-{
-	height:100px;
-	border-color:#97CBEE;
-	border-width:1px;
-	border-style:solid;
-}
-
-#left  { float:left; }
-
-.navwrap
-{
-	margin-top:5px;
-	border-color:#97CBEE;
-	border-width:1px;
-	border-style:solid;
-	width: 150px;
-	background:#E1F0FF;
-	padding:7px;	
-}
-	
-.nav { padding-left:15px; }
-	
-#right 
-{
-	width:530px;
-	float:right;
-}	
-	
-#content 
-{
-	margin-top: 5px;
-	margin-bottom:5px;
-	width:auto;
-	border: #97CBEE 1px solid;
-	padding:5px;
-
-}
 
 h2
 {
@@ -83,3 +99,17 @@ p
 }
 
 .bold { font-weight: bold; }
+
+
+.navwrapper
+{
+	margin-top:5px;
+	border-color:#97CBFF;
+	border-width:1px;
+	border-style:solid;
+	width: 154px;
+	background:#E1F0FF;
+	padding:8px;	
+}
+	
+.nav{ padding-left:15px; }

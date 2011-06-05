@@ -3,20 +3,26 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <title>{{ page.title }}</title>
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" type="text/css" href="../style.css" />
 </head>
 
 <body>
 
-<div id="bodywrapper">
-
 <div id="title">
-<img src="img/logo_small.png" height="95px"/>
+<img src="../img/logo_small.png" height="95px"/>
 </div>
 
-<div id="left">
+<div class="colmask leftmenu">
+    <div class="colright">
+        <div class="col1wrap">
+            <div class="col1">
 
-<div class="navwrap">
+			{{ content }}
+			
+            </div>
+        </div>
+        <div class="col2">
+<div class="navwrapper">
 <a href="#">Home</a><br />
 <a href="#">Download</a><br />
 <br />
@@ -41,15 +47,8 @@
 <a href="#">3rd Party Issues</a><br />
 </div>
 </div>
-</div>
-
-<div id="right">
-  <div id="content">
-
-    {{ content }}
-
-  </div>
-</div>
+        </div>
+    </div>
 </div>
 
 </body>
