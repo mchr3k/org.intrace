@@ -64,13 +64,13 @@ body
 	right:185px;
 }
 
-a 
+.leftmenu a 
 {
 	color:#000000;
 	text-decoration:none;
 }
 
-a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
+.leftmenu a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
 
 h1
 {
