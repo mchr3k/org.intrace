@@ -2,22 +2,22 @@
 layout: default
 title: InTrace - Home
 ---
-InTrace is a Java Agent which modifies JVM class files at runtime to add instrumentation. This tool can be used by adding a JVM parameter to a new JVM process or using a tool (see below) to load the agent into a running JVM process.
+<p>InTrace is a Java Agent which modifies JVM class files at runtime to add instrumentation. This tool can be used by adding a JVM parameter to a new JVM process or using a tool (see below) to load the agent into a running JVM process.
 
 <h2>Why would I use this?</h2>
 
-Have you ever added System.out.println(.) calls to Java code to see what was being executed? This is a common part of writing and debugging an application. However there are two big drawbacks.
+<p>Have you ever added System.out.println(.) calls to Java code to see what was being executed? This is a common part of writing and debugging an application. However there are two big drawbacks.
 
-1) System.out is not a great API - the output only goes to stdout. What about more advanced output like output to file or output over the network?
+<p>1) System.out is not a great API - the output only goes to stdout. What about more advanced output like output to file or output over the network?<br>
 2) Adding System.out lines is slow and boring. Why not get the JVM to do this work for you?
 
-InTrace solves both of these issues by allowing you to automatically instrument Java bytecode. InTrace is very quick to setup so you can get started easily.
+<p>InTrace solves both of these issues by allowing you to automatically instrument Java bytecode. InTrace is very quick to setup so you can get started easily.
 
-See Docs: How InTrace Works to see more details of the instrumentation which is added.
+<p>See Docs: How InTrace Works to see more details of the instrumentation which is added.
 
 <h2>Output</h2>
 
-The instrumentation added by InTrace allows you to record method entry/exit, basic block execution and method arguments.
+<p>The instrumentation added by InTrace allows you to record method entry/exit, basic block execution and method arguments.
 
 <pre>[14:14:30]:[1]:example.TraceExample:workMethod: {:29
 [14:14:30]:[1]:example.TraceExample:workMethod: Arg: foobar
@@ -41,39 +41,39 @@ The instrumentation added by InTrace allows you to record method entry/exit, bas
 
 <h2>Get Started</h2>
 
-1) Download the jars
+<p><span class="bold">1) Download the jars</span>
 
-You need to download the following jars
+<p>You need to download the following jars
 
 <ul>
 <li><a href="http://github.com/mchr3k/org.intrace/raw/master/binaries/jars/latest_release/intrace-agent.jar">intrace-agent.jar</a>
 <li><a href="https://github.com/downloads/mchr3k/org.intrace/intrace-ui.jar">intrace-ui.jar</a>
 </ul>
 
-2) Load Agent into a JVM
+<p><span class="bold">2) Load Agent into a JVM</span>
 
-Add the following argument to your java process.
+<p>Add the following argument to your java process.
 
 <pre>-javaagent:./path/to/intrace-agent.jar</pre>
 
-3) Connect to agent
+<p><span class="bold">3) Connect to agent</span>
 
-When the agent is first loaded it outputs a line to stdout to say which port it is listening on.
+<p>When the agent is first loaded it outputs a line to stdout to say which port it is listening on.
 
 <pre>## Loaded InTrace Agent.
 ## Listening on port 9123</pre>
 
-The default is 9123 but will use a higher port if listening on this port fails. You can use this port to connect to the Agent and control the settings at runtime.
+<p>The default is 9123 but will use a higher port if listening on this port fails. You can use this port to connect to the Agent and control the settings at runtime.
 
-To connect to the agent, launch the intrace-ui.jar application, enter the connection details (which default to localhost/9123) and press "Connect". Once you are connected the GUI will look like the following.
+<p>To connect to the agent, launch the intrace-ui.jar application, enter the connection details (which default to localhost/9123) and press "Connect". Once you are connected the GUI will look like the following.
 
-See Docs: InTrace UI for full details about this UI.
+<p>See Docs: InTrace UI for full details about this UI.
 
 <img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/connectedgui-v3.jpg" />
 
 <h2>Continuous Integration</h2>
 
-This project is build regularly using Jenkins courtesy of the CloudBees service.
+<p>This project is build regularly using Jenkins courtesy of the CloudBees service.
 
 <a href="https://mchr3k.ci.cloudbees.com/job/InTrace/">InTrace Jenkins Console</a>
 
