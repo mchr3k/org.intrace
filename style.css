@@ -64,13 +64,19 @@ body
 	right:185px;
 }
 
-.leftmenu a 
+.col1 a 
+{
+	color:#000000;
+	text-decoration:underline;
+}
+
+.col2 a 
 {
 	color:#000000;
 	text-decoration:none;
 }
 
-.leftmenu a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
+.col2 a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
 
 h1
 {
