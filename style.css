@@ -1,0 +1,57 @@
+/* CSS Document */
+
+body  { font: 11px Verdana, Arial, sans-serif; }
+
+a 
+{
+	color:#000000;
+	text-decoration:none;
+}
+
+a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
+
+#bodywrapper 
+{
+	margin:auto;
+	width: 700px;
+	background: #ffffff;
+}
+	
+#title
+{
+	height:100px;
+	border-color:#97CBEE;
+	border-width:1px;
+	border-style:solid;
+}
+
+#left  { float:left; }
+
+.navwrap
+{
+	margin-top:5px;
+	border-color:#97CBEE;
+	border-width:1px;
+	border-style:solid;
+	width: 150px;
+	background:#E1F0FF;
+	padding:7px;	
+}
+	
+.nav { padding-left:15px; }
+	
+#right 
+{
+	width:530px;
+	float:right;
+}	
+	
+#content 
+{
+	margin-top: 5px;
+	margin-bottom:5px;
+	width:auto;
+	border: #97CBEE 1px solid;
+	padding:5px;
+
+}
