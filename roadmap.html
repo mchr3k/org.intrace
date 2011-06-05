@@ -1,0 +1,78 @@
+---
+layout: default
+title: InTrace - Roadmap
+---
+<h1>Roadmap</h1>
+
+<h2>Recently Done</h2>
+<p>(Entries under here get copied to the release note for each release)</p>
+<h2>Target for Release 14</h2>
+
+<ul>
+<li>Agent
+	<ul>
+<li>(done) Change “## Listening on port 9123” to “## InTrace listening on port 9123”</li>
+		<li>(done) Allow Java standard library to be instrumented with minor exclusions:
+		<ul>
+<li>java.lang.Thread</li>
+			<li>java.lang.SecurityManager</li>
+		</ul>
+</li>
+	</ul>
+
+</li>
+	<li>UI
+	<ul>
+<li>(done) Update inclusion/exclusion UI to use .contains(…) rather than pattern matching
+		<ul>
+<li>(done) Ensure UI only allows entry of appropriate text</li>
+		</ul>
+</li>
+		<li>(done) Allow include/exclude window to be closed by escape key</li>
+		<li>(done) Add Page Up/Page Down key handlers to trace output</li>
+
+		<li>(done) Add content menu “Jump to Enter/Exit”
+		<ul>
+<li>(done) Add keyboard shortcuts</li>
+		</ul>
+</li>
+		<li>(done) Fix default text include filter so that a single exclusion filter doesn’t hide all lines of text</li>
+		<li>(done) Add search feedback to show when no matches were found</li>
+		<li>(done) Fix Eclipse editor window title text</li>
+
+		<li>(done) Add proper icon to standalone UI</li>
+		<li>(done) Fix standalone UI launcher to print the message from an unsatisfiedlinkerror</li>
+	</ul>
+</li>
+	<li>Eclipse
+	<ul>
+<li>(done) Auto instrument the launched class</li>
+	</ul>
+</li>
+
+</ul><h2>Target for Future Releases</h2>
+<ul>
+<li>VisualVM
+	<ul>
+<li>Productise integration</li>
+		<li>Launch client with more memory</li>
+	</ul>
+</li>
+</ul><h2>Other ideas</h2>
+<ul>
+<li>Compress network output stream – (use mappings for classname, methodname and timestamp)</li>
+
+	<li>Instrument ternary if statements</li>
+	<li>improve UTs</li>
+	<li>Check how BTrace instruments system classes as mentioned in http://netbeans.dzone.com/articles/debugging-netbeans-with-visualvm-and-btrace
+	<ul>
+<li>It seems that system classes are only blocked if they have to be classloaded as part of instrumentation</li>
+		<li>Need to use jarjar to ensure InTrace has its own private copies of the required classes
+		<ul>
+<li>Notes – Spent some time trying to get this working and it is entirely non trivial. I don’t care enough about this feature to pursue this any further.</li>
+		</ul>
+
+</li>
+	</ul>
+</li>
+</ul>

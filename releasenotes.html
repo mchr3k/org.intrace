@@ -1,0 +1,138 @@
+---
+layout: default
+title: InTrace - Release Notes
+---
+<h1>Release Notes</h1>
+
+<ul>
+<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/latest_release/">Latest Release</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_13/">Release 13</a></li>
+
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_12/">Release 12</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_11/">Release 11</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_9/">Release 9</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_7/">Release 7</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_5/">Release 5</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_3/">Release 3</a></li>
+
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/release_1/">Release 1</a></li>
+	<li><a href="http://github.com/mchr3k/org.intrace/tree/master/binaries/jars/latest_development/">Latest Development Build</a></li>
+</ul><h2>Release 13, Eclipse V0.0.0.3 (21/05/2011)</h2>
+<ul>
+<li>Fix bug in broadcast of the number of instrumented classes.</li>
+</ul><h2>Release 12, Eclipse V0.0.0.2 (20/05/2011)</h2>
+<ul>
+<li>Release 2 of Eclipse integration
+	<ul>
+<li>Add Open InTrace Editor action</li>
+
+		<li>Cleanup code</li>
+		<li>Publish on update site</li>
+	</ul>
+</li>
+</ul><h2>Release 11, Eclipse V0.0.0.1 (08/05/2011)</h2>
+<ul>
+<li>Alpha quality Eclipse integration</li>
+</ul><h2>Release 10 (02/05/2011)</h2>
+<ul>
+
+<li>Improve GUI
+	<ul>
+<li>Add quick filter include/exclude context menu</li>
+		<li>Add “Find” function to trace output</li>
+		<li>Add Save Output function</li>
+		<li>Fix Filter updates</li>
+	</ul>
+
+</li>
+</ul><h2>Release 9 (27/04/2011)</h2>
+<ul>
+<li>Add help URL
+</li>
+	<li>Complete SWT packaging update</li>
+	<li>Trace verbose messages</li>
+
+</ul><h2>Release 8 (25/04/2011)</h2>
+<ul>
+<li>Refactor UI</li>
+	<li>Partially update SWT packaging – this will be completed in Release 9</li>
+</ul><h2>Release 7 (27/06/2010)</h2>
+<ul>
+<li>Improve GUI resize perf</li>
+
+</ul><h2>Release 6 (26/06/2010)</h2>
+<ul>
+<li>Ensure trace wraps correctly</li>
+	<li>Fix output of number of classes instrumented in the example (currently claims 1 but lists 2)</li>
+	<li>Fix handling of instrumenting the same class loaded by multiple classloaders</li>
+	<li>Trace thrown exceptions</li>
+</ul><h2>Release 5 (21/06/2010)</h2>
+<ul>
+
+<li>Compare classes by hashcode not name. Previous name approach will fail when the same class is loaded by different classloaders.</li>
+</ul><h2>Release 4 (19/06/2010)</h2>
+<ul>
+<li>Misc linux GUI fixes</li>
+</ul><h2>Release 3 (19/06/2010)</h2>
+<ul>
+<li>Fix java.lang.VerifyError: – Attempt to split long or double on the stack</li>
+	<li>Remove FLUSH output line</li>
+
+	<li>Add scroll lock button</li>
+	<li>Fix UI resize bug</li>
+	<li>Fix lowercase callers regex bug</li>
+	<li>Add handling to ensure we cannot use too much memory</li>
+	<li>Use appendText for all but the first increment of setting filtered text</li>
+	<li>Show progress when instrumenting classes</li>
+
+</ul><h2>Release 2 (13/06/2010)</h2>
+<ul>
+<li>Fix invalid jar manifest attributes which are rejected by the linux JVM
+</li>
+</ul><h2>Release 1 (12/06/2010)</h2>
+<ul>
+<li>Use jarjar to repack asm</li>
+	<li>Fix file output</li>
+	<li>Improve GUI
+
+	<ul>
+<li>Add “Clear” button</li>
+		<li>Output a list of traced classes</li>
+		<li>Rewrite GUI code by hand and implement new layout</li>
+		<li>Add better class regex input GUI
+
+</li>
+		<li>Fix display of exceptions</li>
+		<li>Add output filters</li>
+		<li>Cleanup output filters code</li>
+		<li>Refactor output tab</li>
+		<li>Improve tab order and add “enter key” handlers</li>
+		<li>Fix pattern dialog</li>
+
+		<li>Retest GUI on linux – GUI rewrite almost certainly looks a bit broken on linux</li>
+		<li>Add exclude filters</li>
+	</ul>
+</li>
+	<li>Add example script</li>
+
+	<li>get the GUI working on other platforms
+	<ul>
+<li>added jars for linux in addition to windows</li>
+	</ul>
+</li>
+	<li>trace return values</li>
+	<li>trace exception handling</li>
+
+	<li>Increase rate of Callers updates</li>
+	<li>Improve re instrumentation exception handling to allow for debugging of problems in this area</li>
+	<li>Use debug build of ASM
+</li>
+	<li>Fix handling of fast trace output</li>
+	<li>Fix exception (try upgrading to v3.3 of ASM) java.lang.StringIndexOutOfBoundsException: String index out of range: 58</li>
+
+	<li>Save revision info into JAR manifest
+	<ul>
+<li>In fact save a “build number” into the jar and port this todo list into a per build change log</li>
+	</ul>
+</li>
+</ul>
