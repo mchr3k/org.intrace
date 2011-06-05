@@ -1,0 +1,22 @@
+---
+layout: default
+title: InTrace - Troubleshooting
+---
+<p>This page gives details of some common problems you might have.</p>
+<h2>Low Memory</h2>
+<p>When using the InTrace UI to view trace output you may see the following message and then not see any more trace.</p>
+
+<pre>*** Warning: Low memory - dropping trace.</pre>
+<p>This means that the JVM running the GUI Trace Client is running low on memory and is throwing away new trace. You can do one of two things to resolve this.</p>
+<ul>
+<li>Click the Clear button to throw away all trace collected so far – this frees up memory for new trace</li>
+	<li>Restart the GUI Trace Client specifying a larger memory limit e.g.<br><pre>java -jar guitraceclient-win.jar -Xmx512m</pre>
+
+</li>
+</ul><h2>Small Stack Size</h2>
+<p>When starting an application with the InTrace agent the JVM process can crash in some circumstances. On Windows this manifests as <br></p><pre>An unhandled win32 exception occurred in javaw.exe</pre>
+<p>This happens when you start the JVM with a stack size of less than 200kb (e.g. using the JVM argument -Xss190k). This is an unfortunate restriction in the current Sun JVM. I have reported the issue to Sun but they have yet to create a public bug to track it.</p>
+
+<p>To resolve this problem you should restart your application and specify a larger stack size e.g.</p>
+<pre>java -Xss200k (your-app-args-here)</pre>
+<p>UPDATE (22/05/2011): This appears to have been fixed at some point. I have tested InTrace on 32 bit Windows 7 running Java 1.6u25 and was able to run with -Xss100k.</p>

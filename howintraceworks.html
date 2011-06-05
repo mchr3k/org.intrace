@@ -1,0 +1,184 @@
+---
+layout: default
+title: InTrace - How InTrace Works
+---
+<p>InTrace is a Java Agent which transforms Java bytecode at runtime to add instrumentation. InTrace works without access to source code but the following example will illustrate the transformation which InTrace is performing.</p>
+<p>This is a short Example Java source file defining a program which runs forever making random time dependent choices.</p>
+<pre>
+package example;
+
+import java.util.Arrays;
+
+public class TraceExample
+{
+
+  /**
+   * @param args
+   * @throws Exception
+   */
+  public static void main(String[] args)
+  {
+    try
+    {
+      otherMain(args[0]);
+    }
+    catch (Throwable ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  public static void otherMain(String arg) throws Exception
+  {
+    while (true)
+    {
+      Thread.sleep(Long.parseLong(arg));
+      workMethod("foobar");
+    }
+  }
+
+  private static void workMethod(String foo)
+  {
+    long currentTime = System.currentTimeMillis();
+    System.setProperty("a", foo);
+    System.setProperty("foo", exceptionMethod());
+    System.setProperty("foo", ": " + intArrayMethod(new int[]
+    { 1, 2, 3 }));
+    if ((currentTime % 2) == 0)
+    {
+      System.setProperty("a", "Even time");
+    }
+    else
+    {
+      System.setProperty("a", "Odd time");
+    }
+  }
+
+  private static String exceptionMethod()
+  {
+    try
+    {
+      long currentTime = System.currentTimeMillis();
+      if ((currentTime % 2) == 0)
+      {
+        throw new Exception("Exception text");
+      }
+    }
+    catch (Exception ex)
+    {
+      return "seen exception";
+    }
+    return "no exception";
+  }
+
+  private static int intArrayMethod(int[] intArg)
+  {
+    System.setProperty("a", Arrays.toString(intArg));
+    return 123;
+  }
+}
+
+</pre>
+<p>This is what the program gets transformed to at runtime by InTrace. The source listed here is a manually cleaned up copy based on using Jadclipse to decompile the transformed bytecode produced by InTrace.</p>
+<pre>
+package example;
+
+import java.util.Arrays;
+import org.intrace.output.AgentHelper;
+
+public class TraceExample
+{
+    public TraceExample()
+    {
+        AgentHelper.enter("example.TraceExample", "&lt;init&gt;", 5);
+        AgentHelper.exit("example.TraceExample", "&lt;init&gt;", 5);
+    }
+
+    public static void main(String args[])
+    {
+       AgentHelper.enter("example.TraceExample", "main", 16);
+       AgentHelper.val("Arg", "example.TraceExample", "main", args);
+       try
+       {
+         otherMain(args[0]);
+       }
+       catch (Throwable ex)
+       {
+         AgentHelper.caught("example.TraceExample", "main", 18, ex);
+         ex.printStackTrace();
+       }
+       AgentHelper.exit("example.TraceExample", "main", 22);
+       return;
+    }
+
+    public static void otherMain(String s) throws Exception
+    {
+        AgentHelper.enter("example.TraceExample", "otherMain", 28);
+        AgentHelper.val("Arg", "example.TraceExample", "otherMain", s);
+        do
+        {
+            AgentHelper.branch("example.TraceExample", "otherMain", 28);
+            Thread.sleep(Long.parseLong(s));
+            workMethod("foobar");
+        } while(true);
+       // No exit trace is generated as the Java Compiler spotted this was an infinite loop
+       // and did not bother to output a return instruction.
+    }
+
+    private static void workMethod(String s)
+    {
+        AgentHelper.enter("example.TraceExample", "workMethod", 35);
+        AgentHelper.val("Arg", "example.TraceExample", "workMethod", s);
+        long l = System.currentTimeMillis();
+        System.setProperty("a", s);
+        System.setProperty("foo", exceptionMethod());
+        System.setProperty("foo", (new StringBuilder(": ")).append(intArrayMethod(new int[] {
+            1, 2, 3
+        })).toString());
+        if(l % 2L == 0L)
+        {
+            AgentHelper.branch("example.TraceExample", "workMethod", 42);
+            System.setProperty("a", "Even time");
+        } else
+        {
+            AgentHelper.branch("example.TraceExample", "workMethod", 46);
+            System.setProperty("a", "Odd time");
+        }
+        AgentHelper.exit("example.TraceExample", "workMethod", 48);
+    }
+
+    private static String exceptionMethod()
+    {
+        AgentHelper.enter("example.TraceExample", "exceptionMethod", 54);
+        try
+        {
+          long l = System.currentTimeMillis();
+          if(l % 2L == 0L)
+          {
+              AgentHelper.branch("example.TraceExample", "exceptionMethod", 57);
+              throw new Exception("Exception text");
+          }
+       }
+       catch (Exception ex)
+       {
+         AgentHelper.caught("example.TraceExample", "exceptionMethod", 62, ex);
+         AgentHelper.val("Return", "example.TraceExample", "exceptionMethod", "seen exception");
+         AgentHelper.exit("example.TraceExample", "exceptionMethod", 62);
+         return "seen exception";
+       }       
+        AgentHelper.val("Return", "example.TraceExample", "exceptionMethod", "no exception");
+        AgentHelper.exit("example.TraceExample", "exceptionMethod", 64);
+        return ((String) ("no exception"));
+    }
+
+    private static int intArrayMethod(int ai[])
+    {
+        AgentHelper.enter("example.TraceExample", "intArrayMethod", 69);
+        AgentHelper.val("Arg", "example.TraceExample", "intArrayMethod", ai);
+        System.setProperty("a", Arrays.toString(ai));
+        AgentHelper.val("Return", "example.TraceExample", "intArrayMethod", 123);
+        AgentHelper.exit("example.TraceExample", "intArrayMethod", 70);
+        return 123;
+    }
+}
+</pre>

@@ -1,0 +1,108 @@
+---
+layout: default
+title: InTrace - UI
+---
+<p>This page describes all of the UI elements within the GUI Trace Client.</p>
+<h1>Control Tabs</h1>
+
+<h2>Connection Tab</h2>
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/tab_connection.jpg" alt=""></p>
+<h3>Connect Button</h3>
+<p>Uses the details entered into the <strong>Address</strong> and <strong>Port</strong> fields to try and connect to an InTrace Agent. The Status of the connection is given in the <strong>Status</strong> panel to the right. If the connection succeeds the <strong>Connect</strong> button will become a <strong>Disconnect</strong> button.</p>
+
+<p><strong>NOTE:</strong> Most of the UI elements in the Client are only enabled when the Client is connected to an InTrace Agent.</p>
+<h2>Instrumentation Tab</h2>
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/tab_instrumentation.jpg" alt=""></p>
+<p>This tab controls which classes get instrumented by the InTrace agent. Only instrumented classes can generate Trace.</p>
+<h3>Select Classes … Button</h3>
+<p>Launches a dialog which allows the entry of class inclusion and exclusion regexes. Only classes which match the inclusion regex and don’t match the exclusion regex are instrumented.</p>
+<h3>Instrumentation Status</h3>
+<p>Displays the current number of instrumented classes vs the total number of classes which InTrace could instrument. The total will be less than the number of loaded classes as the JVM does not allow the standard libraries to be instrumented.</p>
+
+<p>When you change the instrumentation settings (e.g. the Class Regex…) the status will show “Progress” text showing the current number of classes instrumented and the total number which are going to be instrumented.</p>
+<h3>List Instrumented Classes Button</h3>
+<p>Outputs a list of instrumented classes to the <strong>Output</strong> text area.</p>
+<h2>Trace Tab</h2>
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/tab_trace.jpg" alt=""></p>
+<p>This tab controls what trace is produced by instrumented classes and where that trace is sent.</p>
+<h3>Entry/Exit Trace</h3>
+<p>Toggles whether entry/exit trace should be recorded e.g.</p>
+
+<pre>
+[10/06/24 08:40:07]:[1]:example.TraceExample:intArrayMethod: {:70
+[10/06/24 08:40:07]:[1]:example.TraceExample:intArrayMethod: }:71
+</pre>
+<h3>Branch Trace</h3>
+<p>Toggles whether branch trace should be recorded e.g.</p>
+<pre>
+[10/06/24 08:41:02]:[1]:example.TraceExample:workMethod: /:43
+[10/06/24 08:41:02]:[1]:example.TraceExample:otherMain: /:28
+[10/06/24 08:41:07]:[1]:example.TraceExample:exceptionMethod: /:58
+[06/26 14:13:31.750]:[1]:example.TraceExample:exceptionMethod: Throw:58: java.lang.Exception: Exception text
+	at example.TraceExample.exceptionMethod(TraceExample.java:58)
+	at example.TraceExample.workMethod(TraceExample.java:38)
+	at example.TraceExample.otherMain(TraceExample.java:30)
+	at example.TraceExample.main(TraceExample.java:16)
+
+[06/26 14:13:31.750]:[1]:example.TraceExample:exceptionMethod: Caught:61: java.lang.Exception: Exception text
+	at example.TraceExample.exceptionMethod(TraceExample.java:58)
+	at example.TraceExample.workMethod(TraceExample.java:38)
+	at example.TraceExample.otherMain(TraceExample.java:30)
+	at example.TraceExample.main(TraceExample.java:16)
+
+[10/06/24 08:41:07]:[1]:example.TraceExample:workMethod: /:43
+</pre>
+<p>Note that currently InTrace treats tracing of throwing and catching exceptions as part of branch trace.</p>
+<h3>Args Trace</h3>
+<p>Toggles whether args trace should be recorded e.g.</p>
+<pre>
+
+[10/06/24 08:42:47]:[1]:example.TraceExample:workMethod: Arg: foobar
+[10/06/24 08:42:47]:[1]:example.TraceExample:exceptionMethod: Return: seen exception
+[10/06/24 08:42:47]:[1]:example.TraceExample:intArrayMethod: Arg: [1, 2, 3]
+[10/06/24 08:42:47]:[1]:example.TraceExample:intArrayMethod: Return: 123
+</pre>
+<h3>StdOut</h3>
+<p>Toggles whether trace should be output to System.out.</p>
+<h3>File</h3>
+<p>Toggles whether trace should be output to trc1.txt/trc2.txt in the current working directory of the instrumented JVM. Each of these files will have 100k lines of trace written to it before the output rolls over to the other file.</p>
+<h2>Advanced Tab</h2>
+<h3>Dump Settings</h3>
+<p>Prints out a settings string to the <strong>Output</strong> text area. For example.<br></p><pre>Settings:[out-stdout-true[trace-ee-false[instrujars-false[instru-true[out-file-false[exclude-regex-^$[verbose-false[regex-.*[saveinstru-false[trace-args-false[out-network-false[trace-branch-false</pre>
+
+<p>This string can be added to the command line arguments of your program to restore the current settings. For example.<br></p><pre>java –javaagent:./traceagent.jar=[out-stdout-true[trace-ee-false[instrujars-false[instru-true[out-file-false[exclude-regex-^$[verbose-false[regex-.*[saveinstru-false[trace-args-false[out-network-false[trace-branch-false my.program.Class</pre>
+<h3>Save Instrumented Classes</h3>
+<p>Toggles whether the InTrace agent should write the source bytecode and generated bytecode for instrumented classes out to files. When enabled, the input byte array is written out to ./genbin/package/path/ClassName_src.class and the modified class bytes are written to ./genbin/package/path/ClassName_gen.class. These files can be used to investigate any cases where InTrace generates invalid instrumentation.</p>
+<h3>Verbose Mode</h3>
+<p>Toggles whether the InTrace agent should output verbose diagnostics to stdout.</p>
+<h1>Output Tabs</h1>
+<h2>Output Tab</h2>
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/tab_output.jpg" alt=""></p>
+<h3>Save Output Button</h3>
+
+<p>Save the collected Trace output to a file.</p>
+<h3>Clear Button</h3>
+<p>Clears all of the text currently held within the Output tab.</p>
+<h3>Filter… Button</h3>
+<p>Launches a dialog which allows text include and exclude filters to be specified. These get applied to all lines of text already collected along with all new lines received from the InTrace agent.</p>
+<h3>Collect Trace</h3>
+<p>Toggles whether trace should be collected over the network.</p>
+<h3>Auto Scroll</h3>
+<p>Toggles whether new trace lines should be automatically scrolled into view.</p>
+
+<h3>Enable Filter</h3>
+<p>Toggles the configured filter should be applied.</p>
+<h3>Text Output</h3>
+<p>Text within the main text box can be selected and include/exclude filters added from a right click menu.</p>
+<h3>Trace Status</h3>
+<p>This shows the total number of collected lines of trace along with the number which are currently being displayed.</p>
+<h3>Find Text</h3>
+<p>Enter text and click up/down to search up/down for the entered text.</p>
+<h2>Help Tab</h2>
+
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/tab_help.jpg" alt=""></p>
+<p>This tab describes the meaning of the trace output and links back to this site for further help.</p>
+<h1>Paused Startup</h1>
+<p>If the InTrace agent which you connect to was started with the argument [startwait then the UI will change to look like the following screenshot when you first connect.</p>
+<p><img src="https://github.com/mchr3k/org.intrace/raw/master/binaries/images/connected_wait.jpg" alt=""></p>
+<p>This allows you to setup the classes you want to instrument before the program begins to execute.</p>
