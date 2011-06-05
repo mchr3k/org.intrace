@@ -55,3 +55,23 @@ a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
 	padding:5px;
 
 }
+
+h2
+{
+    border-top: 4px solid #CCCCCC;
+    font-size: 22px;
+    line-height: normal;
+    margin: 22px 0 0;
+    padding: 7px 0 0;
+}
+
+pre
+{
+    background-color: #F8F8F8;
+    border: 1px solid #CCCCCC;
+    border-radius: 3px 3px 3px 3px;
+    font-size: 13px;
+    line-height: 19px;
+    overflow: auto;
+    padding: 6px 10px;
+}
