@@ -287,7 +287,6 @@ public class TraceFilterThread implements Runnable
     {
       ex.printStackTrace();
     }
-    System.out.println("Filter thread quitting");
   }
   
   private boolean matches(List<String> strs, String target)

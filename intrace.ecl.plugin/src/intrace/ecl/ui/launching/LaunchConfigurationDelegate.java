@@ -99,10 +99,13 @@ public class LaunchConfigurationDelegate extends
     {
       // Create working copy launch config
       ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();
-
+      
+      // Identify the main class
+      String mainClass = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "");
+      
       // Prepare InTraceLaunch object to handle callback connection
       ServerSocket callbackServer = new ServerSocket(0);
-      final InTraceLaunch intraceLaunch = new InTraceLaunch(callbackServer);
+      final InTraceLaunch intraceLaunch = new InTraceLaunch(mainClass, callbackServer);
       intraceLaunch.start();
       
       // Save off launch object for later access

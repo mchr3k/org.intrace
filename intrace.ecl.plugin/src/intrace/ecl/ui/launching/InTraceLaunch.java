@@ -47,11 +47,18 @@ public class InTraceLaunch implements Runnable
   private IAction openeditoraction = null;
 
   /**
+   * Main class being launched
+   */
+  private final String mainClass;
+
+  /**
    * Construct an instance to listen on a provided ServerSocket
+   * @param xiMainClass 
    * @param xiServer
    */
-  public InTraceLaunch(ServerSocket xiServer)
+  public InTraceLaunch(String xiMainClass, ServerSocket xiServer)
   {
+    this.mainClass = xiMainClass;
     this.callbackserver = xiServer;    
   }
   
@@ -76,6 +83,18 @@ public class InTraceLaunch implements Runnable
       {
         Map<String,String> settingsMap = (Map<String,String>)obj;
         agentServerPort = settingsMap.get(AgentConfigConstants.SERVER_PORT);
+      }
+      
+      // Setup the main class for instrumenation
+      if (mainClass != null)
+      {
+        out = new ObjectOutputStream(clientConnection.getOutputStream());
+        out.writeObject(AgentConfigConstants.CLASS_REGEX + mainClass);
+        out.flush();
+        
+        // Read the response and ignore it
+        in = new ObjectInputStream(clientConnection.getInputStream());
+        in.readObject();
       }
       
       // Notify the UI that we have got a connection

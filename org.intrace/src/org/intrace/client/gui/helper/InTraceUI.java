@@ -23,9 +23,14 @@ import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.program.Program;
@@ -65,6 +70,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   public static String NEWLINE = System.getProperty("line.separator");
   
   private static final Pattern TRACE_LINE = Pattern.compile("^\\[[^\\]]+]:(\\[[^\\]]+\\]:([^:]+:[^:]+)):.*");
+  
+  private static final Pattern ALLOW_ALL = Pattern.compile(".");
+  private static final Pattern ALLOW_CLASSES = Pattern.compile("[a-zA-Z\\.\\$]");
 
   public void open()
   {
@@ -157,12 +165,30 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       @Override
       public void handleEvent(Event e)
       {
-        if (((e.stateMask & SWT.CTRL) != 0) &&
-            (e.keyCode == 'f') &&
-            (sWindow.getDisplay().getActiveShell() == sWindow) &&
-            (textOutputTab.textOutput.isFocusControl()))
+        if (sWindow.getDisplay().getActiveShell() == sWindow)
         {
-          textOutputTab.findInput.setFocus();
+          // This is the active window
+          
+          if (textOutputTab.textOutput.isFocusControl())
+          {
+            // Textoutput is focused
+            
+            if (((e.stateMask & SWT.CTRL) != 0) &&
+                (e.keyCode == 'f'))
+            {
+              textOutputTab.findInput.setFocus();
+            }
+            else if (((e.stateMask & SWT.CTRL) != 0) &&
+                      (e.keyCode == SWT.ARROW_UP))
+            {
+              textOutputTab.findEntry();
+            }
+            else if (((e.stateMask & SWT.CTRL) != 0) &&
+                      (e.keyCode == SWT.ARROW_DOWN))
+            {
+              textOutputTab.findExit();
+            }
+          }
         }
       }
     });   
@@ -485,7 +511,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                     }
                   }, 
                   getListFromString(settingsData.classRegex), 
-                  getListFromString(settingsData.classExcludeRegex));
+                  getListFromString(settingsData.classExcludeRegex),
+                  ALLOW_CLASSES);
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
@@ -762,6 +789,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final Button upButton;
     final Text findInput;
     final Composite composite;
+    final Color findDefaultBack;
+    final Color findDefaultFore;
+    final Font downButtonDefFont;
+    final Font downButtonBoldFont;
+    final Font upButtonDefFont;
+    final Font upButtonBoldFont;
 
     private TextOutputTab(Composite parent)
     {
@@ -826,27 +859,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             Menu textMenu = new Menu(sWindow, SWT.POP_UP);
             
             // Extract current line of text
-            Point linePoint = textOutput.getSelection();
-            int lineOffset = linePoint.x;
-            String line = "";
-            
-            if (lineOffset != -1)
-            {
-              String text = textOutput.getText();
-              String earlierText = text.substring(0, lineOffset);
-              int startIndex = earlierText.lastIndexOf("\n");
-              int endIndex = text.indexOf("\n", lineOffset);
-              if ((startIndex != -1) && (endIndex != -1))
-              {
-                line = text.substring(startIndex + 1, endIndex - 1);
-              }
-            }
+            String line = getCurrentLine();
             
             // Check if it is a trace line
             Matcher traceLineMatcher = TRACE_LINE.matcher(line);
             if (traceLineMatcher.matches())
             {
-              // TODO
               final String matchStr = traceLineMatcher.group(1);
               final String methodStr = traceLineMatcher.group(2);
               
@@ -857,7 +875,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  doFind(false, matchStr + ": {");
+                  findInput.setText(matchStr + ": {");
+                  doFind(false);
                 }
               });
               
@@ -868,7 +887,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                  doFind(true, matchStr + ": }");
+                  findInput.setText(matchStr + ": }");
+                  doFind(true);
                 }
               });
             }
@@ -954,14 +974,28 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       
       findInput = new Text(compositeBar, SWT.BORDER);
       findInput.setLayoutData("growx");
+      findDefaultBack = findInput.getBackground();
+      findDefaultFore = findInput.getForeground();
       
       downButton = new Button(compositeBar, SWT.PUSH);
       downButton.setText("Down");
       downButton.setAlignment(SWT.CENTER);
+      downButtonDefFont = downButton.getFont();
+      FontData[] downDefData = downButtonDefFont.getFontData();
+      downButtonBoldFont = new Font(Display.getCurrent(), 
+                                    downDefData[0].getName(), 
+                                    downDefData[0].getHeight(),
+                                    SWT.BOLD);
       
       upButton = new Button(compositeBar, SWT.PUSH);
       upButton.setText("Up");
       upButton.setAlignment(SWT.CENTER);
+      upButtonDefFont = downButton.getFont();
+      FontData[] upDefData = upButtonDefFont.getFontData();
+      upButtonBoldFont = new Font(Display.getCurrent(), 
+                                  upDefData[0].getName(), 
+                                  upDefData[0].getHeight(),
+                                  SWT.BOLD);
       
       SelectionListener findListen = new org.eclipse.swt.events.SelectionAdapter()
       {
@@ -980,6 +1014,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       
       downButton.addSelectionListener(findListen);
       findInput.addSelectionListener(findListen);
+      findInput.addModifyListener(new ModifyListener()
+      {        
+        @Override
+        public void modifyText(ModifyEvent arg0)
+        {
+          findInput.setForeground(findDefaultFore);
+          findInput.setBackground(findDefaultBack);
+          downButton.setFont(downButtonDefFont);
+          upButton.setFont(upButtonDefFont);
+        }
+      });
       
       upButton.addSelectionListener(new SelectionAdapter()
       {
@@ -1104,7 +1149,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               IncludeExcludeWindow regexInput;
               regexInput = new IncludeExcludeWindow("Output Filter", helpText, mode,
                   patternCallback, lastEnteredIncludeFilterPattern,
-                  lastEnteredExcludeFilterPattern);
+                  lastEnteredExcludeFilterPattern, ALLOW_ALL);
               placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
             }
           });
@@ -1206,6 +1251,56 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }      
     }
     
+    public void findEntry()
+    {
+      // Extract current line of text
+      String line = getCurrentLine();
+      
+      // Check if it is a trace line
+      Matcher traceLineMatcher = TRACE_LINE.matcher(line);
+      if (traceLineMatcher.matches())
+      {
+        String matchStr = traceLineMatcher.group(1);
+        findInput.setText(matchStr + ": {");
+        doFind(false);
+      }
+    }
+    
+    public void findExit()
+    {
+      // Extract current line of text
+      String line = getCurrentLine();
+      
+      // Check if it is a trace line
+      Matcher traceLineMatcher = TRACE_LINE.matcher(line);
+      if (traceLineMatcher.matches())
+      {
+        String matchStr = traceLineMatcher.group(1);
+        findInput.setText(matchStr + ": }");
+        doFind(true);
+      }
+    }
+    
+    private String getCurrentLine()
+    {
+      Point linePoint = textOutput.getSelection();
+      int lineOffset = linePoint.x;
+      String line = "";
+      
+      if (lineOffset != -1)
+      {
+        String text = textOutput.getText();
+        String earlierText = text.substring(0, lineOffset);
+        int startIndex = earlierText.lastIndexOf("\n");
+        int endIndex = text.indexOf("\n", lineOffset);
+        if ((startIndex != -1) && (endIndex != -1))
+        {
+          line = text.substring(startIndex + 1, endIndex - 1);
+        }
+      }
+      return line;
+    }
+    
     private void doFind(final boolean down)
     {
       if (!sRoot.isDisposed())
@@ -1216,25 +1311,21 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           public void run()
           {
             String searchText = findInput.getText();
-            doFind(down, searchText);
-          }
-        });
-      }
-    }
-    
-    private void doFind(final boolean down, final String searchText)
-    {
-      if (!sRoot.isDisposed())
-      {
-        sWindow.getDisplay().asyncExec(new Runnable()
-        {
-          @Override
-          public void run()
-          {
             if ((searchText != null) &&
                 (searchText.length() > 0) &&
                 (textOutput.getCharCount() > 0))
             {
+              if (down)
+              {                
+                downButton.setFont(downButtonBoldFont);
+                upButton.setFont(downButtonDefFont);
+              }
+              else
+              {
+                downButton.setFont(downButtonDefFont);
+                upButton.setFont(upButtonBoldFont);
+              }
+              
               String fullText = textOutput.getText();
               int startIndex = textOutput.getCaretOffset();
               int nextIndex;
@@ -1256,6 +1347,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 textOutput.setSelectionRange(nextIndex, searchText.length());
                 int lineIndex = textOutput.getLineAtOffset(nextIndex);
                 textOutput.setTopIndex(lineIndex);
+              }
+              else
+              {
+                Display disp = sWindow.getDisplay();
+                findInput.setBackground(new Color(Display.getCurrent(), 255, 200, 200));
+                findInput.setForeground(disp.getSystemColor(SWT.COLOR_BLACK));
               }
             }
           }

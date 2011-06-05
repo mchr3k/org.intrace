@@ -1,6 +1,7 @@
 package org.intrace.client.gui.helper;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import net.miginfocom.swt.MigLayout;
 
@@ -10,6 +11,8 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -37,13 +40,17 @@ public class IncludeExcludeWindow
 
   private final SaveCancelButtons saveCancelButtons;
 
+  private final Pattern allowedStrings;
+
   public IncludeExcludeWindow(String windowTitle, String helpText,
       UIMode mode,
       PatternInputCallback callback, 
       java.util.List<String> initIncludePatterns,
-      java.util.List<String> initExcludePatterns)
+      java.util.List<String> initExcludePatterns,
+      Pattern allowedStrings)
   {
     this.callback = callback;
+    this.allowedStrings = allowedStrings;
     MigLayout windowLayout = new MigLayout("fill", "[grow][100][100][grow]",
                                            "[grow][25]");
     if (initExcludePatterns == null)
@@ -233,6 +240,37 @@ public class IncludeExcludeWindow
                         saveCancelButtons.saveButton.setFocus();
                       }
                     });
+        
+        patternInput.addVerifyListener(new VerifyListener()
+        {          
+          @Override
+          public void verifyText(VerifyEvent event)
+          {
+            char ch = event.character;
+            if (ch == '\b')
+            {
+              event.doit = true;
+            }
+            else
+            {
+              char[] chs = new char[] {ch};
+              String str = new String(chs);
+              event.doit = allowedStrings.matcher(str).matches();
+            }
+          }
+        });
+        
+        sWindow.addListener(SWT.Traverse, new Listener() {
+          public void handleEvent(Event event) {
+            switch (event.detail) {
+            case SWT.TRAVERSE_ESCAPE:
+              sWindow.close();
+              event.detail = SWT.TRAVERSE_NONE;
+              event.doit = false;
+              break;
+            }
+          }
+        });
       }
     }
 
