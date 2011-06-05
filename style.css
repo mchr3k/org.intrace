@@ -75,8 +75,8 @@ a:hover { border-bottom: 1px dotted #000; text-decoration: none; }
 h1
 {
     border-bottom: 1px solid #CCCCCC;
-    margin: 14px 0 5px;
-    padding: 0.5em 0;
+    margin: 0px;
+    padding: 0px;
 }
 
 h2
