@@ -1,0 +1,25 @@
+---
+layout: default
+title: InTrace - Related Projects
+---
+<h1>Related Projects</h1>
+
+<p>There are a number of other projects which are similar to InTrace. There are two examples detailed below which provide a more flexible interface for writing custom instrumentation.</p>
+<ul>
+<li><a href="kenai.com/projects/btrace">BTrace</a></li>
+</ul><p>From the BTrace site: “BTrace can be used to dynamically trace a running Java program (similar to DTrace for OpenSolaris applications and OS). BTrace dynamically instruments the classes of the target application to inject tracing code (”bytecode tracing"). Tracing code is expressed in Java programming language. There is also integration with DTrace for the OpenSolaris platform."</p>
+
+<p>This tool let’s you write simple blocks of java code and then use the BTrace agent to insert your code into existing class files at runtime. It would be very easy to port the InTrace Callers analysis to run in BTrace. However, there is currently no support in BTrace for inserting code into basic block entry. This is something which the InTrace agent does support.</p>
+<ul>
+<li><a href="http://www.jboss.org/byteman">Byteman</a></li>
+</ul><p>From the Byteman site: “Byteman is a tool which simplifies tracing and testing of Java programs. Byteman allows you to insert extra Java code into your application, either as it is loaded during JVM startup or even after it has already started running. The injected code is allowed to access any of your data and call any application methods, including where they are private. You can inject code almost anywhere you want and there is no need to prepare the original source code in advance nor do you have to recompile, repackage or redeploy your application. In fact you can remove injected code and reinstall different code while the application continues to execute.”</p>
+<p>This is very similar to BTrace but allows you to write scripts in a different language. The project site features very details docs about what you can do with the tool.</p>
+<ul>
+<li><a href="http://www.eclipse.org/aspectj/">AspectJ</a></li>
+</ul><p>From the aspectj site: “A seamless aspect-oriented extension to the Javatm programming language”</p>
+
+<p>Aspectj allows you to write “aspects” which are a more generalised form of what BTrace allows. However, there is currently no support in AspectJ for inserting code into basic block entry. This is something which the InTrace agent does support.</p>
+<p>There is also a commercial tool which does much more than InTrace.</p>
+<ul>
+<li><a href="http://www.chrononsystems.com/">Chronon</a></li>
+</ul><p>Chronon uses instrumentation to capture a complete record of the execution of a program. This trace can then be played back in the Chronon debugger. It’s a really cool project and is a really neat application of instrumentation.</p>
