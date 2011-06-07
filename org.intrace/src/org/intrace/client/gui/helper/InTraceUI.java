@@ -1130,6 +1130,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           if ((includePattern != null) && (excludePattern != null))
           {
+            if (includePattern.equals(TraceFilterThread.MATCH_NONE) &&
+                excludePattern.equals(TraceFilterThread.MATCH_NONE))
+            {
+              includePattern = TraceFilterThread.MATCH_ALL;
+            }
             lastEnteredIncludeFilterPattern = includePattern;
             lastEnteredExcludeFilterPattern = excludePattern;
             if (enableFilter.getSelection())
@@ -1347,6 +1352,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 textOutput.setSelectionRange(nextIndex, searchText.length());
                 int lineIndex = textOutput.getLineAtOffset(nextIndex);
                 textOutput.setTopIndex(lineIndex);
+                findInput.setForeground(findDefaultFore);
+                findInput.setBackground(findDefaultBack);
               }
               else
               {

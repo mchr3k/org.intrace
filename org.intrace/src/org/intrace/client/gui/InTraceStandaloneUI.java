@@ -1,14 +1,18 @@
 package org.intrace.client.gui;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+
+import javax.imageio.ImageIO;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.Connection.ConnectState;
+import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
@@ -37,6 +41,9 @@ public class InTraceStandaloneUI
     is32.close();
     window.setImages(new Image[] {icon16, icon32});
     
+    // Load a high res dock icon on OSX
+    loadOSXDockImage();
+    
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
     
@@ -64,4 +71,38 @@ public class InTraceStandaloneUI
     ui.open();
   }
 
+  private static void loadOSXDockImage()
+  {
+    String osName = System.getProperty("os.name").toLowerCase();    
+    boolean isOSX = osName.contains("mac");
+    if (isOSX)
+    {
+      try
+      {
+        // Load Apple class
+        Class<?> appClass = Class.forName(
+                            "com.apple.eawt.Application");
+        
+        // Load methods
+        Method getAppMthd = appClass.getMethod("getApplication", 
+                                               (Class<?>[])null);
+        Method setDockIconMthd = appClass.getMethod("setDockIconImage", 
+                                                    Image.class);
+        
+        // Load high res icon
+        InputStream imgInput = InTraceStandaloneUI.class.getClassLoader().
+                               getResourceAsStream("osxlogo.png");
+        BufferedImage img = ImageIO.read(imgInput);
+        
+        // Invoke methods
+        Object app = getAppMthd.invoke(null, (Object[])null);
+        setDockIconMthd.invoke(app, img);
+      }
+      catch (Exception e)
+      {
+        System.out.println("Failed to load dock image: " + 
+                           e.toString());
+      }
+    }
+  }
 }
