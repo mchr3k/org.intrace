@@ -99,7 +99,7 @@
     <jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <fileset dir="./src" includes="**/icons/**/*.gif" />
+      <fileset dir="./src" includes="**/icons/**/*.*" />
       <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
     </jarjar>
 
