@@ -87,7 +87,7 @@ public class InTraceStandaloneUI
         Method getAppMthd = appClass.getMethod("getApplication", 
                                                (Class<?>[])null);
         Method setDockIconMthd = appClass.getMethod("setDockIconImage", 
-                                                    Image.class);
+                                                    java.awt.Image.class);
         
         // Load high res icon
         InputStream imgInput = InTraceStandaloneUI.class.getClassLoader().
