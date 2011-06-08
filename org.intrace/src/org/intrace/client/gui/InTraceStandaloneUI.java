@@ -91,7 +91,7 @@ public class InTraceStandaloneUI
         
         // Load high res icon
         InputStream imgInput = InTraceStandaloneUI.class.getClassLoader().
-                               getResourceAsStream("osxlogo.png");
+                               getResourceAsStream("org/intrace/icons/osxlogo.png");
         BufferedImage img = ImageIO.read(imgInput);
         
         // Invoke methods
