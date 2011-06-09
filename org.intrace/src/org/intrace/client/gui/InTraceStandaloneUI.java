@@ -22,7 +22,10 @@ public class InTraceStandaloneUI
    * @param args
    */
   public static void main(String[] args) throws IOException
-  {
+  {    
+    // Load a high res dock icon on OSX
+    loadOSXDockImage();
+    
     // Prepare window
     final Shell window = new Shell();
     window.setSize(new Point(800, 800));
@@ -40,9 +43,6 @@ public class InTraceStandaloneUI
     Image icon32 = new Image(display, is32);
     is32.close();
     window.setImages(new Image[] {icon16, icon32});
-    
-    // Load a high res dock icon on OSX
-    loadOSXDockImage();
     
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
