@@ -169,7 +169,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           // This is the active window
           
-          if (textOutputTab.textOutput.isFocusControl())
+          if ((textOutputTab != null) &&
+              (textOutputTab.textOutput != null) &&
+              (!textOutputTab.textOutput.isDisposed()) &&
+              textOutputTab.textOutput.isFocusControl())
           {
             // Textoutput is focused
             
