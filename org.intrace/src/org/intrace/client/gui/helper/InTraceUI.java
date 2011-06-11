@@ -165,7 +165,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       @Override
       public void handleEvent(Event e)
       {
-        if (sWindow.getDisplay().getActiveShell() == sWindow)
+        if (!sRoot.isDisposed() &&
+            (sWindow.getDisplay().getActiveShell() == sWindow))
         {
           // This is the active window
           
@@ -192,6 +193,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               textOutputTab.findExit();
             }
           }
+        }
+        else if (sRoot.isDisposed())
+        {
+          // Remove this listener
+          sWindow.getDisplay().removeFilter(SWT.KeyDown, this);
         }
       }
     });   
@@ -1022,10 +1028,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void modifyText(ModifyEvent arg0)
         {
-          findInput.setForeground(findDefaultFore);
-          findInput.setBackground(findDefaultBack);
-          downButton.setFont(downButtonDefFont);
-          upButton.setFont(upButtonDefFont);
+          if (!composite.isDisposed())
+          {
+            findInput.setForeground(findDefaultFore);
+            findInput.setBackground(findDefaultBack);
+            downButton.setFont(downButtonDefFont);
+            upButton.setFont(upButtonDefFont);
+          }
         }
       });
       
