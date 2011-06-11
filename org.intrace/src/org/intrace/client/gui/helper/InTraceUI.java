@@ -1511,7 +1511,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       
       helpLink = new Link(composite, SWT.NONE);
       helpLink.setLayoutData("growx,wrap");
-      helpLink.setText("<A HREF=\"https://github.com/mchr3k/org.intrace/wiki\">Online Help</A>");
+      helpLink.setText("<A HREF=\"http://mchr3k.github.com/org.intrace/\">Online Help</A>");
       
       textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
           | SWT.H_SCROLL | SWT.BORDER);

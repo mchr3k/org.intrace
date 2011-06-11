@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="intrace.ecl.feature"
-      label="InTrace Eclipse"
-      version="0.0.4">
+      label="InTrace Eclipse Plugin"
+      version="0.0.5">
 
    <description url="https://github.com/mchr3k/org.intrace/wiki">
       Enable launching Java Applications with the InTrace agent.
@@ -20,6 +20,6 @@
          id="intrace.ecl"
          download-size="0"
          install-size="0"
-         version="0.0.4"/>
+         version="0.0.5"/>
 
 </feature>

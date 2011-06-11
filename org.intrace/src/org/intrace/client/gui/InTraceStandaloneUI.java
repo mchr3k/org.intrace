@@ -1,11 +1,7 @@
 package org.intrace.client.gui;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-
-import javax.imageio.ImageIO;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -23,26 +19,37 @@ public class InTraceStandaloneUI
    */
   public static void main(String[] args) throws IOException
   {    
-    // Load a high res dock icon on OSX
-    loadOSXDockImage();
-    
     // Prepare window
+    Display.setAppName("InTrace");
     final Shell window = new Shell();
     window.setSize(new Point(800, 800));
-    window.setMinimumSize(new Point(800, 480));
-    
+    window.setMinimumSize(new Point(800, 480));   
+     
     // Load icons
     Display display = window.getDisplay();
     ClassLoader loader = InTraceStandaloneUI.class.getClassLoader();
+    
     InputStream is16 = loader.getResourceAsStream(
-                     "org/intrace/icons/intrace16.gif");    
+                       "org/intrace/icons/intrace16.gif");    
     Image icon16 = new Image(display, is16);
     is16.close();
+    
     InputStream is32 = loader.getResourceAsStream(
-                     "org/intrace/icons/intrace32.gif");    
+                       "org/intrace/icons/intrace32.gif");    
     Image icon32 = new Image(display, is32);
     is32.close();
-    window.setImages(new Image[] {icon16, icon32});
+    
+    InputStream is48 = loader.getResourceAsStream(
+                       "org/intrace/icons/intrace48.gif");    
+    Image icon48 = new Image(display, is48);
+    is48.close();
+
+    InputStream is128 = loader.getResourceAsStream(
+                        "org/intrace/icons/intrace128.png");    
+    Image icon128 = new Image(display, is128);
+    is128.close();
+    
+    window.setImages(new Image[] {icon16, icon32, icon48, icon128});
     
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
@@ -69,40 +76,5 @@ public class InTraceStandaloneUI
     
     // Open UI
     ui.open();
-  }
-
-  private static void loadOSXDockImage()
-  {
-    String osName = System.getProperty("os.name").toLowerCase();    
-    boolean isOSX = osName.contains("mac");
-    if (isOSX)
-    {
-      try
-      {
-        // Load Apple class
-        Class<?> appClass = Class.forName(
-                            "com.apple.eawt.Application");
-        
-        // Load methods
-        Method getAppMthd = appClass.getMethod("getApplication", 
-                                               (Class<?>[])null);
-        Method setDockIconMthd = appClass.getMethod("setDockIconImage", 
-                                                    java.awt.Image.class);
-        
-        // Load high res icon
-        InputStream imgInput = InTraceStandaloneUI.class.getClassLoader().
-                               getResourceAsStream("org/intrace/icons/osxlogo.png");
-        BufferedImage img = ImageIO.read(imgInput);
-        
-        // Invoke methods
-        Object app = getAppMthd.invoke(null, (Object[])null);
-        setDockIconMthd.invoke(app, img);
-      }
-      catch (Exception e)
-      {
-        System.out.println("Failed to load dock image: " + 
-                           e.toString());
-      }
-    }
   }
 }
