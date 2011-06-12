@@ -89,30 +89,26 @@ public class InTraceStandaloneUI
     boolean isOSX = osName.contains("mac");
     if (isOSX)
     {
-      System.setProperty("com.apple.mrj.application.apple.menu.about.name", "InTrace");
-      
       try
       {
         // Load Apple class
         Class<?> appCls = Class.forName(
                             "com.apple.eawt.Application");
-        Class<?> aboutHandlerCls = Class.forName("com.apple.eawt.AboutHandler");
-        Class<?> prefHandlerCls = Class.forName("com.apple.eawt.PreferencesHandler");
-        
+
         // Load methods
         Method getAppMthd = appCls.getMethod("getApplication", 
                                                (Class<?>[])null);
-        Method setAboutHandlerMthd = appCls.getMethod("setAboutHandler", aboutHandlerCls);
-        Method setPrefHandlerMthd = appCls.getMethod("setPreferencesHandler", prefHandlerCls);
+        Method removeAboutHandlerMthd = appCls.getMethod("removeAboutHandler", (Class<?>[])null);
+        Method removePrefHandlerMthd = appCls.getMethod("removePreferencesHandler", (Class<?>[])null);
         
         // Invoke methods
         Object app = getAppMthd.invoke(null, (Object[])null);
-        setAboutHandlerMthd.invoke(app, new Object[] {null});
-        setPrefHandlerMthd.invoke(app, new Object[] {null});
+        removeAboutHandlerMthd.invoke(app, (Object[])null);
+        removePrefHandlerMthd.invoke(app, (Object[])null);
       }
       catch (Exception e)
       {
-        System.out.println("Failed to load dock image: " + 
+        System.out.println("Failed to hide OSX menu items: " + 
                            e.toString());
       }
     }
