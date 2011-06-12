@@ -100,6 +100,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private IConnectionStateCallback connCallback = null;
   private MigLayout rootLayout;
 
+  private String buttonTabsLayoutData_Default;
+
+  private String buttonTabsLayoutData_Max;
+
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
     this.connCallback = connCallback;
@@ -124,11 +128,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     rootLayout = new MigLayout("fill", "[]", "[][][grow]");
     xiRoot.setLayout(rootLayout);
     
+    buttonTabsLayoutData_Default = "grow,wrap,wmin 0";
+    buttonTabsLayoutData_Max = "grow,wrap,wmin 0,hmin 0";
+    activeButtonTabs = null;
+    
     if (mode == UIMode.STANDALONE)
     {
       buttonCTabs = null;           
       buttonTabs = new TabFolder(xiRoot, SWT.NONE);
-      buttonTabs.setLayoutData("grow,wrap,wmin 0");      
+      buttonTabs.setLayoutData(buttonTabsLayoutData_Default);
+      activeButtonTabs = buttonTabs;
       fillButtonTabs(buttonTabs);
     }
     else
@@ -136,7 +145,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       buttonTabs = null;      
       buttonCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
       buttonCTabs.setSimple(false);
-      buttonCTabs.setLayoutData("grow,wrap,wmin 0");
+      buttonCTabs.setLayoutData(buttonTabsLayoutData_Default);
+      activeButtonTabs = buttonCTabs;
       fillButtonCTabs(buttonCTabs);
       buttonCTabs.setSelection(0);
     }
@@ -146,6 +156,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       outputCTabs = null;
       outputTabs = new TabFolder(xiRoot, SWT.NONE);
       outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");
+      
+      outputTabs.addListener(SWT.MouseDoubleClick, new Listener()
+      {        
+        @Override
+        public void handleEvent(Event paramEvent)
+        {
+          toggleOutputSize();
+        }
+      });
+      
       fillOutputTabs(outputTabs);
     }
     else
@@ -153,7 +173,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       outputTabs = null;
       outputCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
       outputCTabs.setSimple(false);
-      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");      
+      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");
+      
+      outputCTabs.addListener(SWT.MouseDoubleClick, new Listener()
+      {        
+        @Override
+        public void handleEvent(Event paramEvent)
+        {
+          toggleOutputSize();
+        }
+      });
+      
       fillOutputCTabs(outputCTabs);           
       outputCTabs.setSelection(0);      
     }
@@ -203,6 +233,29 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     });   
   }
   
+  private boolean outputSizeFull = false;
+  
+  protected void toggleOutputSize()
+  {
+    if (outputSizeFull)
+    {
+      // Restore normal UI
+      MigLayout rootLayout = new MigLayout("fill", "[]", "[][][grow]");
+      sRoot.setLayout(rootLayout);
+      activeButtonTabs.setLayoutData(buttonTabsLayoutData_Default);
+      outputSizeFull = false;
+    }
+    else
+    {
+      // Maximise Output
+      MigLayout rootLayout = new MigLayout("fill", "[]", "[0]0[0]0[grow]");
+      sRoot.setLayout(rootLayout);
+      activeButtonTabs.setLayoutData(buttonTabsLayoutData_Max);
+      outputSizeFull = true;
+    }
+    sRoot.layout();
+  }
+
   public void setFixedLocalConnection(final String xiPort)
   {    
     fixedConnection = true;
@@ -808,7 +861,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private TextOutputTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
-          "[100][100][100][150][100][grow]", "[20][20][grow][]");
+          "[100][100][100][150][100][grow]", "[][][grow][]");
 
       composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -1513,7 +1566,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private HelpOutputTab(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
-          "[grow]", "[20][grow]");
+          "[grow]", "[][grow]");
 
       composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -1597,6 +1650,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
+
+  private Composite activeButtonTabs;
 
   public void setSocket(Socket socket)
   {
