@@ -98,8 +98,8 @@ public class InTraceStandaloneUI
         // Load methods
         Method getAppMthd = appCls.getMethod("getApplication", 
                                                (Class<?>[])null);
-        Method removeAboutHandlerMthd = appCls.getMethod("removeAboutHandler", (Class<?>[])null);
-        Method removePrefHandlerMthd = appCls.getMethod("removePreferencesHandler", (Class<?>[])null);
+        Method removeAboutHandlerMthd = appCls.getMethod("removeAboutMenuItem", (Class<?>[])null);
+        Method removePrefHandlerMthd = appCls.getMethod("removePreferencesMenuItem", (Class<?>[])null);
         
         // Invoke methods
         Object app = getAppMthd.invoke(null, (Object[])null);
