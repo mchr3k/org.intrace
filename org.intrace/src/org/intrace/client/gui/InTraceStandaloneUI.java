@@ -2,7 +2,6 @@ package org.intrace.client.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -52,9 +51,6 @@ public class InTraceStandaloneUI
     
     window.setImages(new Image[] {icon16, icon32, icon48, icon128});
     
-    // Do special OSX integration work
-    doOSXWork();
-    
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
     
@@ -80,37 +76,5 @@ public class InTraceStandaloneUI
     
     // Open UI
     ui.open();
-  }
-  
-  
-  private static void doOSXWork()
-  {
-    String osName = System.getProperty("os.name").toLowerCase();    
-    boolean isOSX = osName.contains("mac");
-    if (isOSX)
-    {
-      try
-      {
-        // Load Apple class
-        Class<?> appCls = Class.forName(
-                            "com.apple.eawt.Application");
-
-        // Load methods
-        Method getAppMthd = appCls.getMethod("getApplication", 
-                                               (Class<?>[])null);
-        Method removeAboutHandlerMthd = appCls.getMethod("removeAboutMenuItem", (Class<?>[])null);
-        Method removePrefHandlerMthd = appCls.getMethod("removePreferencesMenuItem", (Class<?>[])null);
-        
-        // Invoke methods
-        Object app = getAppMthd.invoke(null, (Object[])null);
-        removeAboutHandlerMthd.invoke(app, (Object[])null);
-        removePrefHandlerMthd.invoke(app, (Object[])null);
-      }
-      catch (Exception e)
-      {
-        System.out.println("Failed to hide OSX menu items: " + 
-                           e.toString());
-      }
-    }
   }
 }
