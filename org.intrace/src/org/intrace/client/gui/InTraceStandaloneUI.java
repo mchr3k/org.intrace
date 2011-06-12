@@ -107,8 +107,8 @@ public class InTraceStandaloneUI
         
         // Invoke methods
         Object app = getAppMthd.invoke(null, (Object[])null);
-        setAboutHandlerMthd.invoke(app, (Object[])null);
-        setPrefHandlerMthd.invoke(app, (Object[])null);
+        setAboutHandlerMthd.invoke(app, new Object[] {null});
+        setPrefHandlerMthd.invoke(app, new Object[] {null});
       }
       catch (Exception e)
       {
