@@ -2,6 +2,7 @@ package org.intrace.client.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -51,6 +52,9 @@ public class InTraceStandaloneUI
     
     window.setImages(new Image[] {icon16, icon32, icon48, icon128});
     
+    // Do special OSX integration work
+    doOSXWork();
+    
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
     
@@ -76,5 +80,41 @@ public class InTraceStandaloneUI
     
     // Open UI
     ui.open();
+  }
+  
+  
+  private static void doOSXWork()
+  {
+    String osName = System.getProperty("os.name").toLowerCase();    
+    boolean isOSX = osName.contains("mac");
+    if (isOSX)
+    {
+      System.setProperty("com.apple.mrj.application.apple.menu.about.name", "InTrace");
+      
+      try
+      {
+        // Load Apple class
+        Class<?> appCls = Class.forName(
+                            "com.apple.eawt.Application");
+        Class<?> aboutHandlerCls = Class.forName("com.apple.eawt.AboutHandler");
+        Class<?> prefHandlerCls = Class.forName("com.apple.eawt.PreferencesHandler");
+        
+        // Load methods
+        Method getAppMthd = appCls.getMethod("getApplication", 
+                                               (Class<?>[])null);
+        Method setAboutHandlerMthd = appCls.getMethod("setAboutHandler", aboutHandlerCls);
+        Method setPrefHandlerMthd = appCls.getMethod("setPreferencesHandler", prefHandlerCls);
+        
+        // Invoke methods
+        Object app = getAppMthd.invoke(null, (Object[])null);
+        setAboutHandlerMthd.invoke(app, (Object[])null);
+        setPrefHandlerMthd.invoke(app, (Object[])null);
+      }
+      catch (Exception e)
+      {
+        System.out.println("Failed to load dock image: " + 
+                           e.toString());
+      }
+    }
   }
 }
