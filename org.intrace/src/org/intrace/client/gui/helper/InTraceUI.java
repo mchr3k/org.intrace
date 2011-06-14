@@ -860,7 +860,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
     private TextOutputTab(Composite parent)
     {
-      MigLayout windowLayout = new MigLayout("debug,fill,wmin 0,hmin 0",
+      MigLayout windowLayout = new MigLayout("fill,wmin 0,hmin 0",
           "[100][100][100][150][100][grow]", "[][][grow][]");
 
       composite = new Composite(parent, SWT.NONE);
