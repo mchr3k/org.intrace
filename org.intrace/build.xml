@@ -253,6 +253,18 @@
     <echo>****</echo>
   </target>
 
+  <target name="release1_dev" depends="jar,update_eclipse_jars">
+    <copy todir="../binaries/jars/latest_development" overwrite="true">
+      <fileset file="./build/jars/intrace-agent.jar" />
+      <fileset file="./build/jars/intrace-ui.jar" />
+    </copy>
+    <echo>****</echo>
+    <echo>****</echo>
+    <echo>Now run Build All in Eclipse for the intrace.ecl.site project</echo>
+    <echo>****</echo>
+    <echo>****</echo>
+  </target>
+
   <target name="release2" description="Copy around built Eclipse files">
     <copy todir="../intrace.appengine/war" overwrite="true">
       <fileset dir="../intrace.ecl.site/" excludes="artifacts.jar,content.jar,.project"/>
