@@ -25,7 +25,6 @@ public class InstrumentedClassWriter extends ClassWriter
 {
   private final String className;
   private final ClassAnalysis analysis;
-  private int methodNum = 1;
 
   /**
    * cTor
@@ -121,7 +120,6 @@ public class InstrumentedClassWriter extends ClassWriter
     @Override
     public void visitCode()
     {
-      methodNum++;
       if (ctorEntryState != CTorEntryState.ISCTOR)
       {
         addEntryCalls();
