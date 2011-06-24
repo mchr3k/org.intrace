@@ -4,7 +4,7 @@ title: InTrace - Home
 ---
 <h1>Home</h1>
 
-<p>InTrace is a Java Agent which modifies Java class files at runtime to add instrumentation. This tool can be used by adding a JVM parameter to a new JVM process (see below) or by using the <a href="eclipse.html">Eclipse plugin</a>.
+<p>InTrace is a tool which enables the tracing of program execution without recompilation. You can easily trace your own classes, library classes or system classes. This tool can be used by adding a single extra JVM parameter to a new JVM process (see below) or by using the <a href="eclipse.html">Eclipse plugin</a>.
 
 <h2>Why would I use this?</h2>
 
@@ -13,13 +13,13 @@ title: InTrace - Home
 <p>1) System.out is not a great API - the output only goes to stdout. What about more advanced output like output to file or output over the network?<br>
 2) Adding System.out lines is slow and boring. Why not get the JVM to do this work for you?
 
-<p>InTrace solves both of these issues by allowing you to automatically instrument Java bytecode. InTrace is very quick to setup so you can get started easily.
+<p>InTrace solves both of these issues by allowing you to automatically trace Java classes. InTrace is very quick to setup so you can get started easily.
 
-<p>See <a href="howintraceworks.html">How InTrace Works</a> to see more details of the instrumentation which is added.
+<p>See <a href="howintraceworks.html">How InTrace Works</a> to see more details of the trace which is added.
 
 <h2>Output</h2>
 
-<p>The instrumentation added by InTrace allows you to record method entry/exit, basic block execution and method arguments.
+<p>The trace added by InTrace allows you to record method entry/exit, basic block execution and method arguments.
 
 <pre>[14:14:30]:[1]:example.TraceExample:workMethod: {:29
 [14:14:30]:[1]:example.TraceExample:workMethod: Arg: foobar
@@ -63,7 +63,7 @@ title: InTrace - Home
 <p>When the agent is first loaded it outputs a line to stdout to say which port it is listening on.
 
 <pre>## Loaded InTrace Agent.
-## Listening on port 9123</pre>
+## InTrace listening on port 9123</pre>
 
 <p>The default is 9123 but will use a higher port if listening on this port fails. You can use this port to connect to the Agent and control the settings at runtime.
 
