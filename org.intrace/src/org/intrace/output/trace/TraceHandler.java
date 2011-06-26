@@ -247,6 +247,7 @@ public class TraceHandler implements IInstrumentationHandler
       String objStr = Arrays.deepToString(new Object[]
       { objArg });
       objStr = objStr.substring(1, objStr.length() - 1);
+      objStr = objStr.replaceAll("\\p{Cntrl}", "\u25A1");
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + objStr);
     }
@@ -257,8 +258,10 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (argTrace)
     {
+      String objStr = Arrays.deepToString(objArrayArg);
+      objStr = objStr.replaceAll("\\p{Cntrl}", "\u25A1");
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(objArrayArg) + Arrays.deepToString(objArrayArg));
+                       + getArrayLenStr(objArrayArg) + objStr);
     }
   }
 

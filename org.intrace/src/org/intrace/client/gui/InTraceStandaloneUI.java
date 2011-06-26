@@ -1,7 +1,6 @@
 package org.intrace.client.gui;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -27,29 +26,8 @@ public class InTraceStandaloneUI
      
     // Load icons
     Display display = window.getDisplay();
-    ClassLoader loader = InTraceStandaloneUI.class.getClassLoader();
-    
-    InputStream is16 = loader.getResourceAsStream(
-                       "org/intrace/icons/intrace16.gif");    
-    Image icon16 = new Image(display, is16);
-    is16.close();
-    
-    InputStream is32 = loader.getResourceAsStream(
-                       "org/intrace/icons/intrace32.gif");    
-    Image icon32 = new Image(display, is32);
-    is32.close();
-    
-    InputStream is48 = loader.getResourceAsStream(
-                       "org/intrace/icons/intrace48.gif");    
-    Image icon48 = new Image(display, is48);
-    is48.close();
-
-    InputStream is128 = loader.getResourceAsStream(
-                        "org/intrace/icons/intrace128.png");    
-    Image icon128 = new Image(display, is128);
-    is128.close();
-    
-    window.setImages(new Image[] {icon16, icon32, icon48, icon128});
+    Image[] icons = InTraceUI.getIcons(display);
+    window.setImages(icons);
     
     // Fill in UI
     InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);

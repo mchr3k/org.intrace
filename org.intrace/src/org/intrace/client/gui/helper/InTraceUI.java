@@ -3,6 +3,7 @@ package org.intrace.client.gui.helper;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
@@ -31,6 +32,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.program.Program;
@@ -71,8 +73,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   
   private static final Pattern TRACE_LINE = Pattern.compile("^\\[[^\\]]+]:(\\[[^\\]]+\\]:([^:]+:[^:]+)):.*");
   
-  private static final Pattern ALLOW_ALL = Pattern.compile(".");
-  private static final Pattern ALLOW_CLASSES = Pattern.compile("[0-9a-zA-Z\\.\\$]");
+  private static final Pattern ALLOW_ALL = Pattern.compile(".*");
+  private static final Pattern ALLOW_CLASSES = Pattern.compile("^[0-9a-zA-Z\\.\\$]*|\\*$");
 
   public void open()
   {
@@ -2000,5 +2002,33 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   {
     disconnect();
     textOutputTab.filterThread.interrupt();
+  }
+  
+  public static Image[] getIcons(Display display) throws IOException
+  {
+    // Load icons
+    ClassLoader loader = InTraceUI.class.getClassLoader();
+    
+    InputStream is16 = loader.getResourceAsStream(
+                       "org/intrace/icons/intrace16.gif");    
+    Image icon16 = new Image(display, is16);
+    is16.close();
+    
+    InputStream is32 = loader.getResourceAsStream(
+                       "org/intrace/icons/intrace32.gif");    
+    Image icon32 = new Image(display, is32);
+    is32.close();
+    
+    InputStream is48 = loader.getResourceAsStream(
+                       "org/intrace/icons/intrace48.gif");    
+    Image icon48 = new Image(display, is48);
+    is48.close();
+
+    InputStream is128 = loader.getResourceAsStream(
+                        "org/intrace/icons/intrace128.png");    
+    Image icon128 = new Image(display, is128);
+    is128.close();
+    
+    return new Image[] {icon16, icon32, icon48, icon128};
   }
 }

@@ -503,7 +503,7 @@ public class ClassTransformer implements ClassFileTransformer
       System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
-    else if (Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
+    else if (!Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
     {
       System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
@@ -511,7 +511,7 @@ public class ClassTransformer implements ClassFileTransformer
       klasses.addAll(getLoadedClassesForModification());
       instrumentKlasses(klasses);
     }
-    else if (Arrays.equals(oldSettings.getExcludeClassRegex(), settings.getExcludeClassRegex()))
+    else if (!Arrays.equals(oldSettings.getExcludeClassRegex(), settings.getExcludeClassRegex()))
     {
       System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());

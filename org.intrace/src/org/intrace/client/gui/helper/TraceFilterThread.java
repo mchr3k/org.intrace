@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
@@ -41,6 +42,12 @@ public class TraceFilterThread implements Runnable
     List<String> getExcludePattern();
   }
 
+  /**
+   * This constant defines the minimum gap in milliseconds between
+   * callbacks to the TraceTextHandler.
+   */
+  private static final long MIN_UPDATE_GAP = 100; // milliseconds
+  
   /**
    * System trace is never filtered out
    */
@@ -199,6 +206,11 @@ public class TraceFilterThread implements Runnable
     TraceFilterProgressHandler patternProgress = null;
     List<String> activeIncludePattern = MATCH_ALL;
     List<String> activeExcludePattern = MATCH_NONE;
+    
+    StringBuilder bufferedText = new StringBuilder();
+    long lastTextTime = 0;
+    int bufferedTextCount = 0;
+    
     try
     {
       while (true)
@@ -224,52 +236,104 @@ public class TraceFilterThread implements Runnable
             numChars = 0;
           }
 
-          String newTraceLine = newTraceLines.take();          
-
-          if (!newTraceLine.startsWith(SYSTEM_TRACE_PREFIX))
+          String newTraceLine = null;
+          if (bufferedTextCount > 0)
           {
-            traceLineSemaphore.release();
+            newTraceLine = newTraceLines.poll(MIN_UPDATE_GAP, 
+                                              TimeUnit.MILLISECONDS);
+          }
+          else
+          {
+            newTraceLine = newTraceLines.take();
           }
 
-          if (numChars < charMemLimit)
+          long newTextTime = System.currentTimeMillis();
+          long timeSinceLastText = newTextTime - lastTextTime;
+          
+          boolean bufferedTextToWrite = (bufferedTextCount > 0);
+          boolean writeBufferedText = (timeSinceLastText > MIN_UPDATE_GAP) && bufferedTextToWrite;
+          if (writeBufferedText)
           {
-            lowMemorySignalled = false;
-
-            if (mode == UIMode.STANDALONE)
-            {
-              // I expected a factor of 2 due to trace strings being held by this
-              // thread along with another copy held by the UI. However, profiling
-              // shows a factor of 18 is necessary. This is because we need to be able
-              // to handle entire copies of the active data when adding new strings.
-              numChars += (18 * newTraceLine.length());
-            }
-            else
-            {
-              // Running within eclipse so better be really conservative
-              numChars += (40 * newTraceLine.length());
-            }
-
-            traceLines.add(newTraceLine);
-            totalLines.incrementAndGet();
+            String bufferedTextStr = bufferedText.toString();
+            
+            totalLines.addAndGet(bufferedTextCount);
+            displayedLines.addAndGet(bufferedTextCount);
+            callback.appendText(bufferedTextStr);
             callback.setStatus(displayedLines.get(), totalLines.get());
-            if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
-                (!matches(activeExcludePattern, newTraceLine) &&
-                  matches(activeIncludePattern, newTraceLine)))
-            {
-              displayedLines.incrementAndGet();
-              callback.appendText(newTraceLine);
-              callback.setStatus(displayedLines.get(), totalLines.get());
-            }
+            
+            lastTextTime = newTextTime;
+            
+            bufferedText.setLength(0);
+            bufferedTextCount = 0;
+            bufferedTextToWrite = false;
           }
-          else if (!lowMemorySignalled)
+          
+          if (newTraceLine != null)
+          {
+            if (!newTraceLine.startsWith(SYSTEM_TRACE_PREFIX))
+            {
+              traceLineSemaphore.release();
+            }
+  
+            if (numChars < charMemLimit)
+            {
+              lowMemorySignalled = false;
+  
+              if (mode == UIMode.STANDALONE)
+              {
+                // I expected a factor of 2 due to trace strings being held by this
+                // thread along with another copy held by the UI. However, profiling
+                // shows a factor of 18 is necessary. This is because we need to be able
+                // to handle entire copies of the active data when adding new strings.
+                numChars += (18 * newTraceLine.length());
+              }
+              else
+              {
+                // Running within eclipse so better be really conservative
+                numChars += (40 * newTraceLine.length());
+              }
+  
+              traceLines.add(newTraceLine);
+
+              if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
+                  (!matches(activeExcludePattern, newTraceLine) &&
+                    matches(activeIncludePattern, newTraceLine)))
+              {
+                if (timeSinceLastText > MIN_UPDATE_GAP)
+                {
+                  totalLines.addAndGet(1);
+                  displayedLines.addAndGet(1);
+                  callback.appendText(newTraceLine);
+                  callback.setStatus(displayedLines.get(), totalLines.get());
+                  
+                  lastTextTime = newTextTime;
+                }
+                else
+                {
+                  bufferedTextCount++;
+                  bufferedText.append(newTraceLine);
+                }
+              }
+              else
+              {
+                totalLines.incrementAndGet();
+                callback.setStatus(displayedLines.get(), totalLines.get());
+              }
+            }            
+          }
+          
+          if (!bufferedTextToWrite &&
+              (numChars >= charMemLimit) &&
+              !lowMemorySignalled)
           {
             lowMemorySignalled = true;
             String memWarning = SYSTEM_TRACE_PREFIX + " " + LOW_MEMORY;            
             traceLines.add(memWarning);
             totalLines.incrementAndGet();
+            displayedLines.incrementAndGet();
             callback.appendText(memWarning);
             callback.setStatus(displayedLines.get(), totalLines.get());
-          }
+          }                   
         }
         catch (InterruptedException ex)
         {

@@ -1,5 +1,6 @@
 package org.intrace.agent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -175,8 +176,8 @@ public class AgentSettings
   {
     // Output key settings
     String currentSettings = "";
-    currentSettings += "Class Regex                : " + classRegex + "\n";
-    currentSettings += "Exclude Class Regex        : " + excludeClassRegex + "\n";
+    currentSettings += "Class Regex                : " + Arrays.toString(classRegex) + "\n";
+    currentSettings += "Exclude Class Regex        : " + Arrays.toString(excludeClassRegex) + "\n";
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
     currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles
                        + "\n";

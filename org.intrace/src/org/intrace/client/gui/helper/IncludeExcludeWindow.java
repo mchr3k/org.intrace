@@ -1,5 +1,6 @@
 package org.intrace.client.gui.helper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -60,6 +62,18 @@ public class IncludeExcludeWindow
 
     sWindow = new Shell(SWT.APPLICATION_MODAL | SWT.CLOSE | SWT.TITLE
                         | SWT.RESIZE);
+    
+    try
+    {
+      Display display = sWindow.getDisplay();
+      Image[] icons = InTraceUI.getIcons(display);
+      sWindow.setImages(icons);
+    }
+    catch (IOException ex)
+    {
+      // Ignore
+    }
+    
     sWindow.setText(windowTitle);
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(400, 400));
@@ -246,16 +260,12 @@ public class IncludeExcludeWindow
           @Override
           public void verifyText(VerifyEvent event)
           {
-            char ch = event.character;
-            if (ch == '\b')
+            String str = event.text;
+            if  (str.length() > 0)
             {
-              event.doit = true;
-            }
-            else
-            {
-              char[] chs = new char[] {ch};
-              String str = new String(chs);
-              event.doit = allowedStrings.matcher(str).matches();
+              String existingStr = newPattern.patternInput.getText();
+              String newStr = existingStr + str;
+              event.doit = allowedStrings.matcher(newStr).matches();
             }
           }
         });
@@ -389,7 +399,7 @@ public class IncludeExcludeWindow
           {
             excludeIndex++;
           }
-          }
+        }
       }
 
       private void removeItem()
