@@ -3,7 +3,7 @@
    <description name="InTrace Update Site">
       InTrace Update Site
    </description>
-   <feature url="features/intrace.ecl.feature_0.0.6.jar" id="intrace.ecl.feature" version="0.0.6">
+   <feature url="features/intrace.ecl.feature_0.7.0.jar" id="intrace.ecl.feature" version="0.7">
       <category name="intrace.ecl.category"/>
    </feature>
    <category-def name="intrace.ecl.category" label="InTrace Eclipse Plugin"/>
