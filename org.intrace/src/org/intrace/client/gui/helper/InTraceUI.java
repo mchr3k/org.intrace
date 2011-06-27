@@ -1022,7 +1022,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
       
-      MigLayout barLayout = new MigLayout("debug,fill,wmin 0,hmin 0",
+      MigLayout barLayout = new MigLayout("fill,wmin 0,hmin 0",
           "[][grow][][200][][]", "[]");
 
       final Composite compositeBar = new Composite(composite, SWT.NONE);
