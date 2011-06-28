@@ -417,7 +417,8 @@ public class ShowInTraceOutputAction implements IViewActionDelegate,
   private boolean isInTraceLaunchAvailable(ILaunch launch)
   {
     String launchIDStr = launch.getAttribute(LaunchConfigurationDelegate.INTRACE_LAUNCHKEY);
-    if (launchIDStr.length() > 0)
+    if ((launchIDStr != null) &&
+        (launchIDStr.length() > 0))
     {
       try
       {
