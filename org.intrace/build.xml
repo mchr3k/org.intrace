@@ -247,6 +247,12 @@
       <fileset file="./build/jars/intrace-agent.jar" />
       <fileset file="./build/jars/intrace-ui.jar" />
     </copy>
+    <delete>
+      <fileset dir="../intrace.appengine/war/features/" includes="*.jar"/>
+      <fileset dir="../intrace.appengine/war/plugins/" includes="*.jar"/>
+      <fileset dir="../intrace.ecl.site/features/" includes="*.jar"/>
+      <fileset dir="../intrace.ecl.site/plugins/" includes="*.jar"/>
+    </delete>
     <echo>****</echo>
     <echo>****</echo>
     <echo>Now run Build All in Eclipse for the intrace.ecl.site project</echo>
@@ -259,6 +265,12 @@
       <fileset file="./build/jars/intrace-agent.jar" />
       <fileset file="./build/jars/intrace-ui.jar" />
     </copy>
+    <delete>
+      <fileset dir="../intrace.appengine/war/features/" includes="*.jar"/>
+      <fileset dir="../intrace.appengine/war/plugins/" includes="*.jar"/>
+      <fileset dir="../intrace.ecl.site/features/" includes="*.jar"/>
+      <fileset dir="../intrace.ecl.site/plugins/" includes="*.jar"/>
+    </delete>
     <echo>****</echo>
     <echo>****</echo>
     <echo>Now run Build All in Eclipse for the intrace.ecl.site project</echo>

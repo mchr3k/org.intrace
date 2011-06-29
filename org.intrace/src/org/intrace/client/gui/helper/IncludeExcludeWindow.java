@@ -350,13 +350,25 @@ public class IncludeExcludeWindow
         
         // Add headers
         if (xiInclude && (includeIndex == -1))
-        {
-          patternSet.add(INCLUDE_TITLE, 0);
+        {          
+          patternSet.add(INCLUDE_TITLE, 0);          
           includeIndex = 0;
+          if (excludeIndex > -1)
+          {
+            // Include header was already added
+            excludeIndex++;
+            
+            // Add spacer
+            patternSet.add("", 1);
+            excludeIndex++;
+          }
         }
         else if (!xiInclude && (excludeIndex == -1))
         {
-          patternSet.add("");
+          if (includeIndex > -1)
+          {
+            patternSet.add("");
+          }          
           patternSet.add(EXCLUDE_TITLE);
           excludeIndex = patternSet.getItemCount() - 1;
         }
@@ -417,7 +429,6 @@ public class IncludeExcludeWindow
           }
           else
           {
-            patternSet.remove(selectedItem);
             removeIndex(selectedItem);
           }
         }
@@ -442,8 +453,7 @@ public class IncludeExcludeWindow
           }
           else
           {
-            newPattern.patternInput.setText(patternSet.getItem(selectedItem).trim());
-            patternSet.remove(selectedItem);
+            newPattern.patternInput.setText(patternSet.getItem(selectedItem).trim());            
             removeIndex(selectedItem);
             newPattern.patternInput.setFocus();
             newPattern.patternInput
@@ -456,12 +466,28 @@ public class IncludeExcludeWindow
       
       private void removeIndex(int index)
       {
-        int count = patternSet.getItemCount();
+        // Remove item
+        patternSet.remove(index);
         
+        // Check if we removed an included item when we already
+        // had an excluded item
+        int count = patternSet.getItemCount();        
         if ((excludeIndex != -1) && (index < excludeIndex))
         {
           // Removed an item above the exclude header
           excludeIndex--;
+        }
+        
+        // Check what kind of item we removed
+        if ((excludeIndex == -1) || (index < excludeIndex))
+        {
+          newPattern.includeButton.setSelection(true);
+          newPattern.excludeButton.setSelection(false);
+        }
+        else
+        {
+          newPattern.includeButton.setSelection(false);
+          newPattern.excludeButton.setSelection(true);
         }
         
         if ((includeIndex != -1) && 
@@ -472,7 +498,17 @@ public class IncludeExcludeWindow
           // of the exclude header or the overall count
           // of items
           patternSet.remove(includeIndex);
-          includeIndex = -1;          
+          includeIndex = -1;
+          
+          if (excludeIndex > -1)
+          {
+            // Include element was removed
+            excludeIndex--;
+            
+            // Remove spacer element
+            patternSet.remove(0);
+            excludeIndex--;
+          }
         }
         
         if ((excludeIndex != -1) && 

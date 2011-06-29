@@ -19,6 +19,7 @@ public class TraceExample
    */
   public static void main(String[] args)
   {
+    System.out.println("Foo\r\nBar");
     try
     {
       otherMain(args[0]);

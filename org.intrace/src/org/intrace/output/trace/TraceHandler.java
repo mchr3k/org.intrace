@@ -235,6 +235,8 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
+  private final String ESCAPE_PATTERN = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
+  
   @Override
   public void val(String desc, String className, String methodName,
                   Object objArg)
@@ -247,7 +249,7 @@ public class TraceHandler implements IInstrumentationHandler
       String objStr = Arrays.deepToString(new Object[]
       { objArg });
       objStr = objStr.substring(1, objStr.length() - 1);
-      objStr = objStr.replaceAll("\\p{Cntrl}", "\u25A1");
+      objStr = objStr.replaceAll(ESCAPE_PATTERN, "\u25A1");
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + objStr);
     }
@@ -259,7 +261,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       String objStr = Arrays.deepToString(objArrayArg);
-      objStr = objStr.replaceAll("\\p{Cntrl}", "\u25A1");
+      objStr = objStr.replaceAll(ESCAPE_PATTERN, "\u25A1");
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + getArrayLenStr(objArrayArg) + objStr);
     }

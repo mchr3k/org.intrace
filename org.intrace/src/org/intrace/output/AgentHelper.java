@@ -562,7 +562,7 @@ public class AgentHelper
           }
           catch (Throwable th)
           {
-            instrumentationHandler.val(desc, className, methodName, "<Exception thrown: " + th.toString() + ">");
+            instrumentationHandler.val(desc, className, methodName, "<InTrace: Exception thrown from toString() on Object arg: " + th.toString() + ">");
           }
         }
       }
