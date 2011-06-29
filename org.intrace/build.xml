@@ -252,6 +252,8 @@
       <fileset dir="../intrace.appengine/war/plugins/" includes="*.jar"/>
       <fileset dir="../intrace.ecl.site/features/" includes="*.jar"/>
       <fileset dir="../intrace.ecl.site/plugins/" includes="*.jar"/>
+      <fileset dir="../intrace.ecl.site/" includes="artifacts.jar"/>
+      <fileset dir="../intrace.ecl.site/" includes="content.jar"/>
     </delete>
     <echo>****</echo>
     <echo>****</echo>
