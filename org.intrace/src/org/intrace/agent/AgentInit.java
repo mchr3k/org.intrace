@@ -82,7 +82,10 @@ public class AgentInit
   {
     try
     {
-      AgentInit.class.wait();
+      while (serverPort == -1)
+      {
+        AgentInit.class.wait();
+      }
     }
     catch (InterruptedException e)
     {

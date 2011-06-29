@@ -75,14 +75,18 @@ public class InTraceLaunch implements Runnable
       ObjectOutputStream out = new ObjectOutputStream(clientConnection.getOutputStream());
       out.writeObject("getsettings");
       out.flush();
-      
-      // Read the returned settings
-      ObjectInputStream in = new ObjectInputStream(clientConnection.getInputStream());
-      Object obj = in.readObject();
-      if (obj instanceof Map<?,?>)
+            
+      // Read the returned settings, discard any instrumentation status messages     
+      ObjectInputStream in;
+      while (agentServerPort == null)
       {
-        Map<String,String> settingsMap = (Map<String,String>)obj;
-        agentServerPort = settingsMap.get(AgentConfigConstants.SERVER_PORT);
+        in = new ObjectInputStream(clientConnection.getInputStream());
+        Object obj = in.readObject();
+        if (obj instanceof Map<?,?>)
+        {
+          Map<String,String> settingsMap = (Map<String,String>)obj;
+          agentServerPort = settingsMap.get(AgentConfigConstants.SERVER_PORT);
+        }
       }
       
       // Setup the main class for instrumenation
