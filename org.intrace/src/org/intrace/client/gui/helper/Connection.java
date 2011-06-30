@@ -61,7 +61,7 @@ public class Connection
           }
           catch (Exception e)
           {
-            socketCallback.setConnectionStatus("Error: " + e.toString());
+            socketCallback.setConnectionStatus("Error: " + e.getMessage());
             socketCallback.setSocket(null);
           }
         }

@@ -106,6 +106,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   private String buttonTabsLayoutData_Max;
 
+  private final Label mainStatusLabel;
+
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
     this.connCallback = connCallback;
@@ -127,8 +129,44 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     sRoot = xiRoot;
     mode = xiMode;
     
-    rootLayout = new MigLayout("fill", "[]", "[][][grow]");
+    rootLayout = new MigLayout("fill", "[]", "[][][][][][grow]");
     xiRoot.setLayout(rootLayout);
+    
+    {
+      Composite mainBar = new Composite(xiRoot, SWT.NONE);    
+      mainBar.setLayoutData("grow,wrap");
+      MigLayout barLayout = new MigLayout("fill", "0[100][50,center][100][30,center][grow,left][30,center][100]0");
+      mainBar.setLayout(barLayout);
+      
+      Button connectButton = new Button(mainBar, SWT.PUSH);
+      connectButton.setText("Connect...");
+      connectButton.setLayoutData("growx");
+      
+      Label arrowLabel = new Label(mainBar, SWT.NONE);
+      arrowLabel.setText("->");
+      
+      Button classesButton = new Button(mainBar, SWT.PUSH);
+      classesButton.setText("Classes...");
+      classesButton.setLayoutData("growx");
+      
+      Label barLabel1 = new Label(mainBar, SWT.NONE);
+      barLabel1.setText("|");
+      
+      mainStatusLabel = new Label(mainBar, SWT.NONE);
+      mainStatusLabel.setText("Status: None");
+      
+      Label barLabel2 = new Label(mainBar, SWT.NONE);
+      barLabel2.setText("|");
+      
+      Button optionsButton = new Button(mainBar, SWT.PUSH);
+      optionsButton.setText("Options...");
+      optionsButton.setLayoutData("growx");
+    }
+    
+    {
+      connTab = new ConnectionTab(xiRoot);
+      connTab.composite.setLayoutData("grow,wrap");
+    }
     
     buttonTabsLayoutData_Default = "grow,wrap,wmin 0";
     buttonTabsLayoutData_Max = "grow,wrap,wmin 0,hmin 0";
@@ -157,7 +195,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     {
       outputCTabs = null;
       outputTabs = new TabFolder(xiRoot, SWT.NONE);
-      outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");
+      outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 5");
       
       outputTabs.addListener(SWT.MouseDoubleClick, new Listener()
       {        
@@ -175,7 +213,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       outputTabs = null;
       outputCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
       outputCTabs.setSimple(false);
-      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 2");
+      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 5");
       
       outputCTabs.addListener(SWT.MouseDoubleClick, new Listener()
       {        
@@ -312,11 +350,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   private void fillButtonTabs(TabFolder tabFolder)
   {
-    TabItem connTabItem = new TabItem(tabFolder, SWT.NONE);
-    connTabItem.setText("Connection");
-    connTab = new ConnectionTab(tabFolder);
-    connTabItem.setControl(connTab.composite);
-
     TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
     instrTabItem.setText("Instrumentation");
     instruTab = new InstruTab(tabFolder);
@@ -335,15 +368,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   
   private void fillButtonCTabs(CTabFolder tabFolder)
   {
-    CTabItem connTabItem = new CTabItem(tabFolder, SWT.NONE);
-    connTabItem.setText("Connection");
-    connTab = new ConnectionTab(tabFolder);
-    connTabItem.setControl(connTab.composite);
-    
-    // Hide the connection controls - in Eclipse mode the
-    // connection is handled implicitly
-    connTabItem.dispose();
-
     CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
     instrTabItem.setText("Instrumentation");
     instruTab = new InstruTab(tabFolder);
@@ -412,50 +436,33 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final Button connectButton;
     final Text addressInput;
     final Text portInput;
-    final Label statusLabel;
     final Composite composite;
 
     private ConnectionTab(Composite parent)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[380][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[40][200][100][grow]");
 
       composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
 
-      Group connectionGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout connGroupLayout = new MigLayout("fill", "[40][200][grow]");
-      connectionGroup.setLayout(connGroupLayout);
-      connectionGroup.setText("Connection Details");
-      connectionGroup.setLayoutData("spany,grow,wmin 300");
-
-      Label addressLabel = new Label(connectionGroup, SWT.NONE);
+      Label addressLabel = new Label(composite, SWT.NONE);
       addressLabel.setText(ClientStrings.CONN_ADDRESS);
       addressLabel.setLayoutData("gapx 5px,right");
-      addressInput = new Text(connectionGroup, SWT.BORDER);
+      addressInput = new Text(composite, SWT.BORDER);
       addressInput.setText("localhost");
       addressInput.setLayoutData("growx,gapy 8px");
 
-      connectButton = new Button(connectionGroup, SWT.LEFT);
+      connectButton = new Button(composite, SWT.LEFT);
       connectButton.setText(ClientStrings.CONNECT);
       connectButton.setAlignment(SWT.CENTER);
       connectButton.setLayoutData("gapx 5px,spany,grow,wrap");
 
-      Label portLabel = new Label(connectionGroup, SWT.NONE);
+      Label portLabel = new Label(composite, SWT.NONE);
       portLabel.setText(ClientStrings.CONN_PORT);
       portLabel.setLayoutData("gapx 5px,right");
-      portInput = new Text(connectionGroup, SWT.BORDER);
+      portInput = new Text(composite, SWT.BORDER);
       portInput.setText("9123");
       portInput.setLayoutData("growx");
-
-      Group statusGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      statusGroup.setLayoutData("spany,grow,wmin 0");
-      MigLayout groupLayout = new MigLayout("fill", "[align center]");
-      statusGroup.setLayout(groupLayout);
-      statusGroup.setText("Connection Status");
-
-      statusLabel = new Label(statusGroup, SWT.WRAP);
-      statusLabel.setAlignment(SWT.CENTER);
-      statusLabel.setLayoutData("grow,wmin 0");
 
       SelectionListener connectListen = new org.eclipse.swt.events.SelectionAdapter()
       {
@@ -1921,7 +1928,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          connTab.statusLabel.setText(statusText);
+          mainStatusLabel.setText(statusText);
         }
       });
     }
