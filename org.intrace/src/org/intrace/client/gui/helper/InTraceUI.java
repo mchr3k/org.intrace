@@ -108,6 +108,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   private final Label mainStatusLabel;
 
+  private CTabFolder settingsCTabs;
+
+  private TabFolder settingsTabs;
+
+  private Composite activeSettingsTabs;
+
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
     this.connCallback = connCallback;
@@ -170,7 +176,26 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     buttonTabsLayoutData_Default = "grow,wrap,wmin 0";
     buttonTabsLayoutData_Max = "grow,wrap,wmin 0,hmin 0";
-    activeButtonTabs = null;
+    activeButtonTabs = null;    
+    
+    if (mode == UIMode.STANDALONE)
+    {
+      settingsCTabs = null;           
+      settingsTabs = new TabFolder(xiRoot, SWT.NONE);
+      settingsTabs.setLayoutData(buttonTabsLayoutData_Default);
+      activeSettingsTabs = settingsTabs;
+      fillSettingsTabs(settingsTabs);
+    }
+    else
+    {
+      settingsTabs = null;      
+      settingsCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
+      settingsCTabs.setSimple(false);
+      settingsCTabs.setLayoutData(buttonTabsLayoutData_Default);
+      activeSettingsTabs = settingsCTabs;
+      fillSettingsCTabs(settingsCTabs);
+      settingsCTabs.setSelection(0);
+    }
     
     if (mode == UIMode.STANDALONE)
     {
@@ -348,13 +373,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private ExtrasTab extraTab;
   private Composite startPanel;
 
-  private void fillButtonTabs(TabFolder tabFolder)
+  private void fillSettingsTabs(TabFolder tabFolder)
   {
-    TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
-    instrTabItem.setText("Instrumentation");
-    instruTab = new InstruTab(tabFolder);
-    instrTabItem.setControl(instruTab.composite);
-
     TabItem traceTabItem = new TabItem(tabFolder, SWT.NONE);
     traceTabItem.setText("Trace");
     traceTab = new TraceTab(tabFolder);
@@ -366,13 +386,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     extraTabItem.setControl(extraTab.composite);
   }
   
-  private void fillButtonCTabs(CTabFolder tabFolder)
+  private void fillSettingsCTabs(CTabFolder tabFolder)
   {
-    CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
-    instrTabItem.setText("Instrumentation");
-    instruTab = new InstruTab(tabFolder);
-    instrTabItem.setControl(instruTab.composite);
-
     CTabItem traceTabItem = new CTabItem(tabFolder, SWT.NONE);
     traceTabItem.setText("Trace");
     traceTab = new TraceTab(tabFolder);
@@ -382,6 +397,22 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     extraTabItem.setText("Advanced");
     extraTab = new ExtrasTab(tabFolder);
     extraTabItem.setControl(extraTab.composite);
+  }
+  
+  private void fillButtonTabs(TabFolder tabFolder)
+  {
+    TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
+    instrTabItem.setText("Instrumentation");
+    instruTab = new InstruTab(tabFolder);
+    instrTabItem.setControl(instruTab.composite);
+  }
+  
+  private void fillButtonCTabs(CTabFolder tabFolder)
+  {
+    CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
+    instrTabItem.setText("Instrumentation");
+    instruTab = new InstruTab(tabFolder);
+    instrTabItem.setControl(instruTab.composite);
   }
   
   private boolean waitStartUIShown = false;
