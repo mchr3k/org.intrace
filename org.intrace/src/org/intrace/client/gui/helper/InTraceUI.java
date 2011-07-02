@@ -94,25 +94,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private final Composite sRoot;
   
   private final TabFolder outputTabs;
-  private final TabFolder buttonTabs;  
-  private final CTabFolder buttonCTabs;
   private final CTabFolder outputCTabs;
   private final UIMode mode;
   
   private IConnectionStateCallback connCallback = null;
   private MigLayout rootLayout;
 
-  private String buttonTabsLayoutData_Default;
-
-  private String buttonTabsLayoutData_Max;
-
-  private final Label mainStatusLabel;
-
   private CTabFolder settingsCTabs;
 
   private TabFolder settingsTabs;
-
-  private Composite activeSettingsTabs;
 
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
@@ -135,55 +125,19 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     sRoot = xiRoot;
     mode = xiMode;
     
-    rootLayout = new MigLayout("fill", "[]", "[][][][][][grow]");
+    rootLayout = new MigLayout("fill", "[]", "[][][][][grow]");
     xiRoot.setLayout(rootLayout);
     
-    {
-      Composite mainBar = new Composite(xiRoot, SWT.NONE);    
-      mainBar.setLayoutData("grow,wrap");
-      MigLayout barLayout = new MigLayout("fill", "0[100][50,center][100][30,center][grow,left][30,center][100]0");
-      mainBar.setLayout(barLayout);
-      
-      Button connectButton = new Button(mainBar, SWT.PUSH);
-      connectButton.setText("Connect...");
-      connectButton.setLayoutData("growx");
-      
-      Label arrowLabel = new Label(mainBar, SWT.NONE);
-      arrowLabel.setText("->");
-      
-      Button classesButton = new Button(mainBar, SWT.PUSH);
-      classesButton.setText("Classes...");
-      classesButton.setLayoutData("growx");
-      
-      Label barLabel1 = new Label(mainBar, SWT.NONE);
-      barLabel1.setText("|");
-      
-      mainStatusLabel = new Label(mainBar, SWT.NONE);
-      mainStatusLabel.setText("Status: None");
-      
-      Label barLabel2 = new Label(mainBar, SWT.NONE);
-      barLabel2.setText("|");
-      
-      Button optionsButton = new Button(mainBar, SWT.PUSH);
-      optionsButton.setText("Options...");
-      optionsButton.setLayoutData("growx");
-    }
+    mainBar = new MainBar(xiRoot);
     
-    {
-      connTab = new ConnectionTab(xiRoot);
-      connTab.composite.setLayoutData("grow,wrap");
-    }
-    
-    buttonTabsLayoutData_Default = "grow,wrap,wmin 0";
-    buttonTabsLayoutData_Max = "grow,wrap,wmin 0,hmin 0";
-    activeButtonTabs = null;    
+    connBar = new ConnectionBar(xiRoot);
+    connBar.composite.setLayoutData("grow,wrap");
     
     if (mode == UIMode.STANDALONE)
     {
       settingsCTabs = null;           
       settingsTabs = new TabFolder(xiRoot, SWT.NONE);
-      settingsTabs.setLayoutData(buttonTabsLayoutData_Default);
-      activeSettingsTabs = settingsTabs;
+      settingsTabs.setLayoutData("grow,wrap,wmin 0");
       fillSettingsTabs(settingsTabs);
     }
     else
@@ -191,46 +145,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       settingsTabs = null;      
       settingsCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
       settingsCTabs.setSimple(false);
-      settingsCTabs.setLayoutData(buttonTabsLayoutData_Default);
-      activeSettingsTabs = settingsCTabs;
+      settingsCTabs.setLayoutData("grow,wrap,wmin 0");
       fillSettingsCTabs(settingsCTabs);
       settingsCTabs.setSelection(0);
-    }
-    
-    if (mode == UIMode.STANDALONE)
-    {
-      buttonCTabs = null;           
-      buttonTabs = new TabFolder(xiRoot, SWT.NONE);
-      buttonTabs.setLayoutData(buttonTabsLayoutData_Default);
-      activeButtonTabs = buttonTabs;
-      fillButtonTabs(buttonTabs);
-    }
-    else
-    {
-      buttonTabs = null;      
-      buttonCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
-      buttonCTabs.setSimple(false);
-      buttonCTabs.setLayoutData(buttonTabsLayoutData_Default);
-      activeButtonTabs = buttonCTabs;
-      fillButtonCTabs(buttonCTabs);
-      buttonCTabs.setSelection(0);
     }
      
     if (mode == UIMode.STANDALONE)
     {
       outputCTabs = null;
       outputTabs = new TabFolder(xiRoot, SWT.NONE);
-      outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 5");
-      
-      outputTabs.addListener(SWT.MouseDoubleClick, new Listener()
-      {        
-        @Override
-        public void handleEvent(Event paramEvent)
-        {
-          toggleOutputSize();
-        }
-      });
-      
+      outputTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 4");
       fillOutputTabs(outputTabs);
     }
     else
@@ -238,17 +162,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       outputTabs = null;
       outputCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
       outputCTabs.setSimple(false);
-      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 5");
-      
-      outputCTabs.addListener(SWT.MouseDoubleClick, new Listener()
-      {        
-        @Override
-        public void handleEvent(Event paramEvent)
-        {
-          toggleOutputSize();
-        }
-      });
-      
+      outputCTabs.setLayoutData("grow,wmin 0,hmin 0,cell 0 4");
       fillOutputCTabs(outputCTabs);           
       outputCTabs.setSelection(0);      
     }
@@ -298,29 +212,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     });   
   }
   
-  private boolean outputSizeFull = false;
-  
-  protected void toggleOutputSize()
-  {
-    if (outputSizeFull)
-    {
-      // Restore normal UI
-      MigLayout rootLayout = new MigLayout("fill", "[]", "[][][grow]");
-      sRoot.setLayout(rootLayout);
-      activeButtonTabs.setLayoutData(buttonTabsLayoutData_Default);
-      outputSizeFull = false;
-    }
-    else
-    {
-      // Maximise Output
-      MigLayout rootLayout = new MigLayout("fill", "[]", "[0]0[0]0[grow]");
-      sRoot.setLayout(rootLayout);
-      activeButtonTabs.setLayoutData(buttonTabsLayoutData_Max);
-      outputSizeFull = true;
-    }
-    sRoot.layout();
-  }
-
   public void setFixedLocalConnection(final String xiPort)
   {    
     fixedConnection = true;
@@ -331,8 +222,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          connTab.addressInput.setText("localhost");
-          connTab.portInput.setText(xiPort);
+          connBar.addressInput.setText("localhost");
+          connBar.portInput.setText(xiPort);
           textOutputTab.filterThread.addSystemTraceLine("Instructions");
           textOutputTab.filterThread.addSystemTraceLine(" - Select Classes you want to Trace");
           textOutputTab.filterThread.addSystemTraceLine("Full help available on the Help tab");
@@ -355,8 +246,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          connTab.addressInput.setText("localhost");
-          connTab.portInput.setText("detecting...");
+          connBar.addressInput.setText("localhost");
+          connBar.portInput.setText("detecting...");
           textOutputTab.filterThread.addSystemTraceLine("Instructions");
           textOutputTab.filterThread.addSystemTraceLine(" - Select Classes you want to Trace");
           textOutputTab.filterThread.addSystemTraceLine("Full help available on the Help tab");
@@ -367,8 +258,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     setSocket(xiSocket);
   }
 
-  private ConnectionTab connTab;
-  private InstruTab instruTab;
+  private final MainBar mainBar;
+
+  private ConnectionBar connBar;
   private TraceTab traceTab;
   private ExtrasTab extraTab;
   private Composite startPanel;
@@ -399,22 +291,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     extraTabItem.setControl(extraTab.composite);
   }
   
-  private void fillButtonTabs(TabFolder tabFolder)
-  {
-    TabItem instrTabItem = new TabItem(tabFolder, SWT.NONE);
-    instrTabItem.setText("Instrumentation");
-    instruTab = new InstruTab(tabFolder);
-    instrTabItem.setControl(instruTab.composite);
-  }
-  
-  private void fillButtonCTabs(CTabFolder tabFolder)
-  {
-    CTabItem instrTabItem = new CTabItem(tabFolder, SWT.NONE);
-    instrTabItem.setText("Instrumentation");
-    instruTab = new InstruTab(tabFolder);
-    instrTabItem.setControl(instruTab.composite);
-  }
-  
   private boolean waitStartUIShown = false;
   
   private void addWaitStartUI()
@@ -422,7 +298,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     if (!waitStartUIShown)
     {
       startPanel = new Composite(sRoot, SWT.NONE);
-      startPanel.setLayoutData("grow,wrap,cell 0 1");
+      startPanel.setLayoutData("grow,wrap,cell 0 3");
       MigLayout startLayout = new MigLayout("fillx", "[align center]", "[]");
       startPanel.setLayout(startLayout);
       
@@ -462,14 +338,146 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     }
   }
 
-  private class ConnectionTab
+  private class MainBar
+  {
+    private final Label mainStatusLabel;
+    private final Button classesButton;
+
+    private MainBar(Composite parent)
+    {
+      Composite composite = new Composite(parent, SWT.NONE);    
+      composite.setLayoutData("grow,wrap");
+      MigLayout barLayout = new MigLayout("fill", "0[100][50,center][100][30,center][grow,left][30,center][100]0");
+      composite.setLayout(barLayout);
+      
+      Button connectButton = new Button(composite, SWT.PUSH);
+      connectButton.setText("Connect...");
+      connectButton.setLayoutData("growx");
+      
+      Label arrowLabel = new Label(composite, SWT.NONE);
+      arrowLabel.setText("->");
+      
+      classesButton = new Button(composite, SWT.PUSH);
+      classesButton.setText("Classes...");
+      classesButton.setLayoutData("growx");
+      
+      Label barLabel1 = new Label(composite, SWT.NONE);
+      barLabel1.setText("|");
+      
+      mainStatusLabel = new Label(composite, SWT.NONE);
+      mainStatusLabel.setText("Status: None");
+      mainStatusLabel.setLayoutData("growx");
+      
+      Label barLabel2 = new Label(composite, SWT.NONE);
+      barLabel2.setText("|");
+      
+      Button optionsButton = new Button(composite, SWT.PUSH);
+      optionsButton.setText("Options...");
+      optionsButton.setLayoutData("growx");
+      
+      final String helpText = "Enter complete or partial class names.\n\n "
+        + "e.g.\n"
+        + "\"mypack.mysubpack.MyClass\"\n"
+        + "\"MyClass\"";
+      classesButton
+      .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+      {
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          IncludeExcludeWindow regexInput = new IncludeExcludeWindow(
+              "Classes to Instrument", helpText, mode,
+              new PatternInputCallback()
+              {
+                private List<String> includePattern = null;
+                private List<String> excludePattern = null;
+
+                @Override
+                public void setIncludePattern(List<String> newIncludePattern)
+                {
+                  includePattern = newIncludePattern;
+                  savePatterns();
+                }
+
+                @Override
+                public void setExcludePattern(List<String> newExcludePattern)
+                {
+                  excludePattern = newExcludePattern;
+                  savePatterns();
+                }
+
+                private void savePatterns()
+                {
+                  if ((includePattern != null) && (excludePattern != null))
+                  {
+                    setRegex(getStringFromList(includePattern), 
+                             getStringFromList(excludePattern));
+                  }
+                }
+              }, 
+              getListFromString(settingsData.classRegex), 
+              getListFromString(settingsData.classExcludeRegex),
+              ALLOW_CLASSES);
+          placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
+        }
+      });
+    }
+        
+    private List<String> getListFromString(String pattern)
+    {
+      List<String> items = new ArrayList<String>();
+      String[] patternParts = pattern.split("\\|");
+      for (String part : patternParts)
+      {
+        items.add(part);
+      }
+      return items;
+    }
+    
+    private String getStringFromList(List<String> list)
+    {
+      StringBuilder str = new StringBuilder();
+      
+      for (int ii = 0; ii < list.size(); ii++)
+      {
+        String item = list.get(ii);
+        str.append(item);
+        if (ii < (list.size() - 1))
+        {
+          str.append("|");
+        }
+      }
+      
+      return str.toString();
+    }
+
+    private void setStatus(int instruClasses, int totalClasses)
+    {
+      if (!sRoot.isDisposed())
+      {
+        mainStatusLabel.setText("Instrumented/Total Classes: " + instruClasses + "/"
+            + totalClasses);
+      }
+    }
+
+    private void setProgress(int progressClasses, int totalClasses, boolean done)
+    {
+      if (!sRoot.isDisposed())
+      {
+        mainStatusLabel.setText("Progress: " + progressClasses + "/"
+            + totalClasses);
+      }
+    }
+  }
+  
+  private class ConnectionBar
   {
     final Button connectButton;
     final Text addressInput;
     final Text portInput;
     final Composite composite;
 
-    private ConnectionTab(Composite parent)
+    private ConnectionBar(Composite parent)
     {
       MigLayout windowLayout = new MigLayout("fill", "[40][200][100][grow]");
 
@@ -530,150 +538,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       connectButton.addSelectionListener(connectListen);
     }
   }
-
-  private class InstruTab
-  {
-    final Button classRegex;
-    final Button listClasses;
-    final Label instrStatusLabel;
-    final Composite composite;
-
-    private InstruTab(Composite parent)
-    {
-      MigLayout windowLayout = new MigLayout("fill", "[][300][grow]", "[]");
-
-      composite = new Composite(parent, SWT.NONE);
-      composite.setLayout(windowLayout);
-      composite.setLayoutData("hmin 0");
-
-      Group mainControlGroup = new Group(composite, SWT.SHADOW_ETCHED_IN);
-      MigLayout mainControlGroupLayout = new MigLayout("filly", "[150]");
-      mainControlGroup.setLayout(mainControlGroupLayout);
-      mainControlGroup.setLayoutData("hmin 0, grow");
-      mainControlGroup.setText("Instrumentation Settings");      
-
-      classRegex = new Button(mainControlGroup, SWT.PUSH);
-      classRegex.setText(ClientStrings.SET_CLASSREGEX);
-      classRegex.setLayoutData("grow");
-
-      Group statusGroup = new Group(composite, SWT.SHADOW_IN);
-      MigLayout statusGroupLayout = new MigLayout("fillx", "[][]");
-      statusGroup.setLayout(statusGroupLayout);
-      statusGroup.setText("Instrumentation Status");
-      statusGroup.setLayoutData("grow");
-
-      instrStatusLabel = new Label(statusGroup, SWT.WRAP | SWT.VERTICAL);
-      instrStatusLabel.setAlignment(SWT.LEFT);
-      instrStatusLabel.setLayoutData("hmin 0,growx,wrap");
-      setStatus(0, 0);
-
-      listClasses = new Button(statusGroup, SWT.PUSH);
-      listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
-      listClasses.setAlignment(SWT.CENTER);
-      listClasses.setLayoutData("gapy 5px");
-
-      final String helpText = "Enter complete or partial class names.\n\n "
-          + "e.g.\n"
-          + "\"mypack.mysubpack.MyClass\"\n"
-          + "\"MyClass\"";
-      classRegex
-          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-          {
-            @Override
-            public void widgetSelected(SelectionEvent arg0)
-            {
-              IncludeExcludeWindow regexInput = new IncludeExcludeWindow(
-                  "Classes to Instrument", helpText, mode,
-                  new PatternInputCallback()
-                  {
-                    private List<String> includePattern = null;
-                    private List<String> excludePattern = null;
-
-                    @Override
-                    public void setIncludePattern(List<String> newIncludePattern)
-                    {
-                      includePattern = newIncludePattern;
-                      savePatterns();
-                    }
-
-                    @Override
-                    public void setExcludePattern(List<String> newExcludePattern)
-                    {
-                      excludePattern = newExcludePattern;
-                      savePatterns();
-                    }
-
-                    private void savePatterns()
-                    {
-                      if ((includePattern != null) && (excludePattern != null))
-                      {
-                        setRegex(getStringFromList(includePattern), 
-                                 getStringFromList(excludePattern));
-                      }
-                    }
-                  }, 
-                  getListFromString(settingsData.classRegex), 
-                  getListFromString(settingsData.classExcludeRegex),
-                  ALLOW_CLASSES);
-              placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
-            }
-          });
-      listClasses
-          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
-          {
-            @Override
-            public void widgetSelected(SelectionEvent arg0)
-            {
-              getModifiedClasses();
-            }
-          });
-
-    }
-
-    private List<String> getListFromString(String pattern)
-    {
-      List<String> items = new ArrayList<String>();
-      String[] patternParts = pattern.split("\\|");
-      for (String part : patternParts)
-      {
-        items.add(part);
-      }
-      return items;
-    }
-    
-    private String getStringFromList(List<String> list)
-    {
-      StringBuilder str = new StringBuilder();
-      
-      for (int ii = 0; ii < list.size(); ii++)
-      {
-        String item = list.get(ii);
-        str.append(item);
-        if (ii < (list.size() - 1))
-        {
-          str.append("|");
-        }
-      }
-      
-      return str.toString();
-    }
-    
-    private void setStatus(int instruClasses, int totalClasses)
-    {
-      if (!sRoot.isDisposed())
-      {
-        instrStatusLabel.setText("Instrumented/Total Loaded Classes: " + instruClasses + "/"
-            + totalClasses);
-      }
-    }
-
-    private void setProgress(int progressClasses, int totalClasses, boolean done)
-    {
-      instrStatusLabel.setText("Progress: " + progressClasses + "/"
-          + totalClasses);
-    }
-  }
-
+  
   private class TraceTab
   {
     final Button entryExitTrace;
@@ -789,11 +654,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final Button togSaveClasses;
     final Button togVerbose;
     final Button printSettings;
+    final Button listClasses;
     final Composite composite;
 
     private ExtrasTab(Composite parent)
     {
-      MigLayout windowLayout = new MigLayout("fill", "[200][grow]");
+      MigLayout windowLayout = new MigLayout("fill", "[200][200][grow]");
 
       composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
@@ -812,6 +678,20 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       printSettings.setText(ClientStrings.DUMP_SETTINGS);
       printSettings.setAlignment(SWT.CENTER);
       printSettings.setLayoutData("growx");
+      
+      listClasses = new Button(composite, SWT.PUSH);
+      listClasses.setText(ClientStrings.LIST_MODIFIED_CLASSES);
+      listClasses.setAlignment(SWT.CENTER);
+      listClasses.setLayoutData("growx");
+      listClasses
+          .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+          {
+            @Override
+            public void widgetSelected(SelectionEvent arg0)
+            {
+              getModifiedClasses();
+            }
+          });
 
       togSaveClasses
           .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -1691,8 +1571,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
 
-  private Composite activeButtonTabs;
-
   public void setSocket(Socket socket)
   {
     if (socket != null)
@@ -1853,7 +1731,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   {
     if (fixedConnection)
     {
-      connTab.portInput.setText(Integer.toString(settingsData.actualServerPort));
+      connBar.portInput.setText(Integer.toString(settingsData.actualServerPort));
     }
     
     if (settingsData.waitStart)
@@ -1867,25 +1745,25 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     if (connectionState == ConnectState.CONNECTING)
     {
-      connTab.connectButton.setText(ClientStrings.CONNECTING);
-      connTab.connectButton.setEnabled(false);
-      connTab.addressInput.setEnabled(false);
-      connTab.portInput.setEnabled(false);
+      connBar.connectButton.setText(ClientStrings.CONNECTING);
+      connBar.connectButton.setEnabled(false);
+      connBar.addressInput.setEnabled(false);
+      connBar.portInput.setEnabled(false);
     } else
     {
-      chooseText(connTab.connectButton,
+      chooseText(connBar.connectButton,
           (connectionState == ConnectState.CONNECTED), ClientStrings.CONNECT,
           ClientStrings.DISCONNECT);
 
       if (connectionState == ConnectState.CONNECTED)
       {
         // Disable connection details
-        connTab.addressInput.setEnabled(false);
-        connTab.portInput.setEnabled(false);
+        connBar.addressInput.setEnabled(false);
+        connBar.portInput.setEnabled(false);
         
         // Enable all buttons
-        instruTab.classRegex.setEnabled(true);
-        instruTab.listClasses.setEnabled(true);
+        mainBar.classesButton.setEnabled(true);
+        extraTab.listClasses.setEnabled(true);
 
         traceTab.argsTrace.setEnabled(true);
         traceTab.branchTrace.setEnabled(true);
@@ -1912,7 +1790,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         textOutputTab.networkOutput.setSelection(settingsData.netOutEnabled);
 
         // Update number of classes
-        instruTab.setStatus(settingsData.instruClasses,
+        mainBar.setStatus(settingsData.instruClasses,
             settingsData.totalClasses);
       }
 
@@ -1928,12 +1806,14 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       {
         if (!fixedConnection)
         {
-          connTab.addressInput.setEnabled(true);
-          connTab.portInput.setEnabled(true);
+          connBar.addressInput.setEnabled(true);
+          connBar.portInput.setEnabled(true);
         }
+        
+        removeWaitStartUI();
 
-        instruTab.classRegex.setEnabled(false);
-        instruTab.listClasses.setEnabled(false);
+        mainBar.classesButton.setEnabled(false);
+        extraTab.listClasses.setEnabled(false);
 
         traceTab.argsTrace.setEnabled(false);
         traceTab.branchTrace.setEnabled(false);
@@ -1959,7 +1839,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          mainStatusLabel.setText(statusText);
+          mainBar.mainStatusLabel.setText(statusText);
         }
       });
     }
@@ -1980,7 +1860,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               .get(AgentConfigConstants.NUM_PROGRESS_TOTAL));
           boolean done = (progressMap
               .get(AgentConfigConstants.NUM_PROGRESS_DONE) != null);
-          instruTab.setProgress(numDone, numTotal, done);
+          mainBar.setProgress(numDone, numTotal, done);
         }
       });
     }
@@ -1999,7 +1879,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               .get(AgentConfigConstants.STINST));
           int numTotal = Integer.parseInt(statusMap
               .get(AgentConfigConstants.STCLS));
-          instruTab.setStatus(numInstr, numTotal);
+          mainBar.setStatus(numInstr, numTotal);
         }
       });
     }
