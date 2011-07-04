@@ -100,9 +100,9 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private IConnectionStateCallback connCallback = null;
   private MigLayout rootLayout;
 
-  private CTabFolder settingsCTabs;
+  private SettingsTabs settingsTabs;
 
-  private TabFolder settingsTabs;
+  private StartProgramBar startProgramBar;
 
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
@@ -125,30 +125,22 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     sRoot = xiRoot;
     mode = xiMode;
     
-    rootLayout = new MigLayout("fill", "[]", "[][][][][grow]");
+    rootLayout = new MigLayout("fill,hidemode 2", "[]", "[][][]0[]0[grow]");
     xiRoot.setLayout(rootLayout);
     
     mainBar = new MainBar(xiRoot);
     
     connBar = new ConnectionBar(xiRoot);
     connBar.composite.setLayoutData("grow,wrap");
+    connBar.hide();
     
-    if (mode == UIMode.STANDALONE)
-    {
-      settingsCTabs = null;           
-      settingsTabs = new TabFolder(xiRoot, SWT.NONE);
-      settingsTabs.setLayoutData("grow,wrap,wmin 0");
-      fillSettingsTabs(settingsTabs);
-    }
-    else
-    {
-      settingsTabs = null;      
-      settingsCTabs = new CTabFolder(xiRoot, SWT.TOP | SWT.BORDER);
-      settingsCTabs.setSimple(false);
-      settingsCTabs.setLayoutData("grow,wrap,wmin 0");
-      fillSettingsCTabs(settingsCTabs);
-      settingsCTabs.setSelection(0);
-    }
+    settingsTabs = new SettingsTabs(xiRoot);
+    settingsTabs.tabs.setLayoutData("grow,wrap");
+    settingsTabs.hide();
+    
+    startProgramBar = new StartProgramBar(xiRoot);
+    startProgramBar.composite.setLayoutData("grow,wrap");
+    startProgramBar.hide();
      
     if (mode == UIMode.STANDALONE)
     {
@@ -263,50 +255,22 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private ConnectionBar connBar;
   private TraceTab traceTab;
   private ExtrasTab extraTab;
-  private Composite startPanel;
-
-  private void fillSettingsTabs(TabFolder tabFolder)
+  
+  private class StartProgramBar
   {
-    TabItem traceTabItem = new TabItem(tabFolder, SWT.NONE);
-    traceTabItem.setText("Trace");
-    traceTab = new TraceTab(tabFolder);
-    traceTabItem.setControl(traceTab.composite);
-
-    TabItem extraTabItem = new TabItem(tabFolder, SWT.NONE);
-    extraTabItem.setText("Advanced");
-    extraTab = new ExtrasTab(tabFolder);
-    extraTabItem.setControl(extraTab.composite);
-  }
-  
-  private void fillSettingsCTabs(CTabFolder tabFolder)
-  {
-    CTabItem traceTabItem = new CTabItem(tabFolder, SWT.NONE);
-    traceTabItem.setText("Trace");
-    traceTab = new TraceTab(tabFolder);
-    traceTabItem.setControl(traceTab.composite);
-
-    CTabItem extraTabItem = new CTabItem(tabFolder, SWT.NONE);
-    extraTabItem.setText("Advanced");
-    extraTab = new ExtrasTab(tabFolder);
-    extraTabItem.setControl(extraTab.composite);
-  }
-  
-  private boolean waitStartUIShown = false;
-  
-  private void addWaitStartUI()
-  {    
-    if (!waitStartUIShown)
+    private Composite composite;
+    
+    private StartProgramBar(Composite parent)
     {
-      startPanel = new Composite(sRoot, SWT.NONE);
-      startPanel.setLayoutData("grow,wrap,cell 0 3");
+      composite = new Composite(parent, SWT.NONE);
       MigLayout startLayout = new MigLayout("fillx", "[align center]", "[]");
-      startPanel.setLayout(startLayout);
+      composite.setLayout(startLayout);
       
-      Label startLabel = new Label(startPanel, SWT.NONE);
+      Label startLabel = new Label(composite, SWT.NONE);
       startLabel.setText("Program has been paused.");
       startLabel.setLayoutData("split");
       
-      final Button startButton = new Button(startPanel, SWT.PUSH);
+      final Button startButton = new Button(composite, SWT.PUSH);
       startButton.setText("Start Program");
       
       startButton.addSelectionListener(new SelectionAdapter()
@@ -319,29 +283,27 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           startButton.setEnabled(false);
         }
       });
-      
+    }
+    
+    private void show()
+    {
+      composite.setVisible(true);   
       sRoot.layout();
-      
-      waitStartUIShown = true;
+    }
+    
+    private void hide()
+    {
+      composite.setVisible(false);
+      sRoot.layout();
     }
   }
   
-  private void removeWaitStartUI()
-  {
-    if (waitStartUIShown)
-    {
-      startPanel.dispose();
-      
-      sRoot.layout();
-
-      waitStartUIShown = false;      
-    }
-  }
-
   private class MainBar
   {
     private final Label mainStatusLabel;
     private final Button classesButton;
+    private boolean connectShown = false;
+    private boolean settingsShown = false;
 
     private MainBar(Composite parent)
     {
@@ -350,12 +312,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       MigLayout barLayout = new MigLayout("fill", "0[100][50,center][100][30,center][grow,left][30,center][100]0");
       composite.setLayout(barLayout);
       
-      Button connectButton = new Button(composite, SWT.PUSH);
-      connectButton.setText("Connect...");
+      final Button connectButton = new Button(composite, SWT.PUSH);
+      connectButton.setText("\u21D3 Connection");
       connectButton.setLayoutData("growx");
       
       Label arrowLabel = new Label(composite, SWT.NONE);
-      arrowLabel.setText("->");
+      arrowLabel.setText("\u21D2");
       
       classesButton = new Button(composite, SWT.PUSH);
       classesButton.setText("Classes...");
@@ -371,9 +333,49 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       Label barLabel2 = new Label(composite, SWT.NONE);
       barLabel2.setText("|");
       
-      Button optionsButton = new Button(composite, SWT.PUSH);
-      optionsButton.setText("Options...");
-      optionsButton.setLayoutData("growx");
+      final Button settingsButton = new Button(composite, SWT.PUSH);
+      settingsButton.setText("\u21D3 Settings");
+      settingsButton.setLayoutData("growx");
+      
+      connectButton.addSelectionListener(new SelectionAdapter()
+      {        
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          if (connectShown)
+          {
+            connBar.hide();
+            connectButton.setText("\u21D3 Connection");
+            connectShown = false;
+          }
+          else
+          {
+            connBar.show();
+            connectButton.setText("\u21D1 Connection");
+            connectShown = true;
+          }
+        }
+      });
+      
+      settingsButton.addSelectionListener(new SelectionAdapter()
+      {        
+        @Override
+        public void widgetSelected(SelectionEvent arg0)
+        {
+          if (settingsShown)
+          {
+            settingsTabs.hide();
+            settingsButton.setText("\u21D3 Settings");
+            settingsShown = false;
+          }
+          else
+          {
+            settingsTabs.show();
+            settingsButton.setText("\u21D1 Settings");
+            settingsShown = true;
+          }
+        }
+      });
       
       final String helpText = "Enter complete or partial class names.\n\n "
         + "e.g.\n"
@@ -536,6 +538,80 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       addressInput.addSelectionListener(connectListen);
       portInput.addSelectionListener(connectListen);
       connectButton.addSelectionListener(connectListen);
+    }
+    
+    private void show()
+    {
+      composite.setVisible(true);   
+      sRoot.layout();
+    }
+    
+    private void hide()
+    {
+      composite.setVisible(false);
+      sRoot.layout();
+    }
+  }
+  
+  private class SettingsTabs
+  {
+    private final Composite tabs;
+    private TabFolder mSettingsTabs;
+    private CTabFolder mSettingsCTabs;
+    
+    private SettingsTabs(Composite parent)
+    {
+      if (mode == UIMode.STANDALONE)
+      {
+        mSettingsCTabs = null;           
+        mSettingsTabs = new TabFolder(parent, SWT.NONE);
+        mSettingsTabs.setLayoutData("grow,wrap,wmin 0");
+        
+        TabItem traceTabItem = new TabItem(mSettingsTabs, SWT.NONE);
+        traceTabItem.setText("Trace");
+        traceTab = new TraceTab(mSettingsTabs);
+        traceTabItem.setControl(traceTab.composite);
+
+        TabItem extraTabItem = new TabItem(mSettingsTabs, SWT.NONE);
+        extraTabItem.setText("Advanced");
+        extraTab = new ExtrasTab(mSettingsTabs);
+        extraTabItem.setControl(extraTab.composite);
+        
+        tabs = mSettingsTabs;
+      }
+      else
+      {
+        mSettingsTabs = null;      
+        mSettingsCTabs = new CTabFolder(parent, SWT.TOP | SWT.BORDER);
+        mSettingsCTabs.setSimple(false);
+        mSettingsCTabs.setLayoutData("grow,wrap,wmin 0");
+        
+        CTabItem traceTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
+        traceTabItem.setText("Trace");
+        traceTab = new TraceTab(mSettingsCTabs);
+        traceTabItem.setControl(traceTab.composite);
+
+        CTabItem extraTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
+        extraTabItem.setText("Advanced");
+        extraTab = new ExtrasTab(mSettingsCTabs);
+        extraTabItem.setControl(extraTab.composite);
+        
+        mSettingsCTabs.setSelection(0);
+        
+        tabs = mSettingsCTabs;
+      }
+    }
+    
+    private void show()
+    {
+      tabs.setVisible(true);   
+      sRoot.layout();
+    }
+    
+    private void hide()
+    {
+      tabs.setVisible(false);
+      sRoot.layout();
     }
   }
   
@@ -1736,11 +1812,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     if (settingsData.waitStart)
     {
-      addWaitStartUI();
+      startProgramBar.show();
     }
     else
     {
-      removeWaitStartUI();
+      startProgramBar.hide();
     }
     
     if (connectionState == ConnectState.CONNECTING)
@@ -1810,7 +1886,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           connBar.portInput.setEnabled(true);
         }
         
-        removeWaitStartUI();
+        startProgramBar.hide();
 
         mainBar.classesButton.setEnabled(false);
         extraTab.listClasses.setEnabled(false);
