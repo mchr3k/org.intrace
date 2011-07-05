@@ -4,7 +4,7 @@ public class ClientStrings
 {
   public static final String SET_CLASSREGEX = "Select Classes ...";
   public static final String ENABLE_ALLOWJARS = "Instru JARs";
-  public static final String ENABLE_SAVECLASSES = "Save Instrumented Classes";
+  public static final String ENABLE_SAVECLASSES = "Save Classes";
   public static final String ENABLE_VERBOSEMODE = "Verbose Mode";
   public static final String LIST_MODIFIED_CLASSES = "List Instrumented Classes";
 
@@ -18,7 +18,7 @@ public class ClientStrings
   public static final String ENABLE_STDOUT_OUTPUT = "StdOut";
   public static final String ENABLE_FILE_OUTPUT = "File";
   public static final String ENABLE_NETWORK_OUTPUT = "Collect Trace";
-  public static final String ENABLE_FILTER = "Enable Filter";
+  public static final String ENABLE_FILTER = "Filter";
 
   public static final String CONNECT = "Connect";
   public static final String CONNECTING = "Connect...";
@@ -36,5 +36,5 @@ public class ClientStrings
   public static final String AUTO_SCROLL = "Auto Scroll";
   public static final String FILTER_TEXT = "Filter...";
   public static final String CANCEL_TEXT = "Cancel";
-  public static final String SAVE_TEXT = "Save Output...";
+  public static final String SAVE_TEXT = "Save...";
 }
