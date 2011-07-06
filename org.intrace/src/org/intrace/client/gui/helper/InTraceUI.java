@@ -142,7 +142,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     startProgramBar.hide();
      
     outputTabs = new OutputTabs(xiRoot);
-    outputTabs.composite.setLayoutData("grow");
+    outputTabs.composite.setLayoutData("grow,wmin 0,hmin 0");
     
     updateUIStateSameThread();
     
@@ -1856,7 +1856,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       connBar.connectButton.setEnabled(false);
       connBar.addressInput.setEnabled(false);
       connBar.portInput.setEnabled(false);
-    } else
+    } 
+    else
     {
       chooseText(connBar.connectButton,
           (connectionState == ConnectState.CONNECTED), ClientStrings.CONNECT,
