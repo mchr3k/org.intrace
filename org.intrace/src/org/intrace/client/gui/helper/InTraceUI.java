@@ -249,7 +249,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       MigLayout barLayout;
       if (mode == UIMode.STANDALONE)
       {
-        barLayout = new MigLayout("fill", "0[100][30,center][100][15,center][grow,left][15,center][100]0", "4[]2");
+        barLayout = new MigLayout("fill", "0[100][50,center][100][15,center][grow,left][15,center][100]0", "4[]2");
       }
       else
       {
@@ -260,11 +260,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       if (mode == UIMode.STANDALONE)
       {
         final Button connectButton = new Button(composite, SWT.PUSH);
-        connectButton.setText("\u21D3 Connection");
+        connectButton.setText("\u25BC Connection");
         connectButton.setLayoutData("growx");
         
         Label arrowLabel = new Label(composite, SWT.NONE);
-        arrowLabel.setText("\u21D2");
+        arrowLabel.setText("\u25BA");
+        FontData[] defFontData = arrowLabel.getFont().getFontData();
+        Font newFont = new Font(Display.getCurrent(), 
+            defFontData[0].getName(), 
+            14,
+            SWT.NORMAL);
+        arrowLabel.setFont(newFont);
         
         connectButton.addSelectionListener(new SelectionAdapter()
         {        
@@ -274,13 +280,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             if (connectShown)
             {
               connBar.hide();
-              connectButton.setText("\u21D3 Connection");
+              connectButton.setText("\u25BC Connection");
               connectShown = false;
             }
             else
             {
               connBar.show();
-              connectButton.setText("\u21D1 Connection");
+              connectButton.setText("\u25B2 Connection");
               connectShown = true;
             }
           }
@@ -302,7 +308,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       barLabel2.setText("|");
       
       final Button settingsButton = new Button(composite, SWT.PUSH);
-      settingsButton.setText("\u21D3 Settings");
+      settingsButton.setText("\u25BC Settings");
       settingsButton.setLayoutData("growx");
       
       settingsButton.addSelectionListener(new SelectionAdapter()
@@ -313,13 +319,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           if (settingsShown)
           {
             settingsTabs.hide();
-            settingsButton.setText("\u21D3 Settings");
+            settingsButton.setText("\u25BC Settings");
             settingsShown = false;
           }
           else
           {
             settingsTabs.show();
-            settingsButton.setText("\u21D1 Settings");
+            settingsButton.setText("\u25B2 Settings");
             settingsShown = true;
           }
         }
