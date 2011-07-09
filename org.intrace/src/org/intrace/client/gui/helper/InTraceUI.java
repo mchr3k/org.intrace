@@ -145,7 +145,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     outputTabs.composite.setLayoutData("grow,wmin 0,hmin 0");
     
     updateUIStateSameThread();
-    
+        
     sWindow.getDisplay().addFilter(SWT.KeyDown, new Listener()
     {
       @Override
@@ -545,7 +545,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private void hide()
     {
       composite.setVisible(false);
-      sRoot.layout();
+      if (mode == UIMode.ECLIPSE)
+      {
+        sRoot.pack();
+      }
+      sRoot.layout(true, true);
     }
   }
 
@@ -622,6 +626,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     {
       composite.setVisible(false);
       sRoot.layout();
+      
+      
     }
 
     private class TraceTab
