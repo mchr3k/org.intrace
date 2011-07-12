@@ -5,6 +5,8 @@ import intrace.ecl.ui.output.EditorInput.InputType;
 import java.net.Socket;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -13,9 +15,11 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.IWorkbenchThemeConstants;
 import org.eclipse.ui.part.EditorPart;
-import org.intrace.client.gui.helper.InTraceUI;
+import org.eclipse.ui.themes.ITheme;
 import org.intrace.client.gui.helper.Connection.ConnectState;
+import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
 
@@ -32,6 +36,14 @@ public class InTraceEditor extends EditorPart
   @Override
   public void createPartControl(final Composite parent)
   {
+    IWorkbench workBench = PlatformUI.getWorkbench();
+    ITheme theme = workBench.getThemeManager().getCurrentTheme();
+    ColorRegistry colreg = theme.getColorRegistry();
+    
+    @SuppressWarnings("restriction")
+    Color c1 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_START);
+    // TODO
+    
     IWorkbench workbench = PlatformUI.getWorkbench();
     final Display display = workbench.getDisplay();
     Shell window = display.getActiveShell();
