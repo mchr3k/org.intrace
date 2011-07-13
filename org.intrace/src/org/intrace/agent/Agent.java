@@ -42,9 +42,15 @@ public class Agent
     try
     {
       // Prepare boot classpath
-      String agentPath = Agent.class.getProtectionDomain().getCodeSource()
-          .getLocation().getPath();
-      if (!agentPath.endsWith(".jar"))
+      String agentPath = null;
+      if ((Agent.class.getProtectionDomain() != null) &&
+          (Agent.class.getProtectionDomain().getCodeSource() != null) &&
+          (Agent.class.getProtectionDomain().getCodeSource().getLocation() != null))
+      {
+        agentPath = Agent.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      }
+       
+      if ((agentPath == null) || !agentPath.endsWith(".jar"))
       {
         System.err.println("InTrace agent must be loaded from a .jar file. Detected path: " + agentPath);
         System.err.println("InTrace loading cancelled.");

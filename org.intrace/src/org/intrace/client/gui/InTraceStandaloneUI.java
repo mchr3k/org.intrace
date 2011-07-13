@@ -30,7 +30,7 @@ public class InTraceStandaloneUI
     window.setImages(icons);
     
     // Fill in UI
-    InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE);
+    InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE, null);
     
     // Register title callback
     ui.setConnCallback(new IConnectionStateCallback()

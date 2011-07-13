@@ -6,6 +6,7 @@ import java.net.Socket;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -22,7 +23,9 @@ import org.intrace.client.gui.helper.Connection.ConnectState;
 import org.intrace.client.gui.helper.InTraceUI;
 import org.intrace.client.gui.helper.InTraceUI.IConnectionStateCallback;
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
+import org.intrace.client.gui.helper.InTraceUI.UIModeData;
 
+@SuppressWarnings("restriction")
 public class InTraceEditor extends EditorPart
 {      
   private InTraceUI inTraceUI;
@@ -36,18 +39,20 @@ public class InTraceEditor extends EditorPart
   @Override
   public void createPartControl(final Composite parent)
   {
+    Composite ui = new Composite(parent, SWT.NONE);
+    
     IWorkbench workBench = PlatformUI.getWorkbench();
     ITheme theme = workBench.getThemeManager().getCurrentTheme();
     ColorRegistry colreg = theme.getColorRegistry();
     
-    @SuppressWarnings("restriction")
     Color c1 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_START);
-    // TODO
+    Color c2 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_END);
+    UIModeData data = new UIModeData(c1, c2);
     
     IWorkbench workbench = PlatformUI.getWorkbench();
     final Display display = workbench.getDisplay();
     Shell window = display.getActiveShell();
-    inTraceUI = new InTraceUI(window, parent, UIMode.ECLIPSE);
+    inTraceUI = new InTraceUI(window, ui, UIMode.ECLIPSE, data);
     inTraceUI.setConnCallback(new IConnectionStateCallback()
     {     
       @Override

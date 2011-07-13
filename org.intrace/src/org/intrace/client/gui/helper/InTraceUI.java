@@ -92,6 +92,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private final Shell sWindow;
   private final Composite sRoot;  
   private final UIMode mode;  
+  private final UIModeData modeData;
+
   private IConnectionStateCallback connCallback = null;
   private MigLayout rootLayout;
   
@@ -117,11 +119,23 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     ECLIPSE
   }
   
-  public InTraceUI(Shell xiWindow, Composite xiRoot, UIMode xiMode)
+  public static class UIModeData
+  {
+    public UIModeData(Color colorOne, Color colorTwo)
+    {
+      this.colorOne = colorOne;
+      this.colorTwo = colorTwo;
+    }
+    public final Color colorOne;
+    public final Color colorTwo;
+  }
+  
+  public InTraceUI(Shell xiWindow, Composite xiRoot, UIMode xiMode, UIModeData xiModeData)
   {
     sWindow = xiWindow;
     sRoot = xiRoot;
     mode = xiMode;
+    modeData = xiModeData;
     
     rootLayout = new MigLayout("fill,hidemode 2", "[]", "0[]0[]0[]0[]0[grow]");
     xiRoot.setLayout(rootLayout);
@@ -560,13 +574,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private void show()
     {
       composite.setVisible(true);   
-      sRoot.layout();
+      sRoot.layout(true, true);
     }
     
     private void hide()
     {
       composite.setVisible(false);
-      sRoot.layout();
+      sRoot.layout(true, true);
     }
   }
   
@@ -602,19 +616,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private void show()
     {
       composite.setVisible(true);   
-      sRoot.layout();
+      sRoot.layout(true, true);
     }
     
     private void hide()
     {
       composite.setVisible(false);
-      if (mode == UIMode.ECLIPSE)
-      {
-        // Hack to make sure the form gets laid out correctly
-        Point p = sRoot.getSize();
-        sRoot.setSize(p.x+1, p.y+1);
-        sRoot.setSize(p);
-      }
       sRoot.layout(true, true);
     }
   }
@@ -662,6 +669,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         mSettingsCTabs = new CTabFolder(composite, SWT.TOP | SWT.BORDER);
         mSettingsCTabs.setSimple(false);
         mSettingsCTabs.setLayoutData("grow,wrap,wmin 0");
+        mSettingsCTabs.setSelectionBackground(
+            new Color[]{modeData.colorOne, 
+                        modeData.colorTwo}, 
+                        new int[]{100}, true);
         
         CTabItem traceTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
         traceTabItem.setText("Trace");
@@ -685,15 +696,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private void show()
     {
       composite.setVisible(true);   
-      sRoot.layout();
+      sRoot.layout(true, true);
     }
     
     private void hide()
     {
       composite.setVisible(false);
-      sRoot.layout();
-      
-      
+      sRoot.layout(true, true);
     }
 
     private class TraceTab
@@ -815,7 +824,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
       private ExtrasTab(Composite parent)
       {
-        MigLayout windowLayout = new MigLayout("fill", "[120][120][160][160][grow]");
+        MigLayout windowLayout = new MigLayout("fill", "[120][120][120][160][grow]");
     
         composite = new Composite(parent, SWT.NONE);
         composite.setLayout(windowLayout);
@@ -922,6 +931,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         mOutputCTabs = new CTabFolder(composite, SWT.TOP | SWT.BORDER);
         mOutputCTabs.setSimple(false);
         mOutputCTabs.setLayoutData("grow,wmin 0,hmin 0");
+        mOutputCTabs.setSelectionBackground(
+                     new Color[]{modeData.colorOne, 
+                                 modeData.colorTwo}, 
+                                 new int[]{100}, true);
         
         CTabItem textOutputTabItem = new CTabItem(mOutputCTabs, SWT.NONE);
         textOutputTabItem.setText("Output");
@@ -1857,8 +1870,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           settingsData.classRegex = includePattern;
           settingsData.classExcludeRegex = excludePattern;
-          controlThread.sendMessage("[regex-" + includePattern
-              + "[excluderegex-" + excludePattern);
+          controlThread.sendMessage(AgentConfigConstants.CLASS_REGEX + includePattern
+              + AgentConfigConstants.EXCLUDE_CLASS_REGEX + excludePattern);
           controlThread.sendMessage("getsettings");
         }
       });
