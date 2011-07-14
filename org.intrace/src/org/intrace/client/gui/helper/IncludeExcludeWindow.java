@@ -339,9 +339,12 @@ public class IncludeExcludeWindow
       private void addItem()
       {
         String newItem = newPattern.patternInput.getText();
-        boolean includeItem = newPattern.includeButton.getSelection();
-        addItem(includeItem, newItem);
-        newPattern.patternInput.setText("");
+        if (newItem.length() > 0)
+        {
+          boolean includeItem = newPattern.includeButton.getSelection();
+          addItem(includeItem, newItem);
+          newPattern.patternInput.setText("");
+        }
       }
 
       private void addItem(boolean xiInclude, String newItem)
@@ -493,15 +496,16 @@ public class IncludeExcludeWindow
         if ((includeIndex != -1) && 
             ((excludeIndex == 2) || (count == 1)))
         {
-          // We have the include: header and no include
-          // items. We detect this either by the position
-          // of the exclude header or the overall count
-          // of items
+          // We need to remove the include header 
+          // as we have no include items left
           patternSet.remove(includeIndex);
           includeIndex = -1;
           
           if (excludeIndex > -1)
           {
+            // We need to remove the spacer above
+            // the exclude header
+            
             // Include element was removed
             excludeIndex--;
             
@@ -514,9 +518,16 @@ public class IncludeExcludeWindow
         if ((excludeIndex != -1) && 
             (excludeIndex == (count - 1)))
         {
-          // We have the exclude: header and the index
-          // of the last entry is the same as the index
-          // of the exclude header
+          // We need to remove the exclude header 
+          // as we have no exclude items left
+          if (includeIndex != -1)
+          {
+            // We need to remove the spacer above
+            // the exclude header
+            patternSet.remove(excludeIndex - 1);
+            excludeIndex--;
+          }
+          
           patternSet.remove(excludeIndex);
           excludeIndex = -1;
         }
