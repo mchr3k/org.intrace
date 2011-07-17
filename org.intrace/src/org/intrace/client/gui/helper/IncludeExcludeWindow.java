@@ -173,8 +173,7 @@ public class IncludeExcludeWindow
     private final PatternList patternList;
     private final Composite patternInputComp;
 
-    private int includeIndex = -1;
-    private int excludeIndex = -1;    
+    private IncludeExcludeHeaders model;    
     
     public PatternInput(Composite parent, 
         java.util.List<String> initIncludePatterns, 
@@ -189,6 +188,33 @@ public class IncludeExcludeWindow
       patternList = new PatternList(patternInputComp, 
                                     initIncludePatterns,
                                     initExcludePatterns);
+      
+      model = new IncludeExcludeHeaders(new IncludeExcludeHeaders.IncludeExcludeList()
+      {        
+        @Override
+        public void remove(int xiIndex)
+        {
+          patternList.patternSet.remove(xiIndex);
+        }
+        
+        @Override
+        public String[] getItems()
+        {
+          return patternList.patternSet.getItems();
+        }
+        
+        @Override
+        public void add(String xiItem, int xiIndex)
+        {
+          patternList.patternSet.add(xiItem, xiIndex);
+        }
+        
+        @Override
+        public void add(String xiItem)
+        {
+          patternList.patternSet.add(xiItem);
+        }
+      });
     }
 
     private class NewPattern
@@ -286,9 +312,6 @@ public class IncludeExcludeWindow
 
     private class PatternList
     {
-      private static final String INCLUDE_TITLE = "Include:";      
-      private static final String EXCLUDE_TITLE = "Exclude:";
-      
       private final List patternSet;
 
       private PatternList(Composite parent, 
@@ -332,7 +355,7 @@ public class IncludeExcludeWindow
             (pattern.length() > 0) &&
             (!pattern.equals(TraceFilterThread.MATCH_ALL)))
         {
-          addItem(xiInclude, pattern);
+          model.addItem(xiInclude, pattern);
         }
       }
 
@@ -342,80 +365,10 @@ public class IncludeExcludeWindow
         if (newItem.length() > 0)
         {
           boolean includeItem = newPattern.includeButton.getSelection();
-          addItem(includeItem, newItem);
+          model.addItem(includeItem, newItem);
           newPattern.patternInput.setText("");
         }
-      }
-
-      private void addItem(boolean xiInclude, String newItem)
-      {
-        boolean addItem = true;
-        
-        // Add headers
-        if (xiInclude && (includeIndex == -1))
-        {          
-          patternSet.add(INCLUDE_TITLE, 0);          
-          includeIndex = 0;
-          if (excludeIndex > -1)
-          {
-            // Include header was already added
-            excludeIndex++;
-            
-            // Add spacer
-            patternSet.add("", 1);
-            excludeIndex++;
-          }
-        }
-        else if (!xiInclude && (excludeIndex == -1))
-        {
-          if (includeIndex > -1)
-          {
-            patternSet.add("");
-          }          
-          patternSet.add(EXCLUDE_TITLE);
-          excludeIndex = patternSet.getItemCount() - 1;
-        }
-        
-        String[] currentItems = patternSet.getItems();
-        int startItem, endItem;
-        if (xiInclude)
-        {
-          startItem = 1;
-          if (excludeIndex == -1)
-          {
-            endItem = currentItems.length;
-          }
-          else
-          {
-            endItem = excludeIndex - 1;
-          }
-        }
-        else
-        {
-          startItem = excludeIndex + 1;
-          endItem = currentItems.length;
-        }
-        
-        for (int ii = startItem; ii < endItem; ii++)
-        {
-          String item = currentItems[ii].trim();
-          if (item.equals(newItem))
-          {
-            addItem = false;
-            break;
-          }
-        }
-        
-        if (addItem)
-        {
-          patternSet.add("   " + newItem, endItem);
-          
-          if ((excludeIndex != -1) && (endItem < excludeIndex))
-          {
-            excludeIndex++;
-          }
-        }
-      }
+      }      
 
       private void removeItem()
       {
@@ -424,16 +377,7 @@ public class IncludeExcludeWindow
         if (selectedItems.length == 1)
         {
           int selectedItem = selectedItems[0];
-          if ((selectedItem == includeIndex) ||
-              (selectedItem == excludeIndex) ||
-              (selectedItem == (excludeIndex - 1)))
-          {
-            // Ignore
-          }
-          else
-          {
-            removeIndex(selectedItem);
-          }
+          model.removeIndex(selectedItem);
         }
         else if (newPattern.patternInput.getText().length() > 0)
         {
@@ -448,110 +392,25 @@ public class IncludeExcludeWindow
         if (selectedItems.length == 1)
         {
           int selectedItem = selectedItems[0];
-          if ((selectedItem == includeIndex) ||
-              (selectedItem == excludeIndex) ||
-              (selectedItem == (excludeIndex - 1)))
+          String item = patternSet.getItem(selectedItem).trim();                     
+          if (model.removeIndex(selectedItem))
           {
-            // Ignore
-          }
-          else
-          {
-            newPattern.patternInput.setText(patternSet.getItem(selectedItem).trim());            
-            removeIndex(selectedItem);
+            newPattern.patternInput.setText(item);
             newPattern.patternInput.setFocus();
             newPattern.patternInput
                                    .setSelection(newPattern.patternInput
                                                                         .getText()
-                                                                        .length());
+                                                                          .length());
           }
         }
-      }
-      
-      private void removeIndex(int index)
-      {
-        // Remove item
-        patternSet.remove(index);
-        
-        // Check if we removed an included item when we already
-        // had an excluded item
-        int count = patternSet.getItemCount();        
-        if ((excludeIndex != -1) && (index < excludeIndex))
-        {
-          // Removed an item above the exclude header
-          excludeIndex--;
-        }
-        
-        // Check what kind of item we removed
-        if ((excludeIndex == -1) || (index < excludeIndex))
-        {
-          newPattern.includeButton.setSelection(true);
-          newPattern.excludeButton.setSelection(false);
-        }
-        else
-        {
-          newPattern.includeButton.setSelection(false);
-          newPattern.excludeButton.setSelection(true);
-        }
-        
-        if ((includeIndex != -1) && 
-            ((excludeIndex == 2) || (count == 1)))
-        {
-          // We need to remove the include header 
-          // as we have no include items left
-          patternSet.remove(includeIndex);
-          includeIndex = -1;
-          
-          if (excludeIndex > -1)
-          {
-            // We need to remove the spacer above
-            // the exclude header
-            
-            // Include element was removed
-            excludeIndex--;
-            
-            // Remove spacer element
-            patternSet.remove(0);
-            excludeIndex--;
-          }
-        }
-        
-        if ((excludeIndex != -1) && 
-            (excludeIndex == (count - 1)))
-        {
-          // We need to remove the exclude header 
-          // as we have no exclude items left
-          if (includeIndex != -1)
-          {
-            // We need to remove the spacer above
-            // the exclude header
-            patternSet.remove(excludeIndex - 1);
-            excludeIndex--;
-          }
-          
-          patternSet.remove(excludeIndex);
-          excludeIndex = -1;
-        }
-      }
+      }      
     }
 
     private java.util.List<String> getIncludePattern()
     {
       java.util.List<String> includes = new ArrayList<String>();
 
-      if (includeIndex != -1)
-      {
-        String[] items = patternList.patternSet.getItems();
-        int endIndex = patternList.patternSet.getItemCount();
-        if (excludeIndex != -1)
-        {
-          endIndex = excludeIndex - 1;
-        }
-        for (int ii = 1; ii < endIndex; ii++)
-        {
-          String item = items[ii].trim();
-          includes.add(item);
-        }
-      }
+      includes.addAll(model.getIncludePattern());
       
       if (newPattern.includeButton.getSelection())
       {
@@ -569,16 +428,7 @@ public class IncludeExcludeWindow
     {
       java.util.List<String> excludes = new ArrayList<String>();
 
-      if (excludeIndex != -1)
-      {
-        String[] items = patternList.patternSet.getItems();
-        int endIndex = patternList.patternSet.getItemCount();
-        for (int ii = (excludeIndex + 1); ii < endIndex; ii++)
-        {
-          String item = items[ii].trim();
-          excludes.add(item);
-        }
-      }
+      excludes.addAll(model.getExcludePattern());
       
       if (newPattern.excludeButton.getSelection())
       {
@@ -638,5 +488,206 @@ public class IncludeExcludeWindow
     public void setIncludePattern(java.util.List<String> newIncludePattern);
 
     public void setExcludePattern(java.util.List<String> newExcludePattern);
+  }
+  
+  /**
+   * Class which managed the presence of include/exclude headers
+   * within a list of items.
+   */
+  public static class IncludeExcludeHeaders
+  {
+    public static interface IncludeExcludeList
+    {
+      public void add(String xiItem);
+      public void add(String xiItem, int xiIndex);
+      public void remove(int xiIndex);
+      public String[] getItems();
+    }
+    
+    private static final String INCLUDE_TITLE = "Include:";      
+    private static final String EXCLUDE_TITLE = "Exclude:";     
+    
+    private int includeIndex = -1;
+    private int excludeIndex = -1;
+    
+    private final IncludeExcludeList list;
+    
+    public IncludeExcludeHeaders(IncludeExcludeList view)
+    {
+      this.list = view;
+    }
+    
+    public void addItem(boolean xiInclude, String newItem)
+    {
+      boolean addItem = true;
+      
+      // Add headers
+      if (xiInclude && (includeIndex == -1))
+      {          
+        list.add(INCLUDE_TITLE, 0);          
+        includeIndex = 0;
+        if (excludeIndex > -1)
+        {
+          // Include header was already added
+          excludeIndex++;
+          
+          // Add spacer
+          list.add("", 1);
+          excludeIndex++;
+        }
+      }
+      else if (!xiInclude && (excludeIndex == -1))
+      {
+        if (includeIndex > -1)
+        {
+          list.add("");
+        }          
+        list.add(EXCLUDE_TITLE);
+        excludeIndex = list.getItems().length - 1;
+      }
+      
+      String[] currentItems = list.getItems();
+      int startItem, endItem;
+      if (xiInclude)
+      {
+        startItem = 1;
+        if (excludeIndex == -1)
+        {
+          endItem = currentItems.length;
+        }
+        else
+        {
+          endItem = excludeIndex - 1;
+        }
+      }
+      else
+      {
+        startItem = excludeIndex + 1;
+        endItem = currentItems.length;
+      }
+      
+      for (int ii = startItem; ii < endItem; ii++)
+      {
+        String item = currentItems[ii].trim();
+        if (item.equals(newItem))
+        {
+          addItem = false;
+          break;
+        }
+      }
+      
+      if (addItem)
+      {
+        list.add("   " + newItem, endItem);
+        
+        if ((excludeIndex != -1) && (endItem < excludeIndex))
+        {
+          excludeIndex++;
+        }
+      }
+    }
+    
+    public boolean removeIndex(int index)
+    {
+      if ((index == includeIndex) ||
+          (index == excludeIndex) ||
+          (index == (excludeIndex - 1)))
+      {
+        // Ignore
+        return false;
+      }
+      
+      // Remove item
+      list.remove(index);
+      
+      // Check if we removed an included item when we already
+      // had an excluded item
+      int count = list.getItems().length;        
+      if ((excludeIndex != -1) && (index < excludeIndex))
+      {
+        // Removed an item above the exclude header
+        excludeIndex--;
+      }
+      
+      if ((includeIndex != -1) && 
+          ((excludeIndex == 2) || (count == 1)))
+      {
+        // We need to remove the include header 
+        // as we have no include items left
+        list.remove(includeIndex);
+        includeIndex = -1;
+        
+        if (excludeIndex > -1)
+        {
+          // We need to remove the spacer above
+          // the exclude header
+          
+          // Include element was removed
+          excludeIndex--;
+          
+          // Remove spacer element
+          list.remove(0);
+          excludeIndex--;
+        }
+      }
+      
+      if ((excludeIndex != -1) && 
+          (excludeIndex == (count - 1)))
+      {
+        // We need to remove the exclude header 
+        // as we have no exclude items left
+        if (includeIndex != -1)
+        {
+          // We need to remove the spacer above
+          // the exclude header
+          list.remove(excludeIndex - 1);
+          excludeIndex--;
+        }
+        
+        list.remove(excludeIndex);
+        excludeIndex = -1;
+      }
+      return true;
+    }
+    
+    public java.util.List<String> getIncludePattern()
+    {
+      java.util.List<String> includes = new ArrayList<String>();
+
+      if (includeIndex != -1)
+      {
+        String[] items = list.getItems();
+        int endIndex = items.length;
+        if (excludeIndex != -1)
+        {
+          endIndex = excludeIndex - 1;
+        }
+        for (int ii = 1; ii < endIndex; ii++)
+        {
+          String item = items[ii].trim();
+          includes.add(item);
+        }
+      }      
+
+      return includes;
+    }
+
+    public java.util.List<String> getExcludePattern()
+    {
+      java.util.List<String> excludes = new ArrayList<String>();
+
+      if (excludeIndex != -1)
+      {
+        String[] items = list.getItems();
+        int endIndex = items.length;
+        for (int ii = (excludeIndex + 1); ii < endIndex; ii++)
+        {
+          String item = items[ii].trim();
+          excludes.add(item);
+        }
+      }      
+
+      return excludes;
+    }
   }
 }

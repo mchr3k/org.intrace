@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,7 +18,7 @@ public class NetworkDataSenderThread extends InstruRunnable
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(30);
-  private Set<NetworkDataSenderThread> set;
+  private Set<NetworkDataSenderThread> set = new HashSet<NetworkDataSenderThread>(0);
   private final AgentClientConnection connection;
 
   public NetworkDataSenderThread(AgentClientConnection connection, ServerSocket networkSocket)

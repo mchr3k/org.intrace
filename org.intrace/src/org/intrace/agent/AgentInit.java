@@ -30,7 +30,7 @@ public class AgentInit
     }
     
     // Setup the trace instrumentation handler
-    AgentHelper.instrumentationHandler = TraceHandler.INSTANCE;
+    AgentHelper.setInstrumentationHandler(TraceHandler.INSTANCE);
   
     // Parse startup args
     AgentSettings args = new AgentSettings(agentArgs);

@@ -1222,7 +1222,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               @Override
               public void widgetSelected(SelectionEvent arg0)
               {
-                filterThread.setClearTrace();
+                MessageBox messageBox = new MessageBox(sWindow, SWT.ICON_WARNING |SWT.YES | SWT.NO);
+                messageBox.setMessage("Clear all output?");
+                messageBox.setText("Output");
+                int rc = messageBox.open();
+                
+                if (rc == SWT.YES)
+                {                
+                  filterThread.setClearTrace();
+                }
               }
             });
     

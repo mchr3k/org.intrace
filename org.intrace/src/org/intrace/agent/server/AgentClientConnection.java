@@ -63,7 +63,7 @@ public class AgentClientConnection extends InstruRunnable
   {
     synchronized (traceConnLock)
     {
-      if (!traceConnEstablished)
+      while (!traceConnEstablished)
       {
         traceConnLock.wait();
       }

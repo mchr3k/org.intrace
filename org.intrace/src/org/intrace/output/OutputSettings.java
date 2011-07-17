@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.intrace.shared.TraceConfigConstants;
@@ -40,7 +41,7 @@ public class OutputSettings
     String[] seperateArgs = args.split("\\[");
     for (int ii = 0; ii < seperateArgs.length; ii++)
     {
-      parseArg("[" + seperateArgs[ii].toLowerCase());
+      parseArg("[" + seperateArgs[ii].toLowerCase(Locale.ROOT));
     }
   }
 
@@ -181,17 +182,26 @@ public class OutputSettings
       closeFile(printWriter);
       if (deleteFile)
       {
-        file.delete();
+        if (!file.delete())
+        {
+          System.err.println("InTrace failed to delete trace file: " + file.getAbsolutePath());
+        }
       }
       else if (file.exists())
       {
         LineNumberReader reader = new LineNumberReader(new FileReader(file));
-        while (reader.readLine() != null)
+        try
         {
-          // Do nothing
+          while (reader.readLine() != null)
+          {
+            // Do nothing
+          }
+          writtenLines = reader.getLineNumber();
         }
-        writtenLines = reader.getLineNumber();
-        reader.close();
+        finally
+        {
+          reader.close();
+        }
       }
       ret = new PrintWriter(new FileWriter(file, true));
     }

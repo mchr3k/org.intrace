@@ -36,7 +36,7 @@ public class AgentServer extends InstruRunnable
   
   public static synchronized void waitForStartSignal() throws InterruptedException
   {
-    if (!startSignaled)
+    while (!startSignaled)
     {
       AgentServer.class.wait();
     }

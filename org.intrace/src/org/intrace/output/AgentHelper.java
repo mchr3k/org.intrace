@@ -18,10 +18,20 @@ import org.intrace.agent.server.AgentClientConnection;
 public class AgentHelper
 {
   // Instrumentation handler
-  public static IInstrumentationHandler instrumentationHandler;
+  private static IInstrumentationHandler instrumentationHandler;
+  
+  public static void setInstrumentationHandler(IInstrumentationHandler handler)
+  {
+    instrumentationHandler = handler;
+  }
 
   // Output Settings
-  public static OutputSettings outputSettings = new OutputSettings("");
+  private static OutputSettings outputSettings = new OutputSettings("");
+  
+  public static OutputSettings getOutputSettings()
+  {
+    return outputSettings;
+  }
 
   // Set of active network output threads
   private static final Map<NetworkDataSenderThread, Object> networkOutputThreads = new ConcurrentHashMap<NetworkDataSenderThread, Object>();

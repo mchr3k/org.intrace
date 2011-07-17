@@ -2,6 +2,7 @@ package org.intrace.agent;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.intrace.shared.AgentConfigConstants;
@@ -55,54 +56,54 @@ public class AgentSettings
 
   private void parseArg(String arg)
   {
-    if (arg.toLowerCase().equals(AgentConfigConstants.VERBOSE_MODE + "true"))
+    if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.VERBOSE_MODE + "true"))
     {
       verboseMode = true;
     }
-    else if (arg.toLowerCase().equals(
+    else if (arg.toLowerCase(Locale.ROOT).equals(
                                       AgentConfigConstants.VERBOSE_MODE
                                           + "false"))
     {
       verboseMode = false;
     }
-    else if (arg.toLowerCase().startsWith(AgentConfigConstants.OPT_SERVER_PORT))
+    else if (arg.toLowerCase(Locale.ROOT).startsWith(AgentConfigConstants.OPT_SERVER_PORT))
     {
       String serverPortStr = arg.replace(AgentConfigConstants.OPT_SERVER_PORT, "");
       serverPort = Integer.parseInt(serverPortStr);
     }
-    else if (arg.toLowerCase().startsWith(AgentConfigConstants.CALLBACK_PORT))
+    else if (arg.toLowerCase(Locale.ROOT).startsWith(AgentConfigConstants.CALLBACK_PORT))
     {
       String callbackPortStr = arg.replace(AgentConfigConstants.CALLBACK_PORT, "");
       callbackPort = Integer.parseInt(callbackPortStr);
     }
-    else if (arg.toLowerCase().equals(
+    else if (arg.toLowerCase(Locale.ROOT).equals(
                                       AgentConfigConstants.INSTRU_ENABLED
                                           + "true"))
     {
       instruEnabled = true;
     }
-    else if (arg.toLowerCase().equals(
+    else if (arg.toLowerCase(Locale.ROOT).equals(
                                       AgentConfigConstants.INSTRU_ENABLED
                                           + "false"))
     {
       instruEnabled = false;
     }
-    else if (arg.toLowerCase()
+    else if (arg.toLowerCase(Locale.ROOT)
                 .equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "true"))
     {
       saveTracedClassfiles = true;
     }
-    else if (arg.toLowerCase()
+    else if (arg.toLowerCase(Locale.ROOT)
                 .equals(AgentConfigConstants.SAVE_TRACED_CLASSFILES + "false"))
     {
       saveTracedClassfiles = false;
     }
-    else if (arg.toLowerCase()
+    else if (arg.toLowerCase(Locale.ROOT)
         .equals(AgentConfigConstants.START_WAIT))
     {
       waitStart = true;
     }
-    else if (arg.toLowerCase().equals(AgentConfigConstants.START_ACTIVATE))
+    else if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.START_ACTIVATE))
     {
       waitStart = false;
     }

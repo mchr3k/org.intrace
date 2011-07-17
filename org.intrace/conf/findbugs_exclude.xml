@@ -1,28 +1,43 @@
 <FindBugsFilter>
-   // Ignore infinite loop
-   <Match>
-       <Class name="org.intrace.agent.server.AgentClientConnection" />
-       <Or>
-         <Method name="run" />
-       </Or>
-       <Bug code="IL" />
-   </Match>
+  // Ignore infinite loop in Agent Server class
+  <Match>
+      <Class name="org.intrace.agent.server.AgentServer" />
+      <Method name="runMethod" />
+      <Bug code="IL" />
+  </Match>
+  
+  // Ignore Exception catching in Agent class
+  <Match>
+      <Class name="org.intrace.agent.Agent" />
+      <Method name="initialize" />
+      <Bug code="REC" />
+  </Match>
+  
+  // Ignore Exception catching in AgentInit class
+  <Match>
+      <Class name="org.intrace.agent.AgentInit" />
+      <Method name="doCallbackConnection" />
+      <Bug code="REC" />
+  </Match>
+  
+  // Ignore returning a mutable instance state
+  <Match>
+      <Class name="org.intrace.agent.AgentSettings" />
+      <Bug code="EI" />
+  </Match>
 
-   // Ignore infinite loop
-   <Match>
-       <Class name="org.intrace.agent.server.AgentServer" />
-       <Or>
-         <Method name="run" />
-       </Or>
-       <Bug code="IL" />
-   </Match>
+  // Ignore null return value in place of array
+  <Match>
+      <Class name="org.intrace.agent.ClassTransformer" />
+      <Method name="getInstrumentedClassBytes" />
+      <Bug code="PZLA" />
+  </Match>
+  
+  // Ignore switch fall through
+  <Match>
+      <Class name="org.intrace.agent.InstrumentedClassWriter$InstrumentedMethodWriter" />
+      <Method name="generateCallToAgentHelper" />
+      <Bug code="SF" />
+  </Match>
 
-   // Ignore return value warnings in this method
-   <Match>
-       <Class name="org.intrace.output.trace.TraceSettings" />
-       <Or>
-         <Method name="resetFile" />
-       </Or>
-       <Bug code="RV" />
-   </Match>
 </FindBugsFilter>

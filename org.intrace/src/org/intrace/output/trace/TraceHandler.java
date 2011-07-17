@@ -235,7 +235,7 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
-  private final String ESCAPE_PATTERN = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
+  private static final String ESCAPE_PATTERN = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
   
   @Override
   public void val(String desc, String className, String methodName,
@@ -337,17 +337,17 @@ public class TraceHandler implements IInstrumentationHandler
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
-    if (AgentHelper.outputSettings.isStdoutOutputEnabled())
+    if (AgentHelper.getOutputSettings().isStdoutOutputEnabled())
     {
       System.out.println(traceString);
     }
 
-    if (AgentHelper.outputSettings.isFileOutputEnabled())
+    if (AgentHelper.getOutputSettings().isFileOutputEnabled())
     {
-      AgentHelper.outputSettings.writeFileOutput(traceString);
+      AgentHelper.getOutputSettings().writeFileOutput(traceString);
     }
 
-    if (AgentHelper.outputSettings.isNetOutputEnabled())
+    if (AgentHelper.getOutputSettings().isNetOutputEnabled())
     {
       AgentHelper.writeDataOutput(traceString);
     }
