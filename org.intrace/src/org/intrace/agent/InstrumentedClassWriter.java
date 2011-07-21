@@ -25,6 +25,7 @@ public class InstrumentedClassWriter extends ClassWriter
 {
   private final String className;
   private final ClassAnalysis analysis;
+  private final boolean threadClass;
 
   /**
    * cTor
@@ -39,6 +40,7 @@ public class InstrumentedClassWriter extends ClassWriter
     super(xiReader, COMPUTE_MAXS);
     className = xiClassName;
     analysis = xiAnalysis;
+    threadClass = xiClassName.equals("java.lang.Thread");
   }
 
   /**
@@ -56,9 +58,13 @@ public class InstrumentedClassWriter extends ClassWriter
                                                                         + desc);
     Integer entryLine = analysis.methodEntryLines.get(name + desc);
 
+    if (!threadClass || !name.equals("getUncaughtExceptionHandler"))
+    {
+      mv = new InstrumentedMethodWriter(mv, access, name, desc,
+                                             branchTraceLines, entryLine);
+    }
     // Transform the method
-    return new InstrumentedMethodWriter(mv, access, name, desc,
-                                        branchTraceLines, entryLine);
+    return mv;
   }
 
   /**
@@ -67,6 +73,7 @@ public class InstrumentedClassWriter extends ClassWriter
   private class InstrumentedMethodWriter extends MethodAdapter
   {
     private static final String HELPER_CLASS = "org/intrace/output/AgentHelper";
+    private static final String CRITICAL_BLOCK = "INSTRU_CRITICAL_BLOCK";
 
     // Final method fields
     private final String methodName;
@@ -86,6 +93,7 @@ public class InstrumentedClassWriter extends ClassWriter
     private int lineNumber = -1;
     private int numBranchesOnLine = 0;
     private TernaryState ternState = TernaryState.BASE;
+    private Label threadLabel;
 
     /**
      * cTor
@@ -115,11 +123,48 @@ public class InstrumentedClassWriter extends ClassWriter
     }
 
     /**
+     * Add the special preable for the Thread.setUncaughtExceptionHandler(...)
+     */
+    private void addThreadSetUCEHPreamble()
+    {
+      Label l0 = new Label();
+      mv.visitLabel(l0);
+      mv.visitVarInsn(Opcodes.ALOAD, 1);
+      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK, 
+                        "L" + HELPER_CLASS + "$CriticalBlock;");
+      Label l1 = new Label();
+      Label l2 = new Label();
+      Label l3 = new Label();
+      mv.visitJumpInsn(Opcodes.IF_ACMPEQ, l3);      
+      mv.visitLabel(l2);
+      mv.visitVarInsn(Opcodes.ALOAD, 0);
+      mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/Thread", "uncaughtExceptionHandler", 
+                        "Ljava/lang/Thread$UncaughtExceptionHandler;");
+      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK, 
+                        "L" + HELPER_CLASS + "$CriticalBlock;");
+      mv.visitJumpInsn(Opcodes.IF_ACMPNE, l1);      
+      mv.visitLabel(l3);
+      mv.visitVarInsn(Opcodes.ALOAD, 0);
+      mv.visitVarInsn(Opcodes.ALOAD, 1);
+      mv.visitFieldInsn(Opcodes.PUTFIELD, "java/lang/Thread", "uncaughtExceptionHandler", 
+                        "Ljava/lang/Thread$UncaughtExceptionHandler;");
+      threadLabel = new Label();
+      mv.visitJumpInsn(Opcodes.GOTO, threadLabel);
+      mv.visitLabel(l1);
+      mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);      
+    }
+    
+    /**
      * Initial entry point - generate ENTRY call.
      */
     @Override
     public void visitCode()
     {
+      if (threadClass && methodName.equals("setUncaughtExceptionHandler"))
+      {
+        addThreadSetUCEHPreamble();
+      }
+      
       if (ctorEntryState != CTorEntryState.ISCTOR)
       {
         addEntryCalls();
@@ -322,7 +367,14 @@ public class InstrumentedClassWriter extends ClassWriter
           addEntryCalls();
           ctorEntryState = CTorEntryState.ENTRY_WRITTEN;
         }
+        
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
+        
+        if (threadClass && methodName.equals("setUncaughtExceptionHandler"))
+        {
+          mv.visitLabel(threadLabel);
+          mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+        }        
       }
       else if ((xiOpCode == Opcodes.IRETURN) || (xiOpCode == Opcodes.FRETURN)
                || (xiOpCode == Opcodes.ARETURN))

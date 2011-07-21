@@ -224,10 +224,7 @@ public class ClassTransformer implements ClassFileTransformer
   private boolean isSensitiveClass(String className)
   {
     return className.contains(".intrace.") || 
-           className.contains("objectweb.asm") ||
-           className.equals("java.lang.Thread") || 
-           className.equals("java.lang.SecurityManager") ||
-           className.equals("java.lang.System");
+           className.contains("objectweb.asm");
   }
 
   /**

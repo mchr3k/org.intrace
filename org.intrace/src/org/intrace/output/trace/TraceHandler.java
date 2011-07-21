@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.intrace.output.AgentHelper;
 import org.intrace.output.IInstrumentationHandler;
@@ -235,21 +236,30 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
-  private static final String ESCAPE_PATTERN = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
+  private static final String ESCAPE_PATTERN_STR = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
+  private static final Pattern ESCAPE_PATTERN = Pattern.compile(ESCAPE_PATTERN_STR);
+  private static final String ESCAPE_REPLACEMENT = "\u25A1";
   
   @Override
   public void val(String desc, String className, String methodName,
                   Object objArg)
   {
-    // Array return values pass through this arm so we must do something
-    // a bit special - use Arrays.deepToString and discard the surrounding
-    // [] that we add.
     if (argTrace)
     {
-      String objStr = Arrays.deepToString(new Object[]
-      { objArg });
-      objStr = objStr.substring(1, objStr.length() - 1);
-      objStr = objStr.replaceAll(ESCAPE_PATTERN, "\u25A1");
+      String objStr;
+      if (objArg.getClass().isArray())
+      {
+        // Array return values pass through this arm so we must do something
+        // a bit special - use Arrays.deepToString and discard the surrounding
+        // [] that we add.
+        objStr = Arrays.deepToString(new Object[] { objArg });
+        objStr = objStr.substring(1, objStr.length() - 1);
+      }
+      else
+      {
+        objStr = (objArg != null ? objArg.toString() : "null");
+      }
+      objStr = ESCAPE_PATTERN.matcher(objStr).replaceAll(ESCAPE_REPLACEMENT);
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + objStr);
     }
@@ -261,7 +271,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       String objStr = Arrays.deepToString(objArrayArg);
-      objStr = objStr.replaceAll(ESCAPE_PATTERN, "\u25A1");
+      objStr = ESCAPE_PATTERN.matcher(objStr).replaceAll(ESCAPE_REPLACEMENT);
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + getArrayLenStr(objArrayArg) + objStr);
     }
