@@ -16,6 +16,7 @@ public class ParsedSettingsData
 
   public boolean entryExitEnabled;
   public boolean branchEnabled;
+  public boolean truncArraysEnabled;
   public boolean argsEnabled;
   public boolean stdOutEnabled;
   public boolean fileOutEnabled;
@@ -92,6 +93,15 @@ public class ParsedSettingsData
     else
     {
       argsEnabled = false;
+    }
+    
+    if ("true".equals(settingsMap.get(TraceConfigConstants.ARRAYS)))
+    {
+      truncArraysEnabled = true;
+    }
+    else
+    {
+      truncArraysEnabled = false;
     }
 
     if ("true".equals(settingsMap.get(TraceConfigConstants.STD_OUT)))

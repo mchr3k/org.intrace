@@ -14,14 +14,16 @@ import org.intrace.shared.TraceConfigConstants;
 public class TraceSettings
 {
   private boolean entryExitTraceEnabled = true;
-  private boolean branchTraceEnabled = true;
+  private boolean branchTraceEnabled = false;
   private boolean argTraceEnabled = true;
+  private boolean truncateArraysEnabled = true;
 
   public TraceSettings(TraceSettings oldSettings)
   {
     entryExitTraceEnabled = oldSettings.entryExitTraceEnabled;
     branchTraceEnabled = oldSettings.branchTraceEnabled;
-    argTraceEnabled = oldSettings.argTraceEnabled;    
+    argTraceEnabled = oldSettings.argTraceEnabled; 
+    truncateArraysEnabled = oldSettings.truncateArraysEnabled;
   }
 
   public TraceSettings(String args)
@@ -64,6 +66,14 @@ public class TraceSettings
     {
       argTraceEnabled = false;
     }
+    else if (arg.equals(TraceConfigConstants.ARRAYS + "true"))
+    {
+      truncateArraysEnabled = true;
+    }
+    else if (arg.equals(TraceConfigConstants.ARRAYS + "false"))
+    {
+      truncateArraysEnabled = false;
+    }
   }
 
   public boolean isEntryExitTraceEnabled()
@@ -80,6 +90,11 @@ public class TraceSettings
   {
     return argTraceEnabled;
   }
+  
+  public boolean isTruncateArraysEnabled()
+  {
+    return truncateArraysEnabled;
+  }
 
   public Map<String, String> getSettingsMap()
   {
@@ -90,6 +105,8 @@ public class TraceSettings
                     Boolean.toString(branchTraceEnabled));
     settingsMap
                .put(TraceConfigConstants.ARG, Boolean.toString(argTraceEnabled));
+    settingsMap
+    .put(TraceConfigConstants.ARRAYS, Boolean.toString(truncateArraysEnabled));
     return settingsMap;
   }
 }

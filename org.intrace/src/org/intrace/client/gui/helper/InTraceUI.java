@@ -60,6 +60,7 @@ import org.intrace.client.gui.helper.NetworkDataReceiverThread.INetworkOutputCon
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 import org.intrace.shared.AgentConfigConstants;
+import org.intrace.shared.TraceConfigConstants;
 
 public class InTraceUI implements ISocketCallback, IControlConnectionListener
 {
@@ -77,6 +78,28 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   public void open()
   {
+//    new Thread()
+//    {
+//      public void run() 
+//      {
+//        try
+//        {
+//          Thread.sleep(500);
+//        }
+//        catch (InterruptedException e)
+//        {
+//          // Ignore
+//        }
+//        sWindow.getDisplay().syncExec(new Runnable()
+//        {
+//          @Override
+//          public void run()
+//          {
+//            startProgramBar.show();
+//          }
+//        });
+//      };
+//    }.start();
     placeDialogInCenter(sWindow.getDisplay().getPrimaryMonitor().getBounds(),
         sWindow);
     sWindow.open();
@@ -253,8 +276,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   {
     private final Label mainStatusLabel;
     private final Button classesButton;
-    private boolean connectShown = false;
-    private boolean settingsShown = false;
     private Composite composite;
 
     private static final String UP = "\u25B2";
@@ -266,6 +287,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private static final String TAHOMA_RIGHT = "\u003E";
     
     private final boolean tahomaUIFont;
+    private final Button connectButton;
+    private final Button settingsButton;
     
     private MainBar(Composite parent)
     {
@@ -285,7 +308,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       
       if (mode == UIMode.STANDALONE)
       {
-        final Button connectButton = new Button(composite, SWT.PUSH);
+        connectButton = new Button(composite, SWT.PUSH);
         if (tahomaUIFont)
         {
           connectButton.setText(TAHOMA_DOWN + " Connection");
@@ -319,34 +342,20 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           @Override
           public void widgetSelected(SelectionEvent arg0)
           {
-            if (connectShown)
+            if (connBar.composite.isVisible())
             {
               connBar.hide();              
-              if (tahomaUIFont)
-              {
-                connectButton.setText(TAHOMA_DOWN + " Connection");
-              }
-              else
-              {
-                connectButton.setText(DOWN + " Connection");
-              }
-              connectShown = false;
             }
             else
             {
               connBar.show();
-              if (tahomaUIFont)
-              {
-                connectButton.setText(TAHOMA_UP + " Connection");
-              }
-              else
-              {
-                connectButton.setText(UP + " Connection");
-              }
-              connectShown = true;
             }
           }
         });
+      }
+      else
+      {
+        connectButton = null;
       }
       
       classesButton = new Button(composite, SWT.PUSH);
@@ -363,7 +372,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       Label barLabel2 = new Label(composite, SWT.NONE);
       barLabel2.setText("|");
       
-      final Button settingsButton = new Button(composite, SWT.PUSH);
+      settingsButton = new Button(composite, SWT.PUSH);
       if (tahomaUIFont)
       {
         settingsButton.setText(TAHOMA_DOWN + " Settings");
@@ -379,31 +388,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void widgetSelected(SelectionEvent arg0)
         {
-          if (settingsShown)
+          if (settingsTabs.composite.isVisible())
           {
             settingsTabs.hide();
-            if (tahomaUIFont)
-            {
-              settingsButton.setText(TAHOMA_DOWN + " Settings");
-            }
-            else
-            {
-              settingsButton.setText(DOWN + " Settings");
-            }
-            settingsShown = false;
           }
           else
           {
-            settingsTabs.show();
-            if (tahomaUIFont)
-            {
-              settingsButton.setText(TAHOMA_UP + " Settings");
-            }
-            else
-            {
-              settingsButton.setText(UP + " Settings");
-            }
-            settingsShown = true;
+            settingsTabs.show();            
           }
         }
       });
@@ -573,12 +564,29 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     private void show()
     {
+      if (mainBar.tahomaUIFont)
+      {
+        mainBar.connectButton.setText(MainBar.TAHOMA_UP + " Connection");
+      }
+      else
+      {
+        mainBar.connectButton.setText(MainBar.UP + " Connection");
+      }
+      settingsTabs.hide();
       composite.setVisible(true);   
       sRoot.layout(true, true);
     }
     
     private void hide()
     {
+      if (mainBar.tahomaUIFont)
+      {
+        mainBar.connectButton.setText(MainBar.TAHOMA_DOWN + " Connection");
+      }
+      else
+      {
+        mainBar.connectButton.setText(MainBar.DOWN + " Connection");
+      }
       composite.setVisible(false);
       sRoot.layout(true, true);
     }
@@ -586,7 +594,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   
   private class StartProgramBar
   {
-    private Composite composite;
+    private final Composite composite;
+    private final Button startButton;
     
     private StartProgramBar(Composite parent)
     {
@@ -598,7 +607,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       startLabel.setText("Program has been paused.");
       startLabel.setLayoutData("split");
       
-      final Button startButton = new Button(composite, SWT.PUSH);
+      startButton = new Button(composite, SWT.PUSH);
       startButton.setText("Start Program");
       
       startButton.addSelectionListener(new SelectionAdapter()
@@ -606,15 +615,23 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void widgetSelected(SelectionEvent arg0)
         {
-          controlThread.sendMessage(AgentConfigConstants.START_ACTIVATE);
-          controlThread.sendMessage("getsettings");
-          startButton.setEnabled(false);
+          if (controlThread != null)
+          {
+            controlThread.sendMessage(AgentConfigConstants.START_ACTIVATE);
+            controlThread.sendMessage("getsettings");
+            startButton.setEnabled(false);
+          }
+          else
+          {
+            startProgramBar.hide();
+          }
         }
       });
     }
     
     private void show()
     {
+      startButton.setEnabled(true);
       composite.setVisible(true);   
       sRoot.layout(true, true);
     }
@@ -695,12 +712,29 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     private void show()
     {
+      if (mainBar.tahomaUIFont)
+      {
+        mainBar.settingsButton.setText(MainBar.TAHOMA_UP + " Settings");
+      }
+      else
+      {
+        mainBar.settingsButton.setText(MainBar.UP + " Settings");
+      }
+      connBar.hide();
       composite.setVisible(true);   
       sRoot.layout(true, true);
     }
     
     private void hide()
     {
+      if (mainBar.tahomaUIFont)
+      {
+        mainBar.settingsButton.setText(MainBar.TAHOMA_DOWN + " Settings");
+      }
+      else
+      {
+        mainBar.settingsButton.setText(MainBar.DOWN + " Settings");
+      }
       composite.setVisible(false);
       sRoot.layout(true, true);
     }
@@ -710,12 +744,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       final Button entryExitTrace;
       final Button branchTrace;
       final Button argsTrace;
+      final Button arrayTrace;
     
-      final Composite composite;
+      final Composite composite;      
     
       private TraceTab(Composite parent)
       {
-        MigLayout windowLayout = new MigLayout("fill", "[120][120][120][grow]");
+        MigLayout windowLayout = new MigLayout("fill", "[80][80][100][100][grow]");
     
         composite = new Composite(parent, SWT.NONE);
         composite.setLayout(windowLayout);
@@ -731,6 +766,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         argsTrace = new Button(composite, SWT.CHECK);
         argsTrace.setText(ClientStrings.ENABLE_ARGS_TRACE);
         argsTrace.setAlignment(SWT.CENTER);
+        
+        arrayTrace = new Button(composite, SWT.CHECK);
+        arrayTrace.setText(ClientStrings.ENABLE_ARRAY_TRACE);
+        arrayTrace.setAlignment(SWT.CENTER);
     
         entryExitTrace
             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -765,6 +804,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 settingsData.argsEnabled = !settingsData.argsEnabled;
               }
             });
+        arrayTrace
+        .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+        {
+          @Override
+          public void widgetSelected(SelectionEvent arg0)
+          {
+            toggleSetting(settingsData.truncArraysEnabled, TraceConfigConstants.ARRAYS + "true",
+                TraceConfigConstants.ARRAYS + "false");
+            settingsData.truncArraysEnabled = !settingsData.truncArraysEnabled;
+          }
+        });
       }
     }
     
@@ -1756,6 +1806,20 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   public void setConnectionState(ConnectState connectionState)
   {
     this.connectionState = connectionState;
+    if (connectionState == ConnectState.CONNECTED)
+    {
+      if (!sWindow.isDisposed())
+      {
+        sWindow.getDisplay().syncExec(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            connBar.hide(); 
+          }
+        });        
+      }
+    }
     IConnectionStateCallback callback = connCallback;
     if (callback != null)
     {
@@ -1984,6 +2048,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.argsTrace.setEnabled(true);
         settingsTabs.traceTab.branchTrace.setEnabled(true);
         settingsTabs.traceTab.entryExitTrace.setEnabled(true);
+        settingsTabs.traceTab.arrayTrace.setEnabled(true);
         settingsTabs.outputSettingsTab.fileOutput.setEnabled(true);
         settingsTabs.outputSettingsTab.stdOutOutput.setEnabled(true);
 
@@ -1997,6 +2062,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.argsTrace.setSelection(settingsData.argsEnabled);
         settingsTabs.traceTab.branchTrace.setSelection(settingsData.branchEnabled);
         settingsTabs.traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
+        settingsTabs.traceTab.arrayTrace.setSelection(settingsData.truncArraysEnabled);
         settingsTabs.outputSettingsTab.fileOutput.setSelection(settingsData.fileOutEnabled);
         settingsTabs.outputSettingsTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
 
@@ -2034,6 +2100,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.argsTrace.setEnabled(false);
         settingsTabs.traceTab.branchTrace.setEnabled(false);
         settingsTabs.traceTab.entryExitTrace.setEnabled(false);
+        settingsTabs.traceTab.arrayTrace.setEnabled(false);
         settingsTabs.outputSettingsTab.fileOutput.setEnabled(false);
         settingsTabs.outputSettingsTab.stdOutOutput.setEnabled(false);
 

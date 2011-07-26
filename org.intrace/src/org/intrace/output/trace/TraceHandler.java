@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.intrace.output.AgentHelper;
 import org.intrace.output.IInstrumentationHandler;
@@ -25,7 +24,8 @@ public class TraceHandler implements IInstrumentationHandler
   
   private boolean entryExitTrace = true;
   private boolean branchTrace = false;
-  private boolean argTrace = false;
+  private boolean argTrace = true;
+  private boolean truncateArrays = true;
 
   private static final TraceSettings traceSettings = new TraceSettings("");
 
@@ -35,11 +35,13 @@ public class TraceHandler implements IInstrumentationHandler
     traceSettings.parseArgs(args);
 
     if ((oldSettings.isEntryExitTraceEnabled() != traceSettings
-                                                               .isEntryExitTraceEnabled())
+        .isEntryExitTraceEnabled())
         || (oldSettings.isBranchTraceEnabled() != traceSettings
-                                                               .isBranchTraceEnabled())
+            .isBranchTraceEnabled())
         || (oldSettings.isArgTraceEnabled() != traceSettings
-                                                            .isArgTraceEnabled()))
+            .isArgTraceEnabled())
+        || (oldSettings.isTruncateArraysEnabled() != traceSettings
+            .isTruncateArraysEnabled()))
     {
       System.out.println("## Trace Settings Changed");
     }
@@ -47,6 +49,7 @@ public class TraceHandler implements IInstrumentationHandler
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
+    truncateArrays = traceSettings.isTruncateArraysEnabled();
 
     return null;
   }
@@ -66,6 +69,17 @@ public class TraceHandler implements IInstrumentationHandler
     return lRet;
   }
   
+  private String arrayStr(String xiArrStr)
+  {
+    String ret = xiArrStr;
+    if (truncateArrays &&
+        xiArrStr.length() > 100)
+    {
+      ret = xiArrStr.substring(0, 100) + "...";
+    }
+    return ret;
+  }
+  
   @Override
   public void val(String desc, String className, String methodName, byte byteArg)
   {
@@ -82,7 +96,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(byteArrayArg) + Arrays.toString(byteArrayArg));
+                       + getArrayLenStr(byteArrayArg) + arrayStr(Arrays.toString(byteArrayArg)));
     }
   }
 
@@ -103,7 +117,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(shortArrayArg) + Arrays.toString(shortArrayArg));
+                       + getArrayLenStr(shortArrayArg) + arrayStr(Arrays.toString(shortArrayArg)));
     }
   }
 
@@ -124,7 +138,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(intArrayArg) + Arrays.toString(intArrayArg));
+                       + getArrayLenStr(intArrayArg) + arrayStr(Arrays.toString(intArrayArg)));
     }
   }
 
@@ -145,7 +159,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(longArrayArg) + Arrays.toString(longArrayArg));
+                       + getArrayLenStr(longArrayArg) + arrayStr(Arrays.toString(longArrayArg)));
     }
   }
 
@@ -167,7 +181,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(floatArrayArg) + Arrays.toString(floatArrayArg));
+                       + getArrayLenStr(floatArrayArg) + arrayStr(Arrays.toString(floatArrayArg)));
     }
   }
 
@@ -189,7 +203,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(doubleArrayArg) + Arrays.toString(doubleArrayArg));
+                       + getArrayLenStr(doubleArrayArg) + arrayStr(Arrays.toString(doubleArrayArg)));
     }
   }
 
@@ -211,7 +225,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(boolArrayArg) + Arrays.toString(boolArrayArg));
+                       + getArrayLenStr(boolArrayArg) + arrayStr(Arrays.toString(boolArrayArg)));
     }
   }
 
@@ -232,13 +246,57 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
-                       + getArrayLenStr(charArrayArg) + Arrays.toString(charArrayArg));
+                       + getArrayLenStr(charArrayArg) + arrayStr(Arrays.toString(charArrayArg)));
     }
   }
 
-  private static final String ESCAPE_PATTERN_STR = "[\\x00-\\x1F\\x7F&&[^\\r\\n]]";
-  private static final Pattern ESCAPE_PATTERN = Pattern.compile(ESCAPE_PATTERN_STR);
-  private static final String ESCAPE_REPLACEMENT = "\u25A1";
+  private static final char ESCAPE_REPLACEMENT = '\u25A1';
+  
+  private String replaceChars(String xiArg)
+  {
+    String ret = xiArg;
+    StringBuilder str = null;
+    for (int ii = 0; ii < xiArg.length(); ii++)
+    {
+      char c = xiArg.charAt(ii);
+      
+      // Detect special char
+      if ((0x00 <= c) && 
+          (c <= 0x20) &&
+          (c != '\r') &&
+          (c != '\n'))
+      {
+        // Replace char
+        c = ESCAPE_REPLACEMENT;
+        
+        // Setup stringbuilder
+        if (str == null)
+        {
+          str = new StringBuilder();
+          
+          // Append any previous non special chars
+          if (ii > 0)
+          {
+            str.append(xiArg.substring(0, ii));
+          }
+        }
+      }
+      
+      // If we are storing chars we better write 
+      // this one now
+      if (str != null)
+      {
+        str.append(c);
+      }
+    }
+    
+    if (str != null)
+    {
+      ret = str.toString();
+    }
+    
+    return ret;
+  }
   
   @Override
   public void val(String desc, String className, String methodName,
@@ -254,12 +312,13 @@ public class TraceHandler implements IInstrumentationHandler
         // [] that we add.
         objStr = Arrays.deepToString(new Object[] { objArg });
         objStr = objStr.substring(1, objStr.length() - 1);
+        objStr = arrayStr(objStr);
+        objStr = replaceChars(objStr);
       }
       else
       {
         objStr = (objArg != null ? objArg.toString() : "null");
-      }
-      objStr = ESCAPE_PATTERN.matcher(objStr).replaceAll(ESCAPE_REPLACEMENT);
+      }      
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + objStr);
     }
@@ -271,7 +330,8 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       String objStr = Arrays.deepToString(objArrayArg);
-      objStr = ESCAPE_PATTERN.matcher(objStr).replaceAll(ESCAPE_REPLACEMENT);
+      objStr = replaceChars(objStr);
+      objStr = arrayStr(objStr);
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + getArrayLenStr(objArrayArg) + objStr);
     }
@@ -282,7 +342,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (branchTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": /:" + lineNo);
+      writeTraceOutput(className + ":" + methodName + ": /" + 
+                       (lineNo >= 0 ? ":" + lineNo : ""));
     }
   }
 
@@ -318,7 +379,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": {:" + lineNo);
+      writeTraceOutput(className + ":" + methodName + ": {" + 
+                       (lineNo >= 0 ? ":" + lineNo : ""));
     }
   }
 
@@ -327,7 +389,8 @@ public class TraceHandler implements IInstrumentationHandler
   {
     if (entryExitTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": }:" + lineNo);
+      writeTraceOutput(className + ":" + methodName + ": }" + 
+                       (lineNo >= 0 ? ":" + lineNo : ""));
     }
   }
 

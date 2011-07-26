@@ -8,9 +8,10 @@ public class ClientStrings
   public static final String ENABLE_VERBOSEMODE = "Verbose Mode";
   public static final String LIST_MODIFIED_CLASSES = "List Instrumented Classes";
 
-  public static final String ENABLE_EE_TRACE = "Entry/Exit Trace";
-  public static final String ENABLE_BRANCH_TRACE = "Branch Trace";
-  public static final String ENABLE_ARGS_TRACE = "Args Trace";
+  public static final String ENABLE_EE_TRACE = "Entry/Exit";
+  public static final String ENABLE_BRANCH_TRACE = "Branch";
+  public static final String ENABLE_ARGS_TRACE = "Method Args";
+  public static final String ENABLE_ARRAY_TRACE = "Truncate Array Args";
 
   public static final String BEGIN_CAPTURE_CALLERS = "New Callers Capture...";
   public static final String END_CAPTURE_CALLERS = "End Callers Capture";
