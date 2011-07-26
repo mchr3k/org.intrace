@@ -305,7 +305,7 @@ public class TraceHandler implements IInstrumentationHandler
     if (argTrace)
     {
       String objStr;
-      if (objArg.getClass().isArray())
+      if ((objArg != null) && objArg.getClass().isArray())
       {
         // Array return values pass through this arm so we must do something
         // a bit special - use Arrays.deepToString and discard the surrounding
