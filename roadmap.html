@@ -9,6 +9,9 @@ title: InTrace - Roadmap
 <h2>Target for Release 24</h2>
 <ul>
 <li>Enable tracing everything by always adding a field to java.lang.Thread
+<ul>
+<li> This isn't possible from a javaagent as Thread.class is always going to be loaded before our agent so we don't get to add any fields.
+</ul>
 <li>Speed up escaping of special characters
 <li>Add array display truncation
 </ul>
