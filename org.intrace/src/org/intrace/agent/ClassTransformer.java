@@ -95,10 +95,12 @@ public class ClassTransformer implements ClassFileTransformer
    * 
    * @param xiClassName
    * @param classfileBuffer
+   * @param shouldInstrument 
    * @return Instrumented class bytes
    */
   private byte[] getInstrumentedClassBytes(String xiClassName,
-                                           byte[] classfileBuffer)
+                                           byte[] classfileBuffer, 
+                                           boolean shouldInstrument)
   {
     try
     {
@@ -107,7 +109,8 @@ public class ClassTransformer implements ClassFileTransformer
       cr.accept(analysis, 0);
 
       InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
-                                                                   cr, analysis);
+                                                                   cr, analysis,
+                                                                   shouldInstrument);
       cr.accept(writer, 0);
 
       return writer.toByteArray();
@@ -255,8 +258,9 @@ public class ClassTransformer implements ClassFileTransformer
       int modifiedSize = modifiedClasses.size();
       int allClassesSize = allClasses.size();
   
-      if (isToBeConsideredForInstrumentation(classBeingRedefined, loader,
-                                             className, protectionDomain))
+      boolean shouldInstrument = isToBeConsideredForInstrumentation(classBeingRedefined, loader,
+                                                                    className, protectionDomain); 
+      if (shouldInstrument || "java.lang.Thread".equals(className))
       {
         System.out.println("!! Instrumenting class: " + compclass);
   
@@ -268,7 +272,9 @@ public class ClassTransformer implements ClassFileTransformer
         byte[] newBytes;
         try
         {
-          newBytes = getInstrumentedClassBytes(className, originalClassfile);
+          newBytes = getInstrumentedClassBytes(className, 
+                                               originalClassfile,
+                                               shouldInstrument);
         }
         catch (RuntimeException th)
         {

@@ -26,20 +26,23 @@ public class InstrumentedClassWriter extends ClassWriter
   private final String className;
   private final ClassAnalysis analysis;
   private final boolean threadClass;
+  private final boolean shouldInstrument;
 
   /**
    * cTor
    * 
    * @param xiClassName
    * @param xiReader
+   * @param xiShouldInstrument 
    * @param analysis
    */
   public InstrumentedClassWriter(String xiClassName, ClassReader xiReader,
-      ClassAnalysis xiAnalysis)
+      ClassAnalysis xiAnalysis, boolean xiShouldInstrument)
   {
     super(xiReader, COMPUTE_MAXS);
     className = xiClassName;
     analysis = xiAnalysis;
+    shouldInstrument = xiShouldInstrument;
     threadClass = xiClassName.equals("java.lang.Thread");
   }
 
@@ -176,6 +179,8 @@ public class InstrumentedClassWriter extends ClassWriter
 
     private void addEntryCalls()
     {
+      if (!shouldInstrument) return;
+      
       generateCallToAgentHelper(InstrumentationType.ENTER,
                                 ((entryLine != null ? entryLine
                                                    : -1)));
@@ -295,7 +300,8 @@ public class InstrumentedClassWriter extends ClassWriter
           }
           else
           {
-            if (exceptionHandlerLabels.contains(label))
+            if (shouldInstrument &&
+                exceptionHandlerLabels.contains(label))
             {
               // Top of the stack contains an exception - generate code to trace
               // it
@@ -320,7 +326,7 @@ public class InstrumentedClassWriter extends ClassWriter
                                  "val",
                                  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Throwable;)V");
             }
-            else
+            else if (shouldInstrument)
             {
               generateCallToAgentHelper(InstrumentationType.BRANCH, lineNumber);
             }
@@ -358,7 +364,11 @@ public class InstrumentedClassWriter extends ClassWriter
         ternState = TernaryState.BASE;
       }
 
-      if (xiOpCode == Opcodes.RETURN)
+      if (!shouldInstrument)
+      {
+        // Don't instrument - ignore
+      }
+      else if (xiOpCode == Opcodes.RETURN)
       {
         // Ensure that cTor entry call gets written even if the cTor is
         // implicit and therefore has only a single line number.
@@ -368,13 +378,7 @@ public class InstrumentedClassWriter extends ClassWriter
           ctorEntryState = CTorEntryState.ENTRY_WRITTEN;
         }
         
-        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
-        
-        if (threadClass && methodName.equals("setUncaughtExceptionHandler"))
-        {
-          mv.visitLabel(threadLabel);
-          mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-        }        
+        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);        
       }
       else if ((xiOpCode == Opcodes.IRETURN) || (xiOpCode == Opcodes.FRETURN)
                || (xiOpCode == Opcodes.ARETURN))
@@ -469,6 +473,16 @@ public class InstrumentedClassWriter extends ClassWriter
         // Also write exit trace
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
+      
+      if (xiOpCode == Opcodes.RETURN)
+      {
+        if (threadClass && methodName.equals("setUncaughtExceptionHandler"))
+        {
+          mv.visitLabel(threadLabel);
+          mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+        }        
+      }
+      
       super.visitInsn(xiOpCode);
     }
 
