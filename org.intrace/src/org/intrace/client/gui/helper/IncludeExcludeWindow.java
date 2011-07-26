@@ -185,9 +185,7 @@ public class IncludeExcludeWindow
       patternInputComp.setLayoutData("grow,wrap,spanx");
 
       newPattern = new NewPattern(patternInputComp);
-      patternList = new PatternList(patternInputComp, 
-                                    initIncludePatterns,
-                                    initExcludePatterns);
+      patternList = new PatternList(patternInputComp);
       
       model = new IncludeExcludeHeaders(new IncludeExcludeHeaders.IncludeExcludeList()
       {        
@@ -215,6 +213,28 @@ public class IncludeExcludeWindow
           patternList.patternSet.add(xiItem);
         }
       });
+      
+      parsePatternSet(true, initIncludePatterns);
+      parsePatternSet(false, initExcludePatterns);
+    }
+    
+    private void parsePatternSet(boolean xiInclude, 
+                  java.util.List<String> initPattern)
+    {
+      for (String pattern : initPattern)
+      {
+        parsePattern(xiInclude, pattern);
+      }
+    }
+
+    private void parsePattern(boolean xiInclude, String pattern)
+    {
+      if ((pattern != null) && 
+          (pattern.length() > 0) &&
+          (!pattern.equals(TraceFilterThread.MATCH_ALL)))
+      {
+        model.addItem(xiInclude, pattern);
+      }
     }
 
     private class NewPattern
@@ -314,9 +334,7 @@ public class IncludeExcludeWindow
     {
       private final List patternSet;
 
-      private PatternList(Composite parent, 
-          java.util.List<String> initIncludePatterns,
-          java.util.List<String> initExcludePatterns)
+      private PatternList(Composite parent)
       {
         Group patternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         patternGroup.setLayoutData("grow");
@@ -335,28 +353,6 @@ public class IncludeExcludeWindow
             editItem();
           }
         });
-
-        parsePatternSet(true, initIncludePatterns);
-        parsePatternSet(false, initExcludePatterns);
-      }
-
-      private void parsePatternSet(boolean xiInclude, 
-                    java.util.List<String> initPattern)
-      {
-        for (String pattern : initPattern)
-        {
-          parsePattern(xiInclude, pattern);
-        }
-      }
-
-      private void parsePattern(boolean xiInclude, String pattern)
-      {
-        if ((pattern != null) && 
-            (pattern.length() > 0) &&
-            (!pattern.equals(TraceFilterThread.MATCH_ALL)))
-        {
-          model.addItem(xiInclude, pattern);
-        }
       }
 
       private void addItem()
