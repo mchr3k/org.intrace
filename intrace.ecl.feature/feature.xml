@@ -2,7 +2,7 @@
 <feature
       id="intrace.ecl.feature"
       label="InTrace Eclipse Plugin"
-      version="0.14">
+      version="0.15">
 
    <description url="https://github.com/mchr3k/org.intrace/wiki">
       Enable launching Java Applications with the InTrace agent.
@@ -215,6 +215,6 @@ litigation.
          id="intrace.ecl"
          download-size="0"
          install-size="0"
-         version="0.14.0"/>
+         version="0.15.0"/>
 
 </feature>

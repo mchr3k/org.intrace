@@ -564,13 +564,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     private void show()
     {
-      if (mainBar.tahomaUIFont)
+      if (mainBar.connectButton != null)
       {
-        mainBar.connectButton.setText(MainBar.TAHOMA_UP + " Connection");
-      }
-      else
-      {
-        mainBar.connectButton.setText(MainBar.UP + " Connection");
+        if (mainBar.tahomaUIFont)
+        {
+          mainBar.connectButton.setText(MainBar.TAHOMA_UP + " Connection");
+        }
+        else
+        {
+          mainBar.connectButton.setText(MainBar.UP + " Connection");
+        }
       }
       settingsTabs.hide();
       composite.setVisible(true);   
@@ -579,13 +582,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     private void hide()
     {
-      if (mainBar.tahomaUIFont)
+      if (mainBar.connectButton != null)
       {
-        mainBar.connectButton.setText(MainBar.TAHOMA_DOWN + " Connection");
-      }
-      else
-      {
-        mainBar.connectButton.setText(MainBar.DOWN + " Connection");
+        if (mainBar.tahomaUIFont)
+        {
+          mainBar.connectButton.setText(MainBar.TAHOMA_DOWN + " Connection");
+        }
+        else
+        {
+          mainBar.connectButton.setText(MainBar.DOWN + " Connection");
+        }
       }
       composite.setVisible(false);
       sRoot.layout(true, true);
@@ -686,10 +692,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         mSettingsCTabs = new CTabFolder(composite, SWT.TOP | SWT.BORDER);
         mSettingsCTabs.setSimple(false);
         mSettingsCTabs.setLayoutData("grow,wrap,wmin 0");
-        mSettingsCTabs.setSelectionBackground(
-            new Color[]{modeData.colorOne, 
-                        modeData.colorTwo}, 
-                        new int[]{100}, true);
+        if (modeData != null)
+        {
+          mSettingsCTabs.setSelectionBackground(
+              new Color[]{modeData.colorOne, 
+                          modeData.colorTwo}, 
+                          new int[]{100}, true);
+        }
         
         CTabItem traceTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
         traceTabItem.setText("Trace");
@@ -981,10 +990,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         mOutputCTabs = new CTabFolder(composite, SWT.TOP | SWT.BORDER);
         mOutputCTabs.setSimple(false);
         mOutputCTabs.setLayoutData("grow,wmin 0,hmin 0");
-        mOutputCTabs.setSelectionBackground(
-                     new Color[]{modeData.colorOne, 
-                                 modeData.colorTwo}, 
-                                 new int[]{100}, true);
+        if (modeData != null)
+        {
+          mOutputCTabs.setSelectionBackground(
+                       new Color[]{modeData.colorOne, 
+                                   modeData.colorTwo}, 
+                                   new int[]{100}, true);
+        }
         
         CTabItem textOutputTabItem = new CTabItem(mOutputCTabs, SWT.NONE);
         textOutputTabItem.setText("Output");
