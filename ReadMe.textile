@@ -5,7 +5,7 @@ h1. Main Projects
 * intrace.ecl.feature - InTrace Eclipse Feature
 * intrace.ecl.site - InTrace Eclipse Update Site
 * intrace.appengine - InTrace AppEngine Update Site Hosting
-* binaries - images and jars used by wiki pages
+* binaries - jars from Inrace releases
 
 h2. Work in progress
 
