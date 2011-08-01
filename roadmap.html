@@ -6,19 +6,8 @@ title: InTrace - Roadmap
 
 <p>Eclipse <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344422">Enhancement 344422</a> tracks the possible future inclusion of InTrace with the Java Development Tools (JDT) project.
 
-<h2>Target for Release 24</h2>
-<ul>
-<li>Enable tracing everything by always adding a field to java.lang.Thread
-<ul>
-<li> This isn't possible from a javaagent as Thread.class is always going to be loaded before our agent so we don't get to add any fields.
-</ul>
-<li>Speed up escaping of special characters
-<li>Add array display truncation
-</ul>
-
 <h2>Target for Future Releases</h2>
 <ul>
-<li>GUI Agent Loader
 <li>VisualVM
 <ul>
   <li>Productise integration</li>
