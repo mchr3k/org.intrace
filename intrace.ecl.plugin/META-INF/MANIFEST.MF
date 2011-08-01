@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: InTrace Eclipse
 Bundle-SymbolicName: intrace.ecl;singleton:=true
-Bundle-Version: 0.15
+Bundle-Version: 0.16
 Bundle-Activator: intrace.ecl.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
