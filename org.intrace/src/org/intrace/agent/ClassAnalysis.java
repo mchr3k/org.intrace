@@ -139,8 +139,16 @@ public class ClassAnalysis extends EmptyVisitor
     {    
       if (currentMethod_numArgs > 0)
       {
-        methodArgNames.get(currentMethod_sig).add(name);
-        currentMethod_numArgs--;
+        List<String> args = methodArgNames.get(currentMethod_sig);
+        
+        if (args != null)
+        {
+          // Do this in a null check block because we hit
+          // an NPE here once. This shouldn't be possible
+          // but this null check will avoid any problems.
+          args.add(name);
+          currentMethod_numArgs--;
+        }
       }
     }
   }

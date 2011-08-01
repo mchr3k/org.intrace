@@ -14,6 +14,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.intrace.client.gui.helper.InTraceUI.UIMode;
+import org.intrace.client.gui.helper.InTraceUI.UIModeData;
 
 public class IncludeExcludeWindow
 {
@@ -44,13 +46,17 @@ public class IncludeExcludeWindow
 
   private final Pattern allowedStrings;
 
+  private final UIModeData modedata;
+
   public IncludeExcludeWindow(String windowTitle, String helpText,
       UIMode mode,
+      UIModeData modedata,
       PatternInputCallback callback, 
       java.util.List<String> initIncludePatterns,
       java.util.List<String> initExcludePatterns,
       Pattern allowedStrings)
   {
+    this.modedata = modedata;
     this.callback = callback;
     this.allowedStrings = allowedStrings;
     MigLayout windowLayout = new MigLayout("fill", "[grow][100][100][grow]",
@@ -105,6 +111,13 @@ public class IncludeExcludeWindow
       ctabs.setLayoutData("grow,wrap,wmin 0,spanx 4");
       fillCTabs(ctabs, initIncludePatterns, initExcludePatterns, helpText);
       ctabs.setSelection(0);
+      if (this.modedata != null)
+      {
+        ctabs.setSelectionBackground(
+            new Color[]{this.modedata.colorOne, 
+                        this.modedata.colorTwo}, 
+                        new int[]{100}, true);
+      }
     }
 
     saveCancelButtons = new SaveCancelButtons(sWindow);

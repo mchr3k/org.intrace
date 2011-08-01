@@ -411,6 +411,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           IncludeExcludeWindow regexInput = new IncludeExcludeWindow(
               "Classes to Instrument", helpText, mode,
+              modeData,
               new PatternInputCallback()
               {
                 private List<String> includePattern = null;
@@ -1404,6 +1405,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               {
                 IncludeExcludeWindow regexInput;
                 regexInput = new IncludeExcludeWindow("Output Filter", helpText, mode,
+                    modeData,
                     patternCallback, lastEnteredIncludeFilterPattern,
                     lastEnteredExcludeFilterPattern, ALLOW_ALL);
                 placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
