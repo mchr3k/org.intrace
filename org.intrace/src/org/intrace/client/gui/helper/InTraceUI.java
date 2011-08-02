@@ -168,11 +168,19 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
     connBar = new ConnectionBar(xiRoot);
     connBar.composite.setLayoutData("grow,wrap,pad 0");
-    connBar.hide();
     
     settingsTabs = new SettingsTabs(xiRoot);
     settingsTabs.composite.setLayoutData("grow,wrap,pad 0");
     settingsTabs.hide();
+    
+    if (mode == UIMode.STANDALONE)
+    {
+      connBar.show();
+    }
+    else
+    {
+      connBar.hide();
+    }
     
     startProgramBar = new StartProgramBar(xiRoot);
     startProgramBar.composite.setLayoutData("grow,wrap,pad 0");
@@ -657,7 +665,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     final private Composite composite;
     final private TraceTab traceTab;
     final private ExtrasTab extraTab;
-    private OutputSettingsTab outputSettingsTab;
+    final private AgentOutputSettingsTab agentOutputSettingsTab;
+    final private LocalOutputSettingsTab localOutputSettingsTab;
     
     private SettingsTabs(Composite parent)
     {
@@ -677,10 +686,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         traceTab = new TraceTab(mSettingsTabs);
         traceTabItem.setControl(traceTab.composite);
 
-        TabItem outputSettingsTabItem = new TabItem(mSettingsTabs, SWT.NONE);
-        outputSettingsTabItem.setText("Output");
-        outputSettingsTab = new OutputSettingsTab(mSettingsTabs);
-        outputSettingsTabItem.setControl(outputSettingsTab.composite);
+        TabItem agentOutputSettingsTabItem = new TabItem(mSettingsTabs, SWT.NONE);
+        agentOutputSettingsTabItem.setText("Agent Output");
+        agentOutputSettingsTab = new AgentOutputSettingsTab(mSettingsTabs);
+        agentOutputSettingsTabItem.setControl(agentOutputSettingsTab.composite);
+        
+        TabItem localOutputSettingsTabItem = new TabItem(mSettingsTabs, SWT.NONE);
+        localOutputSettingsTabItem.setText("Local Output");
+        localOutputSettingsTab = new LocalOutputSettingsTab(mSettingsTabs);
+        localOutputSettingsTabItem.setControl(localOutputSettingsTab.composite);
         
         TabItem extraTabItem = new TabItem(mSettingsTabs, SWT.NONE);
         extraTabItem.setText("Advanced");
@@ -706,11 +720,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         traceTab = new TraceTab(mSettingsCTabs);
         traceTabItem.setControl(traceTab.composite);
         
-        CTabItem outputSettingsTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
-        outputSettingsTabItem.setText("Output");
-        outputSettingsTab = new OutputSettingsTab(mSettingsCTabs);
-        outputSettingsTabItem.setControl(outputSettingsTab.composite);
+        CTabItem agentOutputSettingsTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
+        agentOutputSettingsTabItem.setText("Agent Output");
+        agentOutputSettingsTab = new AgentOutputSettingsTab(mSettingsCTabs);
+        agentOutputSettingsTabItem.setControl(agentOutputSettingsTab.composite);
 
+        CTabItem localOutputSettingsTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
+        localOutputSettingsTabItem.setText("Local Output");
+        localOutputSettingsTab = new LocalOutputSettingsTab(mSettingsCTabs);
+        localOutputSettingsTabItem.setControl(localOutputSettingsTab.composite);
+        
         CTabItem extraTabItem = new CTabItem(mSettingsCTabs, SWT.NONE);
         extraTabItem.setText("Advanced");
         extraTab = new ExtrasTab(mSettingsCTabs);
@@ -760,7 +779,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
       private TraceTab(Composite parent)
       {
-        MigLayout windowLayout = new MigLayout("fill", "[80][80][100][100][grow]");
+        MigLayout windowLayout = new MigLayout("fill", "[80][80][250][100][grow]");
     
         composite = new Composite(parent, SWT.NONE);
         composite.setLayout(windowLayout);
@@ -828,13 +847,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       }
     }
     
-    private class OutputSettingsTab
+    private class AgentOutputSettingsTab
     {
       final Button stdOutOutput;
       final Button fileOutput;
       final Composite composite;
     
-      private OutputSettingsTab(Composite parent)
+      private AgentOutputSettingsTab(Composite parent)
       {
         MigLayout windowLayout = new MigLayout("fill", "[120][120][grow]");
     
@@ -869,6 +888,51 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 toggleSetting(settingsData.fileOutEnabled, "[out-file-true",
                     "[out-file-false");
                 settingsData.fileOutEnabled = !settingsData.fileOutEnabled;
+              }
+            });
+      }
+    }
+    
+    private class LocalOutputSettingsTab
+    {
+      final Button discardFiltered;
+      final Button discardExcess;
+      final Composite composite;
+    
+      private LocalOutputSettingsTab(Composite parent)
+      {
+        MigLayout windowLayout = new MigLayout("fill", "[150][150][grow]");
+    
+        composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(windowLayout);
+    
+        discardFiltered = new Button(composite, SWT.CHECK);
+        discardFiltered.setText(ClientStrings.DISCARD_FILTERED);
+        discardFiltered.setAlignment(SWT.CENTER);
+        discardFiltered.setSelection(true);
+    
+        discardExcess = new Button(composite, SWT.CHECK);
+        discardExcess.setText(ClientStrings.DISCARD_EXCESS);
+        discardExcess.setAlignment(SWT.CENTER);
+        discardExcess.setSelection(true);
+        
+        discardFiltered
+            .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+            {
+              @Override
+              public void widgetSelected(SelectionEvent arg0)
+              {
+                outputTabs.textOutputTab.applyPatterns(activeIncludeFilterPattern, activeExcludeFilterPattern, false, discardFiltered.getSelection());
+              }
+            });
+        discardExcess
+            .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+            {
+              @Override
+              public void widgetSelected(SelectionEvent arg0)
+              {
+                outputTabs.textOutputTab.filterThread.setDiscardExcess(
+                                                discardExcess.getSelection());
               }
             });
       }
@@ -1157,7 +1221,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                       if (enableFilter.getSelection())
                       {
                         applyPatterns(lastEnteredIncludeFilterPattern, 
-                                      lastEnteredExcludeFilterPattern, false);
+                                      lastEnteredExcludeFilterPattern, false,
+                                      settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
                       }
                     }
                   }
@@ -1180,7 +1245,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                       if (enableFilter.getSelection())
                       {
                         applyPatterns(lastEnteredIncludeFilterPattern, 
-                                      lastEnteredExcludeFilterPattern, false);
+                                      lastEnteredExcludeFilterPattern, false,
+                                      settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
                       }
                     }
                   }
@@ -1391,7 +1457,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               lastEnteredExcludeFilterPattern = excludePattern;
               if (enableFilter.getSelection())
               {
-                applyPatterns(includePattern, excludePattern, false);
+                applyPatterns(includePattern, excludePattern, false,
+                    settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
               }
             }
           }
@@ -1421,18 +1488,19 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             if (enableFilter.getSelection())
             {
               applyPatterns(lastEnteredIncludeFilterPattern, 
-                            lastEnteredExcludeFilterPattern, true);
+                            lastEnteredExcludeFilterPattern, true,
+                            settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
             }
             else
             {
               applyPatterns(TraceFilterThread.MATCH_ALL, 
-                            TraceFilterThread.MATCH_NONE, true);
+                            TraceFilterThread.MATCH_NONE, true,
+                            settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
             }
           }
         });
         
-        filterThread = new TraceFilterThread(mode, 
-                                             new TraceTextHandler()
+        filterThread = new TraceFilterThread(new TraceTextHandler()
         {
           // Re-usable class to avoid object allocations
           class SetTextRunnable implements Runnable
@@ -1637,7 +1705,14 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         {
           if (!sRoot.isDisposed())
           {
-            statusLabel.setText("Displayed lines: " + displayed + ", Total lines: " + total);
+            if (activeDiscardFiltered)
+            {
+              statusLabel.setText("Displayed lines: " + displayed);
+            }
+            else
+            {
+              statusLabel.setText("Displayed lines: " + displayed + ", Total lines: " + total);
+            }
           }
         }          
       }       
@@ -1655,10 +1730,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
       private void applyPatterns(List<String> newIncludePattern,
                                  List<String> newExcludePattern,
-                                 final boolean isToggle)
+                                 final boolean isToggle,
+                                 final boolean isDiscardFiltered)
       {
         if (newIncludePattern.equals(activeIncludeFilterPattern)
-            && newExcludePattern.equals(activeExcludeFilterPattern))
+            && newExcludePattern.equals(activeExcludeFilterPattern) &&
+            isDiscardFiltered == activeDiscardFiltered)
         {
           return;
         } 
@@ -1669,6 +1746,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     
           activeIncludeFilterPattern = newIncludePattern;
           activeExcludeFilterPattern = newExcludePattern;
+          
+          activeDiscardFiltered = isDiscardFiltered;
         }
         if (sRoot.isDisposed())
           return;
@@ -1745,6 +1824,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               public List<String> getExcludePattern()
               {
                 return newExcludePattern;
+              }
+
+              @Override
+              public boolean discardFiltered()
+              {
+                return isDiscardFiltered;
               }
             };
     
@@ -1859,6 +1944,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private List<String> lastEnteredExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   private List<String> activeExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
   private List<String> oldExcludeFilterPattern = TraceFilterThread.MATCH_NONE;
+  private boolean activeDiscardFiltered = true; 
   
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
@@ -2063,8 +2149,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.branchTrace.setEnabled(true);
         settingsTabs.traceTab.entryExitTrace.setEnabled(true);
         settingsTabs.traceTab.arrayTrace.setEnabled(true);
-        settingsTabs.outputSettingsTab.fileOutput.setEnabled(true);
-        settingsTabs.outputSettingsTab.stdOutOutput.setEnabled(true);
+        settingsTabs.agentOutputSettingsTab.fileOutput.setEnabled(true);
+        settingsTabs.agentOutputSettingsTab.stdOutOutput.setEnabled(true);
 
         settingsTabs.extraTab.togSaveClasses.setEnabled(true);
         settingsTabs.extraTab.togVerbose.setEnabled(true);
@@ -2077,8 +2163,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.branchTrace.setSelection(settingsData.branchEnabled);
         settingsTabs.traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
         settingsTabs.traceTab.arrayTrace.setSelection(settingsData.truncArraysEnabled);
-        settingsTabs.outputSettingsTab.fileOutput.setSelection(settingsData.fileOutEnabled);
-        settingsTabs.outputSettingsTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
+        settingsTabs.agentOutputSettingsTab.fileOutput.setSelection(settingsData.fileOutEnabled);
+        settingsTabs.agentOutputSettingsTab.stdOutOutput.setSelection(settingsData.stdOutEnabled);
 
         settingsTabs.extraTab.togSaveClasses.setSelection(settingsData.saveTracedClassfiles);
         settingsTabs.extraTab.togVerbose.setSelection(settingsData.verboseMode);
@@ -2115,8 +2201,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         settingsTabs.traceTab.branchTrace.setEnabled(false);
         settingsTabs.traceTab.entryExitTrace.setEnabled(false);
         settingsTabs.traceTab.arrayTrace.setEnabled(false);
-        settingsTabs.outputSettingsTab.fileOutput.setEnabled(false);
-        settingsTabs.outputSettingsTab.stdOutOutput.setEnabled(false);
+        settingsTabs.agentOutputSettingsTab.fileOutput.setEnabled(false);
+        settingsTabs.agentOutputSettingsTab.stdOutOutput.setEnabled(false);
 
         settingsTabs.extraTab.togSaveClasses.setEnabled(false);
         settingsTabs.extraTab.togVerbose.setEnabled(false);

@@ -10,7 +10,7 @@ public class ClientStrings
 
   public static final String ENABLE_EE_TRACE = "Entry/Exit";
   public static final String ENABLE_BRANCH_TRACE = "Branch";
-  public static final String ENABLE_ARGS_TRACE = "Method Args";
+  public static final String ENABLE_ARGS_TRACE = "Method Args, Return Values, Exceptions";
   public static final String ENABLE_ARRAY_TRACE = "Truncate Array Args";
 
   public static final String BEGIN_CAPTURE_CALLERS = "New Callers Capture...";
@@ -21,6 +21,9 @@ public class ClientStrings
   public static final String ENABLE_NETWORK_OUTPUT = "Collect Trace";
   public static final String ENABLE_FILTER = "Filter";
 
+  public static final String DISCARD_FILTERED = "Discard Filtered Trace";
+  public static final String DISCARD_EXCESS = "Discard Excess Trace";
+  
   public static final String CONNECT = "Connect";
   public static final String CONNECTING = "Connect...";
   public static final String DISCONNECT = "Disconnect";

@@ -10,8 +10,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.intrace.client.gui.helper.InTraceUI.UIMode;
-
 /**
  * Threaded owner of the trace lines. Allows a Pattern to be used to filter
  * trace text.
@@ -40,6 +38,8 @@ public class TraceFilterThread implements Runnable
     List<String> getIncludePattern();
 
     List<String> getExcludePattern();
+
+    boolean discardFiltered();
   }
 
   /**
@@ -96,7 +96,7 @@ public class TraceFilterThread implements Runnable
   /**
    * List of trace lines saved by this thread from the newTraceLines
    */
-  private final List<String> traceLines = new ArrayList<String>();
+  private List<String> traceLines = new ArrayList<String>();
   
   /**
    * Number of displayed lines
@@ -122,11 +122,11 @@ public class TraceFilterThread implements Runnable
    * Flag to signal that trace should be cleared
    */
   private boolean clearTrace = false;
-
+  
   /**
-   * UIMode being used
+   * Flag to signal that excess trace should be discarded
    */
-  private final UIMode mode;
+  private boolean discardExcessTrace = true;
 
   /**
    * cTor
@@ -135,9 +135,8 @@ public class TraceFilterThread implements Runnable
    * @param callback
    * @param progressCallback
    */
-  public TraceFilterThread(UIMode mode, TraceTextHandler callback)
+  public TraceFilterThread(TraceTextHandler callback)
   {
-    this.mode = mode;
     this.callback = callback;
 
     thisThread = new Thread(this);
@@ -179,6 +178,11 @@ public class TraceFilterThread implements Runnable
     thisThread.interrupt();
   }
 
+  public void setDiscardExcess(boolean xiDiscardExcess)
+  {
+    discardExcessTrace = xiDiscardExcess;
+  }
+  
   public synchronized void setClearTrace()
   {
     clearTrace = true;
@@ -198,7 +202,7 @@ public class TraceFilterThread implements Runnable
     long maxMemory = Runtime.getRuntime().maxMemory();
     long byteMemLimit = (long) Math.max(maxMemory - (10 * 1000 * 1000), // Maxmemory
                                     // - 10mb
-                                    0.9 * maxMemory); // 90% of Maxmemory
+                                    0.8 * maxMemory); // 90% of Maxmemory
     long charMemLimit = byteMemLimit / 2; // UTF-16 - 2 bytes per char 
     long numChars = 0;
     boolean doClearTrace = false;
@@ -206,6 +210,7 @@ public class TraceFilterThread implements Runnable
     TraceFilterProgressHandler patternProgress = null;
     List<String> activeIncludePattern = MATCH_ALL;
     List<String> activeExcludePattern = MATCH_NONE;
+    boolean discardFilteredTrace = true;
     
     StringBuilder bufferedText = new StringBuilder();
     long lastTextTime = 0;
@@ -222,6 +227,7 @@ public class TraceFilterThread implements Runnable
             activeIncludePattern = patternProgress.getIncludePattern();
             activeExcludePattern = patternProgress.getExcludePattern();
             applyPattern(patternProgress);
+            discardFilteredTrace = patternProgress.discardFiltered();
             patternProgress = null;
           }
 
@@ -275,29 +281,31 @@ public class TraceFilterThread implements Runnable
               traceLineSemaphore.release();
             }
   
-            if (numChars < charMemLimit)
+            boolean memoryLimitSafe = (numChars < charMemLimit); 
+            if (memoryLimitSafe || discardExcessTrace)
             {
+              if (!memoryLimitSafe)
+              {
+                numChars = discardExcess(activeIncludePattern, activeExcludePattern);
+              }
+              
               lowMemorySignalled = false;
+              boolean matchFilter = newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
+                                    (!matches(activeExcludePattern, newTraceLine) &&
+                                     matches(activeIncludePattern, newTraceLine));
   
-              if (mode == UIMode.STANDALONE)
+              if (!discardFilteredTrace || matchFilter)
               {
                 // I expected a factor of 2 due to trace strings being held by this
                 // thread along with another copy held by the UI. However, profiling
-                // shows a factor of 18 is necessary. This is because we need to be able
+                // shows a factor of 40 is necessary. This is because we need to be able
                 // to handle entire copies of the active data when adding new strings.
-                numChars += (18 * newTraceLine.length());
+                numChars += (40 * newTraceLine.length());                
+    
+                traceLines.add(newTraceLine);
               }
-              else
-              {
-                // Running within eclipse so better be really conservative
-                numChars += (40 * newTraceLine.length());
-              }
-  
-              traceLines.add(newTraceLine);
 
-              if (newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
-                  (!matches(activeExcludePattern, newTraceLine) &&
-                    matches(activeIncludePattern, newTraceLine)))
+              if (matchFilter)
               {
                 if (timeSinceLastText > MIN_UPDATE_GAP)
                 {
@@ -314,7 +322,7 @@ public class TraceFilterThread implements Runnable
                   bufferedText.append(newTraceLine);
                 }
               }
-              else
+              else if (!discardExcessTrace)
               {
                 totalLines.incrementAndGet();
                 callback.setStatus(displayedLines.get(), totalLines.get());
@@ -338,8 +346,9 @@ public class TraceFilterThread implements Runnable
         catch (InterruptedException ex)
         {
           doClearTrace = getClearTrace();
-          patternProgress = traceFilters.poll();
-          if ((patternProgress == null) && !doClearTrace)
+          patternProgress = traceFilters.poll(); 
+          if ((patternProgress == null) && 
+              !doClearTrace)
           {
             // Time to quit
             break;
@@ -368,26 +377,42 @@ public class TraceFilterThread implements Runnable
 
   private void applyPattern(TraceFilterProgressHandler progressCallback)
   {
+    boolean xiDiscardFiltered = progressCallback.discardFiltered();
     List<String> includePattern = progressCallback.getIncludePattern();
     List<String> excludePattern = progressCallback.getExcludePattern();
     int numLines = traceLines.size();
     int handledLines = 0;
     double lastPercentage = 0;
+    double filterPercentage = (xiDiscardFiltered ? 70 : 100);
     StringBuilder traceText = new StringBuilder();
     boolean cancelled = progressCallback.setProgress(0);
     boolean firstUpdate = true;
     displayedLines.set(0);
-    callback.setStatus(displayedLines.get(), totalLines.get());
-    if (!cancelled)
+    if (xiDiscardFiltered)
     {
-      for (String traceLine : traceLines)
+      totalLines.set(0);
+    }
+    callback.setStatus(displayedLines.get(), totalLines.get());
+    List<Integer> removeLines = new ArrayList<Integer>();
+    if (!cancelled)
+    {            
+      for (int ii = 0; ii < traceLines.size(); ii++)
       {
+        String traceLine = traceLines.get(ii);
         if (traceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
             (!matches(excludePattern, traceLine) &&
               matches(includePattern, traceLine)))
         {
           displayedLines.incrementAndGet();
+          if (xiDiscardFiltered)
+          {
+            totalLines.incrementAndGet();
+          }
           traceText.append(traceLine);
+        }
+        else if (xiDiscardFiltered)
+        {
+          removeLines.add(ii);
         }
         handledLines++;
 
@@ -402,8 +427,8 @@ public class TraceFilterThread implements Runnable
           {
             // Try and ensure that we are GC-ing regularly
             System.gc();
-            cancelled = progressCallback
-                                        .setProgress((int) (100 * roundedPercantage));
+            cancelled = progressCallback.setProgress(
+                           (int) (filterPercentage * roundedPercantage));
             if (cancelled)
             {
               break;
@@ -428,6 +453,33 @@ public class TraceFilterThread implements Runnable
         }
       }
     }
+    if (xiDiscardFiltered)
+    {
+      handledLines = 0;
+      for (Integer removeLine : removeLines)
+      {
+        traceLines.remove(removeLine - handledLines);
+        handledLines++;
+
+        if ((handledLines % 10000) == 0)
+        {
+          double unroundedPercentage = ((double) handledLines)
+                                       / ((double) numLines);
+          double roundedPercantage = roundToSignificantFigures(
+                                                               unroundedPercentage,
+                                                               2);
+          if (lastPercentage != roundedPercantage)
+          {
+            // Try and ensure that we are GC-ing regularly
+            System.gc();
+            cancelled = progressCallback.setProgress(
+                         (int)(filterPercentage) +  
+                         (int) ((100 - filterPercentage) * roundedPercantage));
+          }
+          lastPercentage = roundedPercantage;
+        }
+      }
+    }
     progressCallback.setProgress(100);
     if (!cancelled)
     {
@@ -442,6 +494,40 @@ public class TraceFilterThread implements Runnable
         callback.setStatus(displayedLines.get(), totalLines.get());
       }
     }
+  }
+  
+  private long discardExcess(List<String> includePattern,
+                             List<String> excludePattern)
+  {    
+    int numLines = traceLines.size();
+    int discardLines = (int)(0.25 * (double)numLines);
+    StringBuilder traceText = new StringBuilder();    
+    displayedLines.set(0);
+    totalLines.set(0);
+    List<String> newTraceLines = new ArrayList<String>((numLines - discardLines) + 10);
+    
+    // Update counters and recompute text
+    for (int ii = discardLines; ii < traceLines.size(); ii++)
+    {
+      String traceLine = traceLines.get(ii);
+      newTraceLines.add(traceLine);
+      if (traceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
+          (!matches(excludePattern, traceLine) &&
+            matches(includePattern, traceLine)))
+      {
+        displayedLines.incrementAndGet();        
+        traceText.append(traceLine);
+      }
+      totalLines.incrementAndGet();
+    }
+
+    // Make callbacks
+    traceLines = newTraceLines;
+    String text = traceText.toString();
+    callback.setText(text);
+    callback.setStatus(displayedLines.get(), totalLines.get());
+    
+    return text.length();
   }
 
   private static double roundToSignificantFigures(double num, int n)
