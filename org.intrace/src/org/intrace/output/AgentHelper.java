@@ -74,17 +74,17 @@ public class AgentHelper
    */
   private static String getResponse(AgentClientConnection connection, String args)
   {
-    OutputSettings oldSettings = new OutputSettings(outputSettings);
+//    OutputSettings oldSettings = new OutputSettings(outputSettings);
     outputSettings.parseArgs(args);
 
-    if ((oldSettings.isStdoutOutputEnabled() != outputSettings.isStdoutOutputEnabled())
-        || (oldSettings.isFileOutputEnabled() != outputSettings
-                                                                   .isFileOutputEnabled())
-        || (oldSettings.isNetOutputEnabled() != outputSettings
-                                                                  .isNetOutputEnabled()))
-    {
-//      System.out.println("## Trace Settings Changed");
-    }
+//    if ((oldSettings.isStdoutOutputEnabled() != outputSettings.isStdoutOutputEnabled())
+//        || (oldSettings.isFileOutputEnabled() != outputSettings
+//                                                                   .isFileOutputEnabled())
+//        || (oldSettings.isNetOutputEnabled() != outputSettings
+//                                                                  .isNetOutputEnabled()))
+//    {
+////      System.out.println("## Trace Settings Changed");
+//    }
 
     if (outputSettings.networkTraceOutputRequested)
     {

@@ -31,20 +31,20 @@ public class TraceHandler implements IInstrumentationHandler
 
   public String getResponse(String args)
   {
-    TraceSettings oldSettings = new TraceSettings(traceSettings);
+//    TraceSettings oldSettings = new TraceSettings(traceSettings);
     traceSettings.parseArgs(args);
 
-    if ((oldSettings.isEntryExitTraceEnabled() != traceSettings
-        .isEntryExitTraceEnabled())
-        || (oldSettings.isBranchTraceEnabled() != traceSettings
-            .isBranchTraceEnabled())
-        || (oldSettings.isArgTraceEnabled() != traceSettings
-            .isArgTraceEnabled())
-        || (oldSettings.isTruncateArraysEnabled() != traceSettings
-            .isTruncateArraysEnabled()))
-    {
-//      System.out.println("## Trace Settings Changed");
-    }
+//    if ((oldSettings.isEntryExitTraceEnabled() != traceSettings
+//        .isEntryExitTraceEnabled())
+//        || (oldSettings.isBranchTraceEnabled() != traceSettings
+//            .isBranchTraceEnabled())
+//        || (oldSettings.isArgTraceEnabled() != traceSettings
+//            .isArgTraceEnabled())
+//        || (oldSettings.isTruncateArraysEnabled() != traceSettings
+//            .isTruncateArraysEnabled()))
+//    {
+////      System.out.println("## Trace Settings Changed");
+//    }
 
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
     branchTrace = traceSettings.isBranchTraceEnabled();
@@ -410,10 +410,10 @@ public class TraceHandler implements IInstrumentationHandler
     long threadID = Thread.currentThread().getId();
     String traceString = "[" + dateFormat.format(new Date()) + "]:[" + threadID
                          + "]:" + xiOutput;
-    if (AgentHelper.getOutputSettings().isStdoutOutputEnabled())
-    {
-//      System.out.println(traceString);
-    }
+//    if (AgentHelper.getOutputSettings().isStdoutOutputEnabled())
+//    {
+////      System.out.println(traceString);
+//    }
 
     if (AgentHelper.getOutputSettings().isFileOutputEnabled())
     {
