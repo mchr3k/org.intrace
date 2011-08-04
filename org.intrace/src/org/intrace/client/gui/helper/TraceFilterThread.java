@@ -229,6 +229,7 @@ public class TraceFilterThread implements Runnable
             applyPattern(patternProgress);
             discardFilteredTrace = patternProgress.discardFiltered();
             patternProgress = null;
+            cb.callback();
           }
 
           if (doClearTrace)
@@ -240,6 +241,7 @@ public class TraceFilterThread implements Runnable
             totalLines.set(0);
             callback.setStatus(displayedLines.get(), totalLines.get());
             numChars = 0;
+            cb.callback();
           }
 
           String newTraceLine = null;
@@ -253,7 +255,7 @@ public class TraceFilterThread implements Runnable
             newTraceLine = newTraceLines.take();
           }
 
-          long newTextTime = System.currentTimeMillis();
+          long newTextTime = time.currentTimeMillis();
           long timeSinceLastText = newTextTime - lastTextTime;
           
           boolean bufferedTextToWrite = (bufferedTextCount > 0);
@@ -341,7 +343,8 @@ public class TraceFilterThread implements Runnable
             displayedLines.incrementAndGet();
             callback.appendText(memWarning);
             callback.setStatus(displayedLines.get(), totalLines.get());
-          }                   
+          }
+          cb.callback();
         }
         catch (InterruptedException ex)
         {
@@ -353,7 +356,7 @@ public class TraceFilterThread implements Runnable
             // Time to quit
             break;
           }
-        }
+        }        
       }
     }
     catch (Throwable ex)
@@ -544,5 +547,37 @@ public class TraceFilterThread implements Runnable
     final double magnitude = Math.pow(10, power);
     final long shifted = Math.round(num * magnitude);
     return shifted / magnitude;
+  }
+  
+  public static interface TimeSource
+  {
+    public long currentTimeMillis();
+  }
+  
+  public TimeSource time = new SystemTimeSource();
+  
+  public static class SystemTimeSource implements TimeSource
+  {
+    @Override
+    public long currentTimeMillis()
+    {
+      return System.currentTimeMillis();
+    }
+  }
+  
+  public static interface FilterCallback
+  {
+    public void callback();
+  }
+  
+  public FilterCallback cb = new DefaultFilterCallback();
+  
+  public static class DefaultFilterCallback implements FilterCallback
+  {
+    @Override
+    public void callback()
+    {
+      // Do nothing
+    }
   }
 }

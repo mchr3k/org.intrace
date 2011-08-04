@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.intrace.client.gui.helper.TraceFilterThread;
+import org.intrace.client.gui.helper.TraceFilterThread.FilterCallback;
+import org.intrace.client.gui.helper.TraceFilterThread.TimeSource;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceFilterProgressHandler;
 import org.intrace.client.gui.helper.TraceFilterThread.TraceTextHandler;
 
@@ -39,9 +41,32 @@ public class TraceFilterThreadTest extends TestCase
       }
     };
     TraceFilterThread filter = new TraceFilterThread(textHandler);
+    final long[] timeSource = new long[1];
+    TimeSource time = new TimeSource()
+    {
+      @Override
+      public long currentTimeMillis()
+      {
+        return timeSource[0];
+      }
+    };
+    filter.time = time;
+    FilterCallback cb = new FilterCallback()
+    {
+      @Override
+      public synchronized void callback()
+      {
+        this.notifyAll();
+      }
+    };
+    filter.cb = cb;
     
     // Add a single line, this is buffered
-    filter.addSystemTraceLine("System line 1");
+    synchronized (cb)
+    {
+      filter.addSystemTraceLine("System line 1");
+      cb.wait();
+    }    
     assertEquals(0, displayedHolder[0]);
     assertEquals(0, totalHolder[0]);
     assertTrue(appendTextHolder[0], 
@@ -52,9 +77,13 @@ public class TraceFilterThreadTest extends TestCase
     // Wait for a little bit and write another line    
     appendTextHolder[0] = null;
     setTextHolder[0] = null;
-    Thread.sleep(200);
-    filter.addSystemTraceLine("System line 2");
-    Thread.sleep(100);
+    timeSource[0] += 1000;
+    synchronized (cb)
+    {
+      filter.addSystemTraceLine("System line 2");
+      cb.wait();
+    }
+    timeSource[0] += 1000;
     assertEquals(2, displayedHolder[0]);
     assertEquals(2, totalHolder[0]);
     assertTrue(appendTextHolder[0], 
@@ -65,8 +94,11 @@ public class TraceFilterThreadTest extends TestCase
     // Clear trace
     appendTextHolder[0] = null;
     setTextHolder[0] = null;
-    filter.setClearTrace();
-    Thread.sleep(100);
+    synchronized (cb)
+    {
+      filter.setClearTrace();
+      cb.wait();
+    }    
     assertEquals(0, displayedHolder[0]);
     assertEquals(0, totalHolder[0]);
     assertTrue(appendTextHolder[0], 
@@ -77,13 +109,25 @@ public class TraceFilterThreadTest extends TestCase
     // Append normal trace line 1, 1b
     appendTextHolder[0] = null;
     setTextHolder[0] = null;
-    filter.addTraceLine("Line 1");
-    filter.addTraceLine("Line 1b");
+    synchronized (cb)
+    {
+      filter.addTraceLine("Line 1");
+      cb.wait();
+    }    
+    synchronized (cb)
+    {
+      filter.addTraceLine("Line 1b");
+      cb.wait();
+    }    
     
     // Append normal trace line 2
-    Thread.sleep(200);
-    filter.addTraceLine("Line 2");
-    Thread.sleep(200);
+    timeSource[0] += 1000;
+    synchronized (cb)
+    {
+      filter.addTraceLine("Line 2");
+      cb.wait();
+    }    
+    timeSource[0] += 1000;
     assertEquals(3, displayedHolder[0]);
     assertEquals(3, totalHolder[0]);
     assertTrue(appendTextHolder[0], 
