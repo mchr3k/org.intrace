@@ -83,7 +83,7 @@ public class AgentHelper
         || (oldSettings.isNetOutputEnabled() != outputSettings
                                                                   .isNetOutputEnabled()))
     {
-      System.out.println("## Trace Settings Changed");
+//      System.out.println("## Trace Settings Changed");
     }
 
     if (outputSettings.networkTraceOutputRequested)
@@ -95,11 +95,9 @@ public class AgentHelper
         {
           networkSocket = new ServerSocket(0);
           NetworkDataSenderThread networkOutputThread = new NetworkDataSenderThread(connection,
-                                                                                    networkSocket);
-  
-          networkOutputThreads.put(networkOutputThread, new Object());
-  
-          networkOutputThread.start(networkOutputThreads.keySet());
+                                                                                    networkSocket);  
+
+          networkOutputThread.start(networkOutputThreads);
           outputSettings.networkTraceOutputRequested = false;
           return Integer.toString(networkSocket.getLocalPort());
         }
@@ -111,7 +109,7 @@ public class AgentHelper
       }
       else
       {
-        System.out.println("## Network Output Already Connected");
+//        System.out.println("## Network Output Already Connected");
         return null;
       }
     }

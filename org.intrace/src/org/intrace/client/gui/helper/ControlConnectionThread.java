@@ -97,7 +97,7 @@ public class ControlConnectionThread implements Runnable
     }
     catch (Exception ex)
     {
-      if (!ex.getMessage().contains("socket closed") &&
+      if (!ex.getMessage().contains("ocket closed") &&
           !ex.getMessage().contains("onnection reset"))
       {
         ex.printStackTrace();

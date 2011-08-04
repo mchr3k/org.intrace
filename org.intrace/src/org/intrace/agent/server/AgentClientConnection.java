@@ -41,8 +41,8 @@ public class AgentClientConnection extends InstruRunnable
     super();
     connectedClient = xiConnectedClient;
     transformer = xiTransformer;
-    System.out.println("## Control Connection Established (Port: " + 
-                       xiConnectedClient.getPort() + ")");
+//    System.out.println("## Control Connection Established (Port: " + 
+//                       xiConnectedClient.getPort() + ")");
   }
   
   public boolean isTraceConnEstablished()
@@ -128,8 +128,8 @@ public class AgentClientConnection extends InstruRunnable
       }
       catch (IOException ex)
       {
-        System.out.println("## Control Connection Disconnected (Port: " + 
-                           connectedClient.getPort() + ")");
+//        System.out.println("## Control Connection Disconnected (Port: " + 
+//                           connectedClient.getPort() + ")");
       }
       connectedClient.close();
     }

@@ -860,13 +860,14 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         composite = new Composite(parent, SWT.NONE);
         composite.setLayout(windowLayout);
     
-        stdOutOutput = new Button(composite, SWT.CHECK);
-        stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
-        stdOutOutput.setAlignment(SWT.CENTER);
-    
         fileOutput = new Button(composite, SWT.CHECK);
         fileOutput.setText(ClientStrings.ENABLE_FILE_OUTPUT);
         fileOutput.setAlignment(SWT.CENTER);
+        
+        stdOutOutput = new Button(composite, SWT.CHECK);
+        stdOutOutput.setText(ClientStrings.ENABLE_STDOUT_OUTPUT);
+        stdOutOutput.setAlignment(SWT.CENTER);
+        stdOutOutput.setVisible(false);
         
         stdOutOutput
             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()

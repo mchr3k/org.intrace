@@ -262,7 +262,7 @@ public class ClassTransformer implements ClassFileTransformer
                                                                     className, protectionDomain); 
       if (shouldInstrument || "java.lang.Thread".equals(className))
       {
-        System.out.println("!! Instrumenting class: " + compclass);
+//        System.out.println("!! Instrumenting class: " + compclass);
   
         if (settings.saveTracedClassfiles())
         {
@@ -444,8 +444,8 @@ public class ClassTransformer implements ClassFileTransformer
     }
     else
     {
-      System.out.println("Can't create directory " + parentDir
-                         + " for saving traced classfiles.");
+//      System.out.println("Can't create directory " + parentDir
+//                         + " for saving traced classfiles.");
     }
 
   }
@@ -503,12 +503,12 @@ public class ClassTransformer implements ClassFileTransformer
     else if (oldSettings.isInstrumentationEnabled() != settings
                                                                .isInstrumentationEnabled())
     {
-      System.out.println("## Settings Changed");
+//      System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
     else if (!Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
     {
-      System.out.println("## Settings Changed");
+//      System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -516,7 +516,7 @@ public class ClassTransformer implements ClassFileTransformer
     }
     else if (!Arrays.equals(oldSettings.getExcludeClassRegex(), settings.getExcludeClassRegex()))
     {
-      System.out.println("## Settings Changed");
+//      System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -525,7 +525,7 @@ public class ClassTransformer implements ClassFileTransformer
     else if (oldSettings.saveTracedClassfiles() != settings
                                                            .saveTracedClassfiles())
     {
-      System.out.println("## Settings Changed");
+//      System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = getModifiedClasses();
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -651,7 +651,7 @@ public class ClassTransformer implements ClassFileTransformer
         catch (Throwable e)
         {
           // Write exception to stdout
-          System.out.println(klass.klass.getName());
+//          System.out.println(klass.klass.getName());
           e.printStackTrace();
         }
       }

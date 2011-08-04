@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +18,7 @@ public class NetworkDataSenderThread extends InstruRunnable
   private final ServerSocket networkSocket;
   private Socket traceSendingSocket = null;
   private final BlockingQueue<Object> outgoingData = new LinkedBlockingQueue<Object>(30);
-  private Set<NetworkDataSenderThread> set = new HashSet<NetworkDataSenderThread>(0);
+  private Map<NetworkDataSenderThread, Object> set = new HashMap<NetworkDataSenderThread, Object>();
   private final AgentClientConnection connection;
 
   public NetworkDataSenderThread(AgentClientConnection connection, ServerSocket networkSocket)
@@ -27,7 +27,7 @@ public class NetworkDataSenderThread extends InstruRunnable
     this.networkSocket = networkSocket;
   }
 
-  public void start(Set<NetworkDataSenderThread> set)
+  public void start(Map<NetworkDataSenderThread, Object> set)
   {
     this.set = set;
 
@@ -58,14 +58,14 @@ public class NetworkDataSenderThread extends InstruRunnable
       // Throw away
     }
     set.remove(this);
-    System.out.println("## Trace Connection Disconnected");
+//    System.out.println("## Trace Connection Disconnected");
   }
 
   public void queueData(Object data)
   {
     try
     {
-      while (alive && !outgoingData.offer(data, 1, TimeUnit.SECONDS))
+      while (alive && !outgoingData.offer(data, 100, TimeUnit.MILLISECONDS))
       {
         // Do nothing - work is done above
       }
@@ -81,7 +81,7 @@ public class NetworkDataSenderThread extends InstruRunnable
     try
     {
       traceSendingSocket = networkSocket.accept();
-      System.out.println("## Trace Connection Established");
+//      System.out.println("## Trace Connection Established");
       traceSendingSocket.setKeepAlive(true);
       
       if (connection != null)
@@ -92,6 +92,9 @@ public class NetworkDataSenderThread extends InstruRunnable
       ObjectOutputStream traceWriter = new ObjectOutputStream(
                                                               traceSendingSocket
                                                                                 .getOutputStream());
+      // Ready to handle data
+      set.put(this, new Object());      
+      
       while (true)
       {
         Object traceLine = outgoingData.poll(5, TimeUnit.SECONDS);

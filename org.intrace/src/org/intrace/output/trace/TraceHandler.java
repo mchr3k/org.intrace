@@ -43,7 +43,7 @@ public class TraceHandler implements IInstrumentationHandler
         || (oldSettings.isTruncateArraysEnabled() != traceSettings
             .isTruncateArraysEnabled()))
     {
-      System.out.println("## Trace Settings Changed");
+//      System.out.println("## Trace Settings Changed");
     }
 
     entryExitTrace = traceSettings.isEntryExitTraceEnabled();
@@ -412,7 +412,7 @@ public class TraceHandler implements IInstrumentationHandler
                          + "]:" + xiOutput;
     if (AgentHelper.getOutputSettings().isStdoutOutputEnabled())
     {
-      System.out.println(traceString);
+//      System.out.println(traceString);
     }
 
     if (AgentHelper.getOutputSettings().isFileOutputEnabled())
