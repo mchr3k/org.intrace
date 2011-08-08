@@ -174,7 +174,7 @@
       <zipfileset excludes="META-INF/*.MF" src="./lib/asm-debug-all-3.3.jar"/>
     </jar>
 
-    <junit printsummary="yes" haltonfailure="yes">
+    <junit printsummary="yes" failureproperty="test.failure">
       <classpath>
         <pathelement location="./build/test"/>        
         <fileset dir="./lib" includes="*.jar" excludes="intrace*.jar" />
@@ -195,7 +195,7 @@
       </batchtest>
     </junit>
     
-    <junit printsummary="yes" haltonfailure="yes">
+    <junit printsummary="yes" failureproperty="test.failure">
       <classpath>
         <pathelement location="./build/test"/>                
         <pathelement location="./build/classes_instr"/>
@@ -276,6 +276,7 @@
   </target>
 
   <target name="validate" description="Build jars and run all automated tests" depends="jar, test, findbugs" >
+    <fail message="Tests failed" if="test.failure" />
   </target>
 
   <target name="release1" description="Validate InTrace and copy files ready for Eclipse build" depends="validate,update_eclipse_jars">
