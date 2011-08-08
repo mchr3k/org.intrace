@@ -31,14 +31,14 @@ title: InTrace - UI
 
 <p>This tab controls what trace is produced by instrumented classes and where that trace is sent.</p>
 
-<h3>Entry/Exit Trace</h3>
+<h3>Entry/Exit</h3>
 <p>Toggles whether entry/exit trace should be recorded e.g.</p>
 <pre>
 [10/06/24 08:40:07]:[1]:example.TraceExample:intArrayMethod: {:70
 [10/06/24 08:40:07]:[1]:example.TraceExample:intArrayMethod: }:71
 </pre>
 
-<h3>Branch Trace</h3>
+<h3>Branch</h3>
 <p>Toggles whether branch trace should be recorded e.g.</p>
 <pre>
 [10/06/24 08:41:02]:[1]:example.TraceExample:workMethod: /:43
@@ -60,7 +60,7 @@ title: InTrace - UI
 </pre>
 <p>Note that currently InTrace treats tracing of throwing and catching exceptions as part of branch trace.</p>
 
-<h3>Args Trace</h3>
+<h3>Method Args, Return Values, Exceptions</h3>
 <p>Toggles whether args trace should be recorded e.g.</p>
 <pre>
 [10/06/24 08:42:47]:[1]:example.TraceExample:workMethod: Arg: foobar
@@ -69,13 +69,20 @@ title: InTrace - UI
 [10/06/24 08:42:47]:[1]:example.TraceExample:intArrayMethod: Return: 123
 </pre>
 
-<h2>Settings Bar - Output Tab</h2>
+<h2>Settings Bar - Agent Output Tab</h2>
 <p><img src="img/bar_settings_tab_output.jpg" alt=""></p>
 
-<h3>StdOut</h3>
-<p>Toggles whether trace should be output to System.out.</p>
 <h3>File</h3>
 <p>Toggles whether trace should be output to trc1.txt/trc2.txt in the current working directory of the instrumented JVM. Each of these files will have 100k lines of trace written to it before the output rolls over to the other file.</p>
+
+<h2>Settings Bar - Local Output Tab</h2>
+<p><img src="img/bar_settings_tab_local_output.jpg" alt=""></p>
+
+<h3>Discard Filtered Trace</h3>
+<p>Discard trace which doesn't match the local filter patterns.</p>
+
+<h3>Discard Excess Trace</h3>
+<p>Discard old trace when we run low on memory.</p>
 
 <h2>Settings Bar - Advanced Tab</h2>
 <p><img src="img/bar_settings_tab_advanced.jpg" alt=""></p>
