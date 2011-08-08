@@ -482,8 +482,7 @@ public class TraceFilterThread implements Runnable
           lastPercentage = roundedPercantage;
         }
       }
-    }
-    progressCallback.setProgress(100);
+    }    
     if (!cancelled)
     {
       if (firstUpdate)
@@ -497,6 +496,7 @@ public class TraceFilterThread implements Runnable
         callback.setStatus(displayedLines.get(), totalLines.get());
       }
     }
+    progressCallback.setProgress(100);
   }
   
   private long discardExcess(List<String> includePattern,
