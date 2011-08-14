@@ -104,7 +104,7 @@
     </jarjar>
 
     <!-- UI (Cross platform SWT wrapper around InTrace Code) -->
-    <jarjar jarfile="./build/jars/intrace-ui.jar">
+    <jar jarfile="./build/jars/intrace-ui.jar">
       <manifest>
         <attribute name="Main-Class" value="org.intrace.client.loader.InTraceStandaloneUILoader" />
         <attribute name="Class-Path" value="." />
@@ -115,7 +115,7 @@
       <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
       <fileset dir="./lib" includes="swt-*.jar" />
       <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>
-    </jarjar>
+    </jar>
 
     <!-- InTrace UI Library -->
     <jar jarfile="./build/jars/intrace-ui-helper.jar">
