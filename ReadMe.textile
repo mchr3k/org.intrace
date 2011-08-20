@@ -1,3 +1,5 @@
+Full details available on the "InTrace Site":http://mchr3k.github.com/org.intrace/
+
 h1. Main Projects
 
 * org.intrace - InTrace Agent and GUI
