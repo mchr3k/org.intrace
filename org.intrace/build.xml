@@ -17,6 +17,8 @@
   </taskdef>
   <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
            classpath="./lib/jarjar-1.0.jar"/>
+  <taskdef name="swtjar" classname="org.swtjar.ant.SWTJarTask"
+           classpath="./lib/swtjar.jar"/>
 
   <property name="findbugs.home" value="./lib/findbugs" />
 
@@ -95,27 +97,28 @@
     </jarjar>
     <copy file="./build/jars/intrace-agent.jar" todir="./lib/" />
 
-    <!-- UI (InTrace Code) -->
-    <jarjar jarfile="./build/tmp/intrace-ui-wrapper.jar">
-      <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
-      <fileset dir="./src" includes="**/icons/**/*.*" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
-    </jarjar>
-
-    <!-- UI (Cross platform SWT wrapper around InTrace Code) -->
-    <jar jarfile="./build/jars/intrace-ui.jar">
+    <!-- UI (Cross platform SWT Jar) -->
+    <swtjar jarfile="./build/jars/intrace-ui.jar"
+	        targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
+			swtversion="3.6.2">
       <manifest>
-        <attribute name="Main-Class" value="org.intrace.client.loader.InTraceStandaloneUILoader" />
-        <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
-      <fileset dir="./build/classes" includes="**/client/loader/*.class" />
-      <fileset dir="./build/tmp" includes="intrace-ui-wrapper.jar" />
-      <fileset dir="./lib" includes="swt-*.jar" />
-      <zipfileset excludes="META-INF/*.MF" src="lib/jar-in-jar-loader.jar"/>
-    </jar>
+	  
+	  <!-- InTrace classes -->
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+	  
+	  <!-- InTrace icons -->
+      <fileset dir="./src" includes="**/icons/**/*.*" />
+	  
+	  <!-- Required Jars -->
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
+	  
+	  <!-- SWT Jars -->
+      <fileset dir="./lib" includes="swt-*-3.6.2.jar" />
+    </swtjar>
 
     <!-- InTrace UI Library -->
     <jar jarfile="./build/jars/intrace-ui-helper.jar">
