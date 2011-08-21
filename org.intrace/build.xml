@@ -19,6 +19,8 @@
            classpath="./lib/jarjar-1.0.jar"/>
   <taskdef name="swtjar" classname="org.swtjar.ant.SWTJarTask"
            classpath="./lib/swtjar.jar"/>
+  <taskdef name="jarbundler" classname="net.sourceforge.jarbundler.JarBundler" 
+           classpath="./lib/jarbundler-2.2.0.jar"/>
 
   <property name="findbugs.home" value="./lib/findbugs" />
 
@@ -77,6 +79,7 @@
   <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
     <mkdir dir="./build/tmp/" />
+    <mkdir dir="./build/tmp/InTraceApp/" />
     <mkdir dir="./build/jars/" />
 
     <!-- Agent -->
@@ -97,7 +100,7 @@
     </jarjar>
     <copy file="./build/jars/intrace-agent.jar" todir="./lib/" />
 
-    <!-- UI (Cross platform SWT Jar) -->
+    <!-- UI (Cross platform SWT Jar (Windows/Linux)) -->
     <swtjar jarfile="./build/jars/intrace-ui.jar"
 	        targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
 			swtversion="3.6.2">
@@ -106,26 +109,65 @@
         <attribute name="Implementation-Version" value="${git.tag}" />
       </manifest>
 	  
-	  <!-- InTrace classes -->
+      <!-- InTrace classes -->
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
 	  
-	  <!-- InTrace icons -->
+      <!-- InTrace icons -->
       <fileset dir="./src" includes="**/icons/**/*.*" />
 	  
-	  <!-- Required Jars -->
+      <!-- Required Jars -->
       <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
 	  
-	  <!-- SWT Jars -->
-      <fileset dir="./lib" includes="swt-*-3.6.2.jar" />
+      <!-- SWT Jars (Windows/Linux) -->
+      <fileset dir="./lib" includes="swt-win*-3.6.2.jar" />
+	  <fileset dir="./lib" includes="swt-lin*-3.6.2.jar" />
     </swtjar>
+	
+    <!-- UI (OSX SWT Jar) -->
+    <swtjar jarfile="./build/tmp/intrace-ui-osx.jar"
+	        targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
+			swtversion="3.6.2">
+      <manifest>
+        <attribute name="Git-Revision" value="${git.revision}" />
+        <attribute name="Implementation-Version" value="${git.tag}" />
+      </manifest>
+	  
+      <!-- InTrace classes -->
+      <fileset dir="./build/classes" includes="**/shared/*.class" />
+      <fileset dir="./build/classes" includes="**/client/gui/**/*.class" />
+	  
+      <!-- InTrace icons -->
+      <fileset dir="./src" includes="**/icons/**/*.*" />
+	  
+      <!-- Required Jars -->
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
+	  
+      <!-- SWT Jars (OSX) -->
+      <fileset dir="./lib" includes="swt-osx*-3.6.2.jar" />
+    </swtjar>
+	
+    <!-- UI (OSX application) -->
+    <jarbundler dir="./build/tmp/InTraceApp/"
+                name="InTrace"
+                mainclass="org.swtjar.SWTLoader" 
+                jar="./build/tmp/intrace-ui-osx.jar" 
+                startOnMainThread="true" 
+                icon="./src/org/intrace/icons/intrace128.icns" />
+    <mkdir dir="./build/tmp/InTraceAppLauncher/InTrace.app/Contents/MacOS/" />
+    <copy file="./lib/JavaApplicationStub" 
+          todir="./build/tmp/InTraceAppLauncher/InTrace.app/Contents/MacOS/" />
+    <tar destfile="./build/jars/InTrace.app.tar">
+      <tarfileset dir="./build/tmp/InTraceAppLauncher/" filemode="777" />
+      <tarfileset dir="./build/tmp/InTraceApp/" />
+    </tar>
 
     <!-- InTrace UI Library -->
     <jar jarfile="./build/jars/intrace-ui-helper.jar">
       <fileset dir="./build/classes" includes="**/shared/*.class" />
       <fileset dir="./build/classes" includes="**/client/gui/helper/*.class" />
       <fileset dir="./src" includes="**/icons/**/*.*" />
-    </jar>
+    </jar>	
   </target>
 
   <target name="test" description="Run Tests" depends="build" >
