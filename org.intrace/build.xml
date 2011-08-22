@@ -78,8 +78,7 @@
 
   <target name="jar" description="Create Jars" depends="build,getgitdetails" >
 
-    <mkdir dir="./build/tmp/" />
-    <mkdir dir="./build/tmp/InTraceApp/" />
+    <mkdir dir="./build/tmp/" />    
     <mkdir dir="./build/jars/" />
 
     <!-- Agent -->
@@ -148,6 +147,7 @@
     </swtjar>
 	
     <!-- UI (OSX application) -->
+    <mkdir dir="./build/tmp/InTraceApp/" />
     <jarbundler dir="./build/tmp/InTraceApp/"
                 name="InTrace"
                 mainclass="org.swtjar.SWTLoader" 
@@ -155,7 +155,7 @@
                 startOnMainThread="true" 
                 icon="./src/org/intrace/icons/intrace128.icns" 
                 stubfile="./lib/JavaApplicationStub" />
-    <delete file="./build/tmp/InTrace.app/InTrace.app/Contents/MacOS/JavaApplicationStub" />
+    <delete file="./build/tmp/InTraceApp/InTrace.app/Contents/MacOS/JavaApplicationStub" />
     <mkdir dir="./build/tmp/InTraceAppLauncher/InTrace.app/Contents/MacOS/" />
     <copy file="./lib/JavaApplicationStub" 
           todir="./build/tmp/InTraceAppLauncher/InTrace.app/Contents/MacOS/" />
