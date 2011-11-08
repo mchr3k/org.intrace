@@ -70,6 +70,16 @@ public class AgentInit
         e.printStackTrace();
       }
     }
+    
+    // Setup shutdown hook
+    Runtime.getRuntime().addShutdownHook(new Thread()
+    {
+      @Override
+      public void run()
+      {
+        AgentHelper.gracefulShutdown();
+      }
+    });
   }
 
   public static synchronized void setServerPort(int xiServerPort)

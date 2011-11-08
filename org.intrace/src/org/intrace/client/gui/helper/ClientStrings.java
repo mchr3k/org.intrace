@@ -41,4 +41,15 @@ public class ClientStrings
   public static final String FILTER_TEXT = "Filter...";
   public static final String CANCEL_TEXT = "Cancel";
   public static final String SAVE_TEXT = "Save...";
+  
+  public static final String CLASS_TITLE = "Classes to Instrument";
+  public static final String CLASS_HELP_TEXT = "Enter complete or partial class names.\n\n "
+  + "e.g.\n"
+  + "\"mypack.mysubpack.MyClass\"\n"
+  + "\"MyClass\"";
+  
+  public static final String FILTER_HELP_TEXT = "Enter text to match against trace lines. " +
+      "You can match any part of the line. " +
+      "\n\nYou can also select some text and right click the " +
+      "selection to quickly add an include or exclude filter.\n";
 }

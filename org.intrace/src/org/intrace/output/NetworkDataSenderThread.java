@@ -119,4 +119,19 @@ public class NetworkDataSenderThread extends InstruRunnable
       stop();
     }
   }
+
+  public void gracefulShutdown()
+  {
+    while(!outgoingData.isEmpty())
+    {
+      try
+      {
+        Thread.sleep(100);
+      }
+      catch (InterruptedException e)
+      {
+        // Ignore
+      }
+    }
+  }
 }

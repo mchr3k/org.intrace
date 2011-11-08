@@ -1,5 +1,7 @@
 package intrace.ecl.ui.launching;
 
+import java.util.Arrays;
+
 import intrace.ecl.Util;
 
 import org.eclipse.core.runtime.CoreException;
@@ -20,6 +22,7 @@ public class TabGroup extends AbstractLaunchConfigurationTabGroup implements IEx
   private static final String CONFIGATTR_TYPE = "type"; //$NON-NLS-1$
 
   private ILaunchConfigurationTabGroup tabGroupDelegate;
+  private ILaunchConfigurationTab[] alltabs;
 
   public void setInitializationData(IConfigurationElement config,
       String propertyName, Object data) throws CoreException
@@ -67,11 +70,20 @@ public class TabGroup extends AbstractLaunchConfigurationTabGroup implements IEx
   public void createTabs(ILaunchConfigurationDialog dialog, String mode)
   {
     tabGroupDelegate.createTabs(dialog, mode);
+    ILaunchConfigurationTab[] tabs = tabGroupDelegate.getTabs();
+    alltabs = new ILaunchConfigurationTab[tabs.length + 1];
+    alltabs[0] = tabs[0];    
+    alltabs[1] = new InTraceLaunchConfigTab();
+    for (int ii = 2; ii < alltabs.length; ii++)
+    {
+      alltabs[ii] = tabs[ii - 1];
+    }
+    setTabs(alltabs);
   }
   
   @Override
   public ILaunchConfigurationTab[] getTabs()
   {
-    return tabGroupDelegate.getTabs();
+    return alltabs;
   }
 }

@@ -150,6 +150,21 @@ public class AgentHelper
       }
     }
   }
+  
+  /**
+   * Allow any network output to gracefully shutdown
+   */
+  public static void gracefulShutdown()
+  {
+    Set<NetworkDataSenderThread> networkThreads = networkOutputThreads.keySet();
+    if (networkThreads.size() > 0)
+    {
+      for (NetworkDataSenderThread thread : networkThreads)
+      {
+        thread.gracefulShutdown();
+      }
+    }
+  }
 
   public static final CriticalBlock INSTRU_CRITICAL_BLOCK = new CriticalBlock();
   private static class CriticalBlock implements Thread.UncaughtExceptionHandler

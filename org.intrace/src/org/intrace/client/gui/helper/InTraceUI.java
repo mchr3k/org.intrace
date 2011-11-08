@@ -73,8 +73,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   
   private static final Pattern TRACE_LINE = Pattern.compile("^\\[[^\\]]+]:(\\[[^\\]]+\\]:([^:]+:[^:]+)):.*");
   
-  private static final Pattern ALLOW_ALL = Pattern.compile(".*");
-  private static final Pattern ALLOW_CLASSES = Pattern.compile("^[0-9a-zA-Z\\.\\$]*|\\*$");
+  public static final Pattern ALLOW_ALL = Pattern.compile(".*");
+  public static final Pattern ALLOW_CLASSES = Pattern.compile("^[0-9a-zA-Z\\.\\$]*|\\*$");
 
   public void open()
   {
@@ -297,7 +297,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     private final boolean tahomaUIFont;
     private final Button connectButton;
     private final Button settingsButton;
-    
     private MainBar(Composite parent)
     {
       composite = new Composite(parent, SWT.NONE);          
@@ -407,10 +406,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         }
       });
       
-      final String helpText = "Enter complete or partial class names.\n\n "
-        + "e.g.\n"
-        + "\"mypack.mysubpack.MyClass\"\n"
-        + "\"MyClass\"";
       classesButton
       .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
       {
@@ -418,7 +413,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         public void widgetSelected(SelectionEvent arg0)
         {
           IncludeExcludeWindow regexInput = new IncludeExcludeWindow(
-              "Classes to Instrument", helpText, mode,
+              ClientStrings.CLASS_TITLE, ClientStrings.CLASS_HELP_TEXT, mode,
               modeData,
               new PatternInputCallback()
               {
@@ -456,34 +451,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       });
     }
         
-    private List<String> getListFromString(String pattern)
-    {
-      List<String> items = new ArrayList<String>();
-      String[] patternParts = pattern.split("\\|");
-      for (String part : patternParts)
-      {
-        items.add(part);
-      }
-      return items;
-    }
-    
-    private String getStringFromList(List<String> list)
-    {
-      StringBuilder str = new StringBuilder();
-      
-      for (int ii = 0; ii < list.size(); ii++)
-      {
-        String item = list.get(ii);
-        str.append(item);
-        if (ii < (list.size() - 1))
-        {
-          str.append("|");
-        }
-      }
-      
-      return str.toString();
-    }
-
     private void setStatus(int instruClasses, int totalClasses)
     {
       if (!sRoot.isDisposed())
@@ -1419,12 +1386,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               }
             }
           }
-        });
-    
-        final String helpText = "Enter text to match against trace lines. " +
-        		"You can match any part of the line. " +
-        		"\n\nYou can also select some text and right click the " +
-        		"selection to quickly add an include or exclude filter.\n";
+        });   
         
         final PatternInputCallback patternCallback = new PatternInputCallback()
         {
@@ -1472,7 +1434,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               public void widgetSelected(SelectionEvent arg0)
               {
                 IncludeExcludeWindow regexInput;
-                regexInput = new IncludeExcludeWindow("Output Filter", helpText, mode,
+                regexInput = new IncludeExcludeWindow("Output Filter", ClientStrings.FILTER_HELP_TEXT, mode,
                     modeData,
                     patternCallback, lastEnteredIncludeFilterPattern,
                     lastEnteredExcludeFilterPattern, ALLOW_ALL);
@@ -2288,7 +2250,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     }
   }
 
-  private static void placeDialogInCenter(Rectangle parentSize, Shell shell)
+  public static void placeDialogInCenter(Rectangle parentSize, Shell shell)
   {
     Rectangle mySize = shell.getBounds();
 
@@ -2306,6 +2268,34 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     outputTabs.textOutputTab.filterThread.interrupt();
   }
   
+  public static List<String> getListFromString(String pattern)
+  {
+    List<String> items = new ArrayList<String>();
+    String[] patternParts = pattern.split("\\|");
+    for (String part : patternParts)
+    {
+      items.add(part);
+    }
+    return items;
+  }
+
+  public static String getStringFromList(List<String> list)
+  {
+    StringBuilder str = new StringBuilder();
+    
+    for (int ii = 0; ii < list.size(); ii++)
+    {
+      String item = list.get(ii);
+      str.append(item);
+      if (ii < (list.size() - 1))
+      {
+        str.append("|");
+      }
+    }
+    
+    return str.toString();
+  }
+
   public static Image[] getIcons(Display display) throws IOException
   {
     // Load icons

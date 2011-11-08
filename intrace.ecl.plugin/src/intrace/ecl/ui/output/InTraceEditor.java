@@ -36,11 +36,8 @@ public class InTraceEditor extends EditorPart
     // Do nothing
   }
 
-  @Override
-  public void createPartControl(final Composite parent)
-  {
-    Composite ui = new Composite(parent, SWT.NONE);
-    
+  public static UIModeData getUIModeData()
+  {    
     IWorkbench workBench = PlatformUI.getWorkbench();
     ITheme theme = workBench.getThemeManager().getCurrentTheme();
     ColorRegistry colreg = theme.getColorRegistry();
@@ -48,6 +45,15 @@ public class InTraceEditor extends EditorPart
     Color c1 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_START);
     Color c2 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_END);
     UIModeData data = new UIModeData(c1, c2);
+    return data;
+  }
+  
+  @Override
+  public void createPartControl(final Composite parent)
+  {
+    Composite ui = new Composite(parent, SWT.NONE);
+
+    UIModeData data = getUIModeData();
     
     IWorkbench workbench = PlatformUI.getWorkbench();
     final Display display = workbench.getDisplay();
