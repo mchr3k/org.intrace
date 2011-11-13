@@ -9,9 +9,14 @@
 	</system-properties>
 	
 	<static-files>
-        <include path="/**.html" />
-        <include path="/**.jar" />
-        <include path="/**.xml" />
-    </static-files>
+    <include path="/**.html" />        
+    <include path="/**.xml" />
+    <exclude path="/plugins/**" />
+    <exclude path="/files/**" />
+  </static-files>
+  
+  <admin-console>
+    <page name="Downloads" url="/downloads.jsp" />
+  </admin-console>
 	
 </appengine-web-app>

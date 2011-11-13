@@ -9,3 +9,5 @@ asm_patch*
 libsrc*
 *private*
 *genfile*
+classes/
+appengine-generated/
