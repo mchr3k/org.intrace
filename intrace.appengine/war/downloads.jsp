@@ -14,6 +14,8 @@
 <%@ page import="java.util.Set" %>
 <%@ page import="java.util.HashSet" %>
 <%@ page import="org.joda.time.DateTime" %>
+<%@ page import="com.google.appengine.api.users.UserService" %>
+<%@ page import="com.google.appengine.api.users.UserServiceFactory" %>
 <!DOCTYPE html>
 <html>
   <head>
@@ -24,6 +26,15 @@
     </script>
   </head>
   <body>
+<%
+   UserService userService = UserServiceFactory.getUserService();
+   if (!(userService.isUserLoggedIn() && userService.isUserAdmin())) 
+   {%>
+     Please <a href="<%=userService.createLoginURL("/downloads.jsp")%>">log in</a>
+ <%}
+   else
+   {
+ %>  
   <%
     // Set type
     Type lType = Type.DAY;
@@ -109,7 +120,7 @@
         }
         
         // Create and draw the visualization.
-        var ac = new google.visualization.AreaChart(document.getElementById('visualization'));
+        var ac = new google.visualization.LineChart(document.getElementById('visualization'));
         ac.draw(data, {
           title : 'Downloads by Date',
           isStacked: true,
@@ -159,3 +170,4 @@
     <input type="submit" value="Create Test Data" onclick="doTestData()" />
   </body>
 </html>
+<%}%>
