@@ -25,8 +25,7 @@
       google.load('visualization', '1', {packages: ['corechart']});
     </script>
   </head>
-  <body>
-<%
+  <body><%
    UserService userService = UserServiceFactory.getUserService();
    if (!(userService.isUserLoggedIn() && userService.isUserAdmin())) 
    {%>
@@ -34,8 +33,6 @@
  <%}
    else
    {
- %>  
-  <%
     // Set type
     Type lType = Type.DAY;
     
@@ -160,6 +157,16 @@
     function doTestData()
     { window.location.href = "action?action=testdata&redir=downloads.jsp"; }
     
+    function adminMode()
+    { 
+      var normalEl = document.getElementById("normaltable");
+      normalEl.style.display = "none";
+      var adminEl = document.getElementById("admintable");      
+      adminEl.style.display = "block"; 
+      var adminButtonEl = document.getElementById("adminbutton");
+      adminButtonEl.style.display = "none"; 
+    }
+    
     function setMode(mode)
     {       
       if (getUrlVars()['file'])
@@ -210,37 +217,64 @@
 		  <option value="all">All Files</option>
 		  <% for (String lFilename : lFilenames) { 
 		  %><option value="<%=Utils.enc(lFilename)%>"><%=lFilename%></option>
-		  <% } %></select> 
-		<br><br>
+		  <% } %></select>
     <input type="submit" value="Year" onclick="setMode('year')" />
     <input type="submit" value="Month" onclick="setMode('month')" />
     <input type="submit" value="Day" onclick="setMode('day')" /><br>
     <div style="width: 100%;" id="visualization"></div>    
-    <table>
-      <tr>
-        <td>Total</td>
-        <td>Filename</td>
-        <td></td>
-      </tr>
-  <%
-    for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
-      Map<String,Integer> lCounterMap = entry.getValue();
-      int lTotal = 0;
-      for (Integer lCount : lCounterMap.values())
-      {
-        lTotal += lCount;
-      }
-  %>
-      <tr>
-        <td><%=lTotal%></td>
-        <td><%=entry.getKey()%></td>
-        <td><input type="submit" value="Clear File" onclick="doClearFile('<%=Utils.enc(entry.getKey())%>')" /></td>
-      </tr>
-  <% } %>
-    </table><br>
-    <input type="submit" value="Clear All Data (<%=lPerFilePerDateStrDownloads.keySet().size()%> Files)" onclick="doClear()" />
-    <br><br><br>
-    <input type="submit" value="Create Test Data" onclick="doTestData()" />
+    <div id="normaltable">    
+	    <table>
+	      <tr>
+	        <td>Total</td>
+	        <td>Filename</td>
+	      </tr>
+	  <%
+	    for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
+	      Map<String,Integer> lCounterMap = entry.getValue();
+	      int lTotal = 0;
+	      for (Integer lCount : lCounterMap.values())
+	      {
+	        lTotal += lCount;
+	      }
+	  %>
+	      <tr>
+	        <td><%=lTotal%></td>
+	        <td><%=entry.getKey()%></td>
+	      </tr>
+	  <% } %>
+	    </table>
+    </div>
+    <div id="admintable" style="display:none;">    
+      <table>
+        <tr>
+          <td>Total</td>
+          <td>Filename</td>
+          <td></td>
+        </tr>
+    <%
+      for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
+        Map<String,Integer> lCounterMap = entry.getValue();
+        int lTotal = 0;
+        for (Integer lCount : lCounterMap.values())
+        {
+          lTotal += lCount;
+        }
+    %>
+        <tr>
+          <td><%=lTotal%></td>
+          <td><%=entry.getKey()%></td>
+          <td><input type="submit" value="Clear File" onclick="doClearFile('<%=Utils.enc(entry.getKey())%>')" /></td>
+        </tr>
+    <% } %>
+      </table><br>
+      <input type="submit" value="Clear All Data (<%=lPerFilePerDateStrDownloads.keySet().size()%> Files)" onclick="doClear()" />
+      <br><br>
+      <input type="submit" value="Create Test Data" onclick="doTestData()" />
+    </div>
+    <div id="adminbutton">
+    <br>
+    <input type="submit" value="Admin" onclick="adminMode()" />
+    </div>
   </body>
 </html>
 <%}%>
