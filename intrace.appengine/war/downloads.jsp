@@ -222,26 +222,26 @@
     <input type="submit" value="Day" onclick="setMode('day')" /><br>
     <div style="width: 100%;" id="visualization"></div>    
     <div id="normaltable">    
-	    <table>
-	      <tr>
-	        <td>Total</td>
-	        <td>Filename</td>
-	      </tr>
-	  <%
-	    for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
-	      Map<String,Integer> lCounterMap = entry.getValue();
-	      int lTotal = 0;
-	      for (Integer lCount : lCounterMap.values())
-	      {
-	        lTotal += lCount;
-	      }
-	  %>
-	      <tr>
-	        <td><%=lTotal%></td>
-	        <td><%=entry.getKey()%></td>
-	      </tr>
-	  <% } %>
-	    </table>
+      <table>
+        <tr>
+          <td>Total</td>
+          <td>Filename</td>
+        </tr>
+    <%
+      for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
+        Map<String,Integer> lCounterMap = entry.getValue();
+        int lTotal = 0;
+        for (Integer lCount : lCounterMap.values())
+        {
+          lTotal += lCount;
+        }
+    %>
+        <tr>
+          <td><%=lTotal%></td>
+          <td><%=entry.getKey()%></td>
+        </tr><% 
+      } %>
+      </table>
     </div>
     <div id="admintable" style="display:none;">    
       <table>
@@ -263,8 +263,8 @@
           <td><%=lTotal%></td>
           <td><%=entry.getKey()%></td>
           <td><input type="submit" value="Clear File" onclick="doClearFile('<%=Utils.enc(entry.getKey())%>')" /></td>
-        </tr>
-    <% } %>
+        </tr><% 
+      } %>
       </table><br>
       <input type="submit" value="Clear All Data (<%=lPerFilePerDateStrDownloads.keySet().size()%> Files)" onclick="doClear()" />
       <br><br>
