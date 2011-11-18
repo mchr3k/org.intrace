@@ -213,10 +213,11 @@
     </script>
     <select id="filePicker" onchange="selectFile()">
       <option selected value="">Choose File...</option>
-      <option value="all">All Files</option>
-      <% for (String lFilename : lFilenames) { 
-      %><option value="<%=Utils.enc(lFilename)%>"><%=lFilename%></option>
-    <% } %></select>
+      <option value="all">All Files</option><% 
+      for (String lFilename : lFilenames) {%>
+      <option value="<%=Utils.enc(lFilename)%>"><%=lFilename%></option><% 
+    } %>
+    </select>
     <input type="submit" value="Year" onclick="setMode('year')" />
     <input type="submit" value="Month" onclick="setMode('month')" />
     <input type="submit" value="Day" onclick="setMode('day')" /><br>
