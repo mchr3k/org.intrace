@@ -216,7 +216,7 @@
       <option value="all">All Files</option>
       <% for (String lFilename : lFilenames) { 
       %><option value="<%=Utils.enc(lFilename)%>"><%=lFilename%></option>
-      <% } %></select>
+    <% } %></select>
     <input type="submit" value="Year" onclick="setMode('year')" />
     <input type="submit" value="Month" onclick="setMode('month')" />
     <input type="submit" value="Day" onclick="setMode('day')" /><br>
@@ -226,8 +226,7 @@
         <tr>
           <td>Total</td>
           <td>Filename</td>
-        </tr>
-    <%
+        </tr><%
       for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
         Map<String,Integer> lCounterMap = entry.getValue();
         int lTotal = 0;
@@ -249,8 +248,7 @@
           <td>Total</td>
           <td>Filename</td>
           <td></td>
-        </tr>
-    <%
+        </tr><%
       for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
         Map<String,Integer> lCounterMap = entry.getValue();
         int lTotal = 0;
