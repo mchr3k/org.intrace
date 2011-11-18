@@ -25,7 +25,8 @@
       google.load('visualization', '1', {packages: ['corechart']});
     </script>
   </head>
-  <body><%
+  <body>
+  <%
    UserService userService = UserServiceFactory.getUserService();
    if (!(userService.isUserLoggedIn() && userService.isUserAdmin())) 
    {%>
@@ -79,19 +80,18 @@
     List<String> dateStrs = Counter.getDateStrs(lType, 
                                                 lType.getPartial(lNow.getYear(), lNow.getMonthOfYear(), lNow.getDayOfMonth()), 
                                                 dateStrsSet);
-  %>
-    <script type="text/javascript">
+  %><script type="text/javascript">
       function drawVisualization() {
         // Raw data
         var filenames = 
         [
         <%Iterator<String> lFiles = lPerFilePerDateStrDownloads.keySet().iterator(); while (lFiles.hasNext()) {
-        %>  '<%=lFiles.next()%>'<%=(lFiles.hasNext() ? "," : "")%>
+        %>  '<%=lFiles.next()%>'<%=(lFiles.hasNext() ? "," : " ")%>
         <%}%>];
         var datestrs = 
         [
         <%Iterator<String> dateStrsIter = dateStrs.iterator(); while (dateStrsIter.hasNext()) {
-        %>  '<%=dateStrsIter.next()%>'<%=(dateStrsIter.hasNext() ? "," : "")%>
+        %>  '<%=dateStrsIter.next()%>'<%=(dateStrsIter.hasNext() ? "," : " ")%>
         <%}%>];
         var downloadsByFile = 
         [<%Iterator<Entry<String,Map<String,Integer>>> iter = lPerFilePerDateStrDownloads.entrySet().iterator();
@@ -104,7 +104,7 @@
              String dateStr = dateStrsIter.next();
              Integer lVal = perDateCount.get(dateStr);
              if (lVal == null) lVal = 0;
-            %>  <%=lVal%><%=(dateStrsIter.hasNext() ? "," : "")%> // <%=dateStr%>
+            %>  <%=lVal%><%=(dateStrsIter.hasNext() ? "," : " ")%> // <%=dateStr%>
           <%}%>]<%=(iter.hasNext() ? "," : "")%> // <%=entry.getKey()
           %><%}%>
         ]; 
@@ -145,8 +145,7 @@
       }
      
       google.setOnLoadCallback(drawVisualization);
-    </script>
-        
+    </script>        
     <script>
     function doClearFile(fileName)
     { window.location.href = "action?action=clearfile&file=" + fileName + "&redir=downloads.jsp"; }
