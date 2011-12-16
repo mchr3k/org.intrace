@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.jdo.PersistenceManager;
@@ -13,7 +14,10 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
+import org.joda.time.DateMidnight;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeFieldType;
+import org.joda.time.Days;
 import org.joda.time.Partial;
 import org.joda.time.Period;
 
@@ -58,6 +62,18 @@ public class Counter
                           {DateTimeFieldType.year(),
                            DateTimeFieldType.monthOfYear()},
                           new int[] {y, m});
+      }
+    },
+    WEEK("yyyy/MM/dd", Period.days(7))
+    {
+      @Override
+      public Partial getPartial(int y, int m, int d)
+      {
+        return new Partial(new DateTimeFieldType[]
+                          {DateTimeFieldType.year(),
+                           DateTimeFieldType.monthOfYear(),
+                           DateTimeFieldType.dayOfMonth()},
+                          new int[] {y, m, d});
       }
     },
     DAY("yyyy/MM/dd", Period.days(1))
@@ -151,6 +167,24 @@ public class Counter
 
     if (xiDataDateStrs.size() > 0)
     {
+      if (xiType == Type.WEEK)
+      {
+        DateMidnight foundMonday = new DateMidnight(xiStart.get(DateTimeFieldType.year()),
+                                                    xiStart.get(DateTimeFieldType.monthOfYear()),
+                                                    xiStart.get(DateTimeFieldType.dayOfMonth()));
+        while (foundMonday.getDayOfWeek() != DateTimeConstants.MONDAY)
+        {
+          foundMonday = foundMonday.plus(Days.ONE);
+        }
+        xiStart = new Partial(new DateTimeFieldType[]
+                              {DateTimeFieldType.year(),
+                              DateTimeFieldType.monthOfYear(),
+                              DateTimeFieldType.dayOfMonth()},
+                              new int[] {foundMonday.getYear(),
+                                         foundMonday.getMonthOfYear(),
+                                         foundMonday.getDayOfMonth()});
+      }
+
       List<String> lInDataStrsList = new ArrayList<String>(xiDataDateStrs);
       Collections.sort(lInDataStrsList);
       String lOldestDate = lInDataStrsList.get(0);
@@ -169,6 +203,79 @@ public class Counter
       Collections.reverse(lDateStrs);
     }
     return lDateStrs;
+  }
+
+  public static Map<String,Map<String,Integer>> getFilePerWeekMap(Map<String,Map<String,Integer>> xiPerFilePerDayData)
+  {
+    // Filename -> DateStr -> Count
+    Map<String,Map<String,Integer>> lRet = new HashMap<String, Map<String,Integer>>();
+
+   for (Entry<String,Map<String,Integer>> fileEntry : xiPerFilePerDayData.entrySet())
+   {
+     String file = fileEntry.getKey();
+     Map<String,Integer> perWeekData = new HashMap<String, Integer>();
+     lRet.put(file, perWeekData);
+
+     // DateStr -> Count
+     Map<String, Integer> perDateData = fileEntry.getValue();
+     List<String> dateStrs = new ArrayList<String>(perDateData.keySet());
+     Collections.sort(dateStrs);
+     Collections.reverse(dateStrs);
+
+     DateMidnight lastDate = null;
+     int weekCount = 0;
+     boolean unrecordedItem = false;
+
+     for (String datestr : dateStrs)
+     {
+       DateMidnight date = new DateMidnight(datestr.replace("/", "-"));
+       if (unrecordedItem && (lastDate != null))
+       {
+         Days d = Days.daysBetween(date, lastDate);
+         if (d.getDays() >= 7)
+         {
+           DateMidnight foundMonday = lastDate;
+           while (foundMonday.getDayOfWeek() != DateTimeConstants.MONDAY)
+           {
+             foundMonday = foundMonday.minus(Days.ONE);
+           }
+           perWeekData.put(Type.DAY.getPartialStr(foundMonday.getYear(),
+                                                  foundMonday.getMonthOfYear(),
+                                                  foundMonday.getDayOfMonth()),
+                           weekCount);
+           weekCount = 0;
+           unrecordedItem = false;
+         }
+       }
+
+       lastDate = date;
+       Integer count = perDateData.get(datestr);
+       weekCount += count;
+       unrecordedItem = true;
+
+       if (date.getDayOfWeek() == DateTimeConstants.MONDAY)
+       {
+         perWeekData.put(datestr, weekCount);
+         weekCount = 0;
+         unrecordedItem = false;
+       }
+     }
+
+     if (unrecordedItem)
+     {
+       DateMidnight foundMonday = lastDate;
+       while (foundMonday.getDayOfWeek() != DateTimeConstants.MONDAY)
+       {
+         foundMonday = foundMonday.minus(Days.ONE);
+       }
+       perWeekData.put(Type.DAY.getPartialStr(foundMonday.getYear(),
+                                              foundMonday.getMonthOfYear(),
+                                              foundMonday.getDayOfMonth()),
+                       weekCount);
+     }
+   }
+
+    return lRet;
   }
 
 }

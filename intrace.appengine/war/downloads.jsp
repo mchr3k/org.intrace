@@ -28,21 +28,25 @@
   <body>
   <%
    UserService userService = UserServiceFactory.getUserService();
-   if (!(userService.isUserLoggedIn() && userService.isUserAdmin())) 
-   {%>
-     Please <a href="<%=userService.createLoginURL("/downloads.jsp")%>">log in</a>
- <%}
+   if (!(userService.isUserLoggedIn() && userService.isUserAdmin()))     
+   {
+     response.sendRedirect(userService.createLoginURL("/downloads.jsp"));
+   }
    else
    {
     // Set type
-    Type lType = Type.DAY;
+    Type lType = Type.WEEK;
     
     // Check file
     String lFileStr = request.getParameter("file");    
   
     // Check type
     String lModeStr = request.getParameter("mode");
-    if ("month".equals(lModeStr))
+    if ("day".equals(lModeStr))
+    {
+      lType = Type.DAY;
+    }
+    else if ("month".equals(lModeStr))
     {
       lType = Type.MONTH;
     }
@@ -52,10 +56,19 @@
     }
     
     // Fetch data
-    List<Counter> lRecords = Counter.getAllByType(lType);
+    Type lFetchType = lType;
+    if (lFetchType == Type.WEEK)
+    {
+      lFetchType = Type.DAY;
+    }
+    List<Counter> lRecords = Counter.getAllByType(lFetchType);
     
     // Filename -> DateStr -> Count
     Map<String,Map<String,Integer>> lPerFilePerDateStrDownloads = Counter.getPerFilePerDateMap(lRecords);
+    if (lType == Type.WEEK)
+    {
+      lPerFilePerDateStrDownloads = Counter.getFilePerWeekMap(lPerFilePerDateStrDownloads);
+    }
     
     // Filenames
     List<String> lFilenames = new ArrayList<String>(lPerFilePerDateStrDownloads.keySet());
@@ -85,7 +98,8 @@
         // Raw data
         var filenames = 
         [
-        <%Iterator<String> lFiles = lPerFilePerDateStrDownloads.keySet().iterator(); while (lFiles.hasNext()) {
+        <%
+        Iterator<String> lFiles = lFilenames.iterator(); while (lFiles.hasNext()) {
         %>  '<%=lFiles.next()%>'<%=(lFiles.hasNext() ? "," : " ")%>
         <%}%>];
         var datestrs = 
@@ -94,10 +108,9 @@
         %>  '<%=dateStrsIter.next()%>'<%=(dateStrsIter.hasNext() ? "," : " ")%>
         <%}%>];
         var downloadsByFile = 
-        [<%Iterator<Entry<String,Map<String,Integer>>> iter = lPerFilePerDateStrDownloads.entrySet().iterator();
-           while (iter.hasNext()) {
-           Entry<String,Map<String,Integer>> entry = iter.next();
-           Map<String,Integer> perDateCount = entry.getValue();
+        [<%lFiles = lFilenames.iterator(); while (lFiles.hasNext()) {
+           String lFile = lFiles.next();
+           Map<String,Integer> perDateCount = lPerFilePerDateStrDownloads.get(lFile);
            dateStrsIter = dateStrs.iterator();%>  
           [
           <%while(dateStrsIter.hasNext()) { 
@@ -105,7 +118,7 @@
              Integer lVal = perDateCount.get(dateStr);
              if (lVal == null) lVal = 0;
             %>  <%=lVal%><%=(dateStrsIter.hasNext() ? "," : " ")%> // <%=dateStr%>
-          <%}%>]<%=(iter.hasNext() ? "," : "")%> // <%=entry.getKey()
+          <%}%>]<%=(lFiles.hasNext() ? "," : "")%> // <%=lFile
           %><%}%>
         ]; 
       
@@ -220,6 +233,7 @@
     </select>
     <input type="submit" value="Year" onclick="setMode('year')" />
     <input type="submit" value="Month" onclick="setMode('month')" />
+    <input type="submit" value="Week" onclick="setMode('week')" />
     <input type="submit" value="Day" onclick="setMode('day')" /><br>
     <div style="width: 100%;" id="visualization"></div>    
     <div id="normaltable">    
@@ -228,8 +242,8 @@
           <td>Total</td>
           <td>Filename</td>
         </tr><%
-      for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
-        Map<String,Integer> lCounterMap = entry.getValue();
+      for (String lFilename : lFilenames) {
+        Map<String,Integer> lCounterMap = lPerFilePerDateStrDownloads.get(lFilename);
         int lTotal = 0;
         for (Integer lCount : lCounterMap.values())
         {
@@ -238,7 +252,7 @@
     %>
         <tr>
           <td><%=lTotal%></td>
-          <td><%=entry.getKey()%></td>
+          <td><%=lFilename%></td>
         </tr><% 
       } %>
       </table>
@@ -250,8 +264,8 @@
           <td>Filename</td>
           <td></td>
         </tr><%
-      for (Entry<String,Map<String,Integer>> entry : lPerFilePerDateStrDownloads.entrySet()) {
-        Map<String,Integer> lCounterMap = entry.getValue();
+      for (String lFilename : lFilenames) {
+        Map<String,Integer> lCounterMap = lPerFilePerDateStrDownloads.get(lFilename);
         int lTotal = 0;
         for (Integer lCount : lCounterMap.values())
         {
@@ -260,8 +274,8 @@
     %>
         <tr>
           <td><%=lTotal%></td>
-          <td><%=entry.getKey()%></td>
-          <td><input type="submit" value="Clear File" onclick="doClearFile('<%=Utils.enc(entry.getKey())%>')" /></td>
+          <td><%=lFilename%></td>
+          <td><input type="submit" value="Clear File" onclick="doClearFile('<%=Utils.enc(lFilename)%>')" /></td>
         </tr><% 
       } %>
       </table><br>
