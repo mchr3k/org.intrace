@@ -100,7 +100,9 @@
         [
         <%
         Iterator<String> lFiles = lFilenames.iterator(); while (lFiles.hasNext()) {
-        %>  '<%=lFiles.next()%>'<%=(lFiles.hasNext() ? "," : " ")%>
+          String lFile = lFiles.next();
+          if ((lFileStr != null) && !lFileStr.equals("all") && !lFileStr.equals(lFile)) continue;
+        %>  '<%=lFile%>'<%=(lFiles.hasNext() ? "," : " ")%>
         <%}%>];
         var datestrs = 
         [
@@ -111,6 +113,7 @@
         [<%lFiles = lFilenames.iterator(); while (lFiles.hasNext()) {
            String lFile = lFiles.next();
            Map<String,Integer> perDateCount = lPerFilePerDateStrDownloads.get(lFile);
+           if (perDateCount == null) continue;
            dateStrsIter = dateStrs.iterator();%>  
           [
           <%while(dateStrsIter.hasNext()) { 
@@ -242,8 +245,9 @@
           <td>Total</td>
           <td>Filename</td>
         </tr><%
-      for (String lFilename : lFilenames) {
+      for (String lFilename : lFilenames) {        
         Map<String,Integer> lCounterMap = lPerFilePerDateStrDownloads.get(lFilename);
+        if (lCounterMap == null) continue;
         int lTotal = 0;
         for (Integer lCount : lCounterMap.values())
         {
@@ -266,6 +270,7 @@
         </tr><%
       for (String lFilename : lFilenames) {
         Map<String,Integer> lCounterMap = lPerFilePerDateStrDownloads.get(lFilename);
+        if (lCounterMap == null) continue;
         int lTotal = 0;
         for (Integer lCount : lCounterMap.values())
         {
