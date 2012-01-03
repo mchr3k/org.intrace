@@ -44,7 +44,7 @@ public class ClassTransformer implements ClassFileTransformer
    * Pattern which matches nothing
    */
   public static final String MATCH_NONE = "";
-  
+
   /**
    * Set of modified class names
    */
@@ -64,7 +64,7 @@ public class ClassTransformer implements ClassFileTransformer
    * Settings for this Transformer
    */
   private final AgentSettings settings;
-  
+
   /**
    * Marker indicating whether many classes are currently being updated
    */
@@ -72,7 +72,7 @@ public class ClassTransformer implements ClassFileTransformer
 
   /**
    * cTor
-   * 
+   *
    * @param xiInst
    * @param xiEnableTracing
    * @param xiClassRegex
@@ -92,14 +92,14 @@ public class ClassTransformer implements ClassFileTransformer
 
   /**
    * Generate and return instrumented class bytes.
-   * 
+   *
    * @param xiClassName
    * @param classfileBuffer
-   * @param shouldInstrument 
+   * @param shouldInstrument
    * @return Instrumented class bytes
    */
   private byte[] getInstrumentedClassBytes(String xiClassName,
-                                           byte[] classfileBuffer, 
+                                           byte[] classfileBuffer,
                                            boolean shouldInstrument)
   {
     try
@@ -135,7 +135,7 @@ public class ClassTransformer implements ClassFileTransformer
    * <li>Class name doesn't match the regex
    * <li>Class is in a JAR and JAR instrumention is disabled
    * </ul>
-   * 
+   *
    * @param klass
    * @param className
    * @param protectionDomain
@@ -158,7 +158,7 @@ public class ClassTransformer implements ClassFileTransformer
     {
       return false;
     }
-    
+
     // Don't sensitive classes
     if (isSensitiveClass(className))
     {
@@ -178,7 +178,7 @@ public class ClassTransformer implements ClassFileTransformer
       }
       return false;
     }
-    
+
     // Don't modify classes which match the exclude regex
     if ((settings.getExcludeClassRegex() == null)
         || matches(settings.getExcludeClassRegex(), className))
@@ -206,7 +206,7 @@ public class ClassTransformer implements ClassFileTransformer
     // All checks passed - class can be instrumented
     return true;
   }
-  
+
   private boolean matches(String[] strs, String target)
   {
     for (String str : strs)
@@ -215,7 +215,7 @@ public class ClassTransformer implements ClassFileTransformer
       {
         continue;
       }
-      else if (str.equals(MATCH_ALL) || 
+      else if (str.equals(MATCH_ALL) ||
                target.contains(str))
       {
         return true;
@@ -226,7 +226,7 @@ public class ClassTransformer implements ClassFileTransformer
 
   private boolean isSensitiveClass(String className)
   {
-    return className.contains(".intrace.") || 
+    return className.contains(".intrace.") ||
            className.contains("objectweb.asm");
   }
 
@@ -250,29 +250,29 @@ public class ClassTransformer implements ClassFileTransformer
     Thread currentTh = Thread.currentThread();
     UncaughtExceptionHandler handler = currentTh.getUncaughtExceptionHandler();
     currentTh.setUncaughtExceptionHandler(AgentHelper.INSTRU_CRITICAL_BLOCK);
-      
+
     try
     {
       String className = internalClassName.replace('/', '.');
       ComparableClassName compclass = new ComparableClassName(className, loader);
       int modifiedSize = modifiedClasses.size();
       int allClassesSize = allClasses.size();
-  
+
       boolean shouldInstrument = isToBeConsideredForInstrumentation(classBeingRedefined, loader,
-                                                                    className, protectionDomain); 
+                                                                    className, protectionDomain);
       if (shouldInstrument || "java.lang.Thread".equals(className))
       {
 //        System.out.println("!! Instrumenting class: " + compclass);
-  
+
         if (settings.saveTracedClassfiles())
         {
           writeClassBytes(originalClassfile, internalClassName + "_src.class");
         }
-  
+
         byte[] newBytes;
         try
         {
-          newBytes = getInstrumentedClassBytes(className, 
+          newBytes = getInstrumentedClassBytes(className,
                                                originalClassfile,
                                                shouldInstrument);
         }
@@ -288,22 +288,22 @@ public class ClassTransformer implements ClassFileTransformer
           th.printStackTrace();
           throw th;
         }
-  
+
         if (settings.saveTracedClassfiles())
         {
           writeClassBytes(newBytes, internalClassName + "_gen.class");
         }
-  
+
         modifiedClasses.add(compclass);
-        
+
         sendStatusUpdate(modifiedSize, allClassesSize);
-              
+
         return newBytes;
       }
       else
       {
         modifiedClasses.remove(compclass);
-        
+
         sendStatusUpdate(modifiedSize, allClassesSize);
         return null;
       }
@@ -318,14 +318,14 @@ public class ClassTransformer implements ClassFileTransformer
   {
     public final int modifiedSize;
     public final int allClassesSize;
-    
+
     public StatusUpdate(int modifiedSize, int allClassesSize)
     {
       this.modifiedSize = modifiedSize;
       this.allClassesSize = allClassesSize;
     }
   }
-  
+
   private static class StatusHolder
   {
     private StatusUpdate update;
@@ -334,30 +334,31 @@ public class ClassTransformer implements ClassFileTransformer
       this.update = update;
       this.notifyAll();
     }
-    
+
     public synchronized StatusUpdate getStatus() throws InterruptedException
     {
       while (update == null)
       {
         this.wait();
       }
-      
+
       StatusUpdate retVal = update;
       update = null;
-      
+
       return retVal;
     }
   }
-  
+
   private class StatusUpdateThread extends InstruRunnable
-  {    
+  {
     // Need more than 1 slot to allow for recursive status calls
     public final StatusHolder statusHolder = new StatusHolder();
 
+    @Override
     public void runMethod()
-    {      
+    {
       while (true)
-      {        
+      {
         try
         {
           StatusUpdate update = statusHolder.getStatus();
@@ -376,7 +377,7 @@ public class ClassTransformer implements ClassFileTransformer
         }
       }
     }
-    
+
     public StatusUpdateThread start()
     {
       Thread statusUpdateThread = new Thread(this);
@@ -386,9 +387,9 @@ public class ClassTransformer implements ClassFileTransformer
       return this;
     }
   }
-  
-  private StatusUpdateThread statusUpdater = new StatusUpdateThread().start();
-  
+
+  private final StatusUpdateThread statusUpdater = new StatusUpdateThread().start();
+
   /**
    * Asynchronously send a status update to all connected clients.
    * <p>
@@ -452,7 +453,7 @@ public class ClassTransformer implements ClassFileTransformer
 
   /**
    * Toggle whether instrumentation is enabled
-   * 
+   *
    * @param xiTracingEnabled
    */
   public void setInstrumentationEnabled(boolean xiInstrumentationEnabled)
@@ -484,8 +485,8 @@ public class ClassTransformer implements ClassFileTransformer
 
   /**
    * Handle a message and return a response.
-   * @param connection 
-   * 
+   * @param connection
+   *
    * @param message
    * @return Response or null if there is no response.
    */
@@ -546,7 +547,7 @@ public class ClassTransformer implements ClassFileTransformer
    * <p>
    * Iterates over all loaded classes and retransforms those which we know we
    * have modified.
-   * 
+   *
    * @param xiInst
    */
   private Set<ComparableClass> getModifiedClasses()
@@ -626,6 +627,12 @@ public class ClassTransformer implements ClassFileTransformer
 
   public void instrumentKlasses(Set<ComparableClass> klasses)
   {
+    if (!inst.isRetransformClassesSupported())
+    {
+      System.out.println("## Retransform classes is not supported...");
+      return;
+    }
+
     if (klasses.size() == 0)
     {
       return;
@@ -641,7 +648,7 @@ public class ClassTransformer implements ClassFileTransformer
         try
         {
           inst.retransformClasses(klass.klass);
-  
+
           countNumClasses++;
           if ((countNumClasses % 10) == 0)
           {
@@ -668,7 +675,7 @@ public class ClassTransformer implements ClassFileTransformer
   {
     broadcastProgress(count, total, false);
   }
-  
+
   private void broadcastProgress(int count, int total, boolean done)
   {
     Map<String, String> progressMap = new HashMap<String, String>();
@@ -691,7 +698,7 @@ public class ClassTransformer implements ClassFileTransformer
       e.printStackTrace();
     }
   }
-  
+
   private void broadcastStatus(int count, int total)
   {
     Map<String, String> progressMap = new HashMap<String, String>();
@@ -726,7 +733,7 @@ public class ClassTransformer implements ClassFileTransformer
 
     /**
      * cTor
-     * 
+     *
      * @param klassName
      *          , ClassLoader klassloader
      */
@@ -865,7 +872,7 @@ public class ClassTransformer implements ClassFileTransformer
 
     /**
      * cTor
-     * 
+     *
      * @param klass
      */
     public ComparableClass(Class<?> klass)

@@ -16,47 +16,47 @@ public class AgentInit
 
   /**
    * Common init function.
-   * 
+   *
    * @param agentArgs
    * @param inst
    */
   public static void initialize(String agentArgs, Instrumentation inst)
   {
     System.out.println("## Loaded InTrace Agent.");
-  
+
     if (agentArgs == null)
     {
       agentArgs = "";
     }
-    
+
     // Setup the trace instrumentation handler
     AgentHelper.setInstrumentationHandler(TraceHandler.INSTANCE);
-  
+
     // Parse startup args
     AgentSettings args = new AgentSettings(agentArgs);
     AgentHelper.getResponses(null, agentArgs);
-  
+
     // Construct Transformer
     ClassTransformer t = new ClassTransformer(inst, args);
-    inst.addTransformer(t, true);
-  
+    inst.addTransformer(t, inst.isRetransformClassesSupported());
+
     // Ensure loaded classes are traced
     t.instrumentKlasses(t.getLoadedClassesForModification());
-    
+
     // Start Server thread
     new AgentServer(t, args.getServerPort()).start();
-    
+
     // Store server port
     waitForServerPort();
     args.setActualServerPort(serverPort);
-    
+
     // Wait for callback connection
     if (args.getCallbackPort() > -1)
     {
       System.out.println("## Establishing Callback Connection...");
       doCallbackConnection(args.getCallbackPort(), t);
     }
-    
+
     // Wait for startup
     if (args.isWaitStart())
     {
@@ -70,7 +70,7 @@ public class AgentInit
         e.printStackTrace();
       }
     }
-    
+
     // Setup shutdown hook
     Runtime.getRuntime().addShutdownHook(new Thread()
     {
@@ -88,7 +88,7 @@ public class AgentInit
     AgentInit.class.notifyAll();
   }
 
-  static synchronized void waitForServerPort()  
+  static synchronized void waitForServerPort()
   {
     try
     {
