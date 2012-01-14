@@ -103,6 +103,13 @@ public class AgentInit
     }
   }
 
+  /**
+   * This is a mechanism which allows a client to listen on a particular port and have the
+   * Agent server make the initial connection. This is useful when the client launches the Agent
+   * and wants to connect as soon as the Agent starts up. This is used by the Eclipse plugin.
+   * @param callbackPort
+   * @param t
+   */
   static void doCallbackConnection(int callbackPort, ClassTransformer t)
   {
     try
