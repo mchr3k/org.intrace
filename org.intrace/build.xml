@@ -86,7 +86,7 @@
       <manifest>
         <attribute name="Premain-Class" value="org.intrace.agent.Agent" />
         <attribute name="Agent-Class" value="org.intrace.agent.Agent" />
-        <attribute name="Can-Redefine-Classes" value="true" />
+        <attribute name="Can-Retransform-Classes" value="true" />
         <attribute name="Class-Path" value="." />
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
