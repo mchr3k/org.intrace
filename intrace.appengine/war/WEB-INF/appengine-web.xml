@@ -9,8 +9,9 @@
 	</system-properties>
 	
 	<static-files>
-    <include path="/**.html" />        
+    <include path="/**.html" />   
     <include path="/**.xml" />
+    <include path="/features/**" />
     <exclude path="/plugins/**" />
     <exclude path="/files/**" />
   </static-files>
