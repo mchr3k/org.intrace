@@ -20,6 +20,9 @@ public class ClientStrings
   public static final String ENABLE_FILE_OUTPUT = "File";
   public static final String ENABLE_NETWORK_OUTPUT = "Collect Trace";
   public static final String ENABLE_FILTER = "Filter";
+  
+  public static final String ENABLE_METHOD_FILTER = "Ingore Repeated Methods";
+  public static final String RESET_METHOD_FILTER = "Reset Repeated Methods";
 
   public static final String DISCARD_FILTERED = "Discard Filtered Trace";
   public static final String DISCARD_EXCESS = "Discard Excess Trace";

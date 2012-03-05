@@ -1127,11 +1127,14 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         textFilter = new Button(composite, SWT.PUSH);
         textFilter.setText(ClientStrings.FILTER_TEXT);
         textFilter.setLayoutData("grow");
-
+       
+        Button resetMethodFilterBtn = new Button(composite, SWT.PUSH);
+        resetMethodFilterBtn.setText(ClientStrings.RESET_METHOD_FILTER);
+        
         pBar = new ProgressBar(composite, SWT.NORMAL);
         pBar.setLayoutData("grow");
         pBar.setVisible(false);
-
+                         
         cancelButton = new Button(composite, SWT.PUSH);
         cancelButton.setText(ClientStrings.CANCEL_TEXT);
         cancelButton.setLayoutData("grow");
@@ -1149,8 +1152,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
         enableFilter = new Button(composite, SWT.CHECK);
         enableFilter.setText(ClientStrings.ENABLE_FILTER);
-        enableFilter.setLayoutData("grow,wrap,skip 2");
+        enableFilter.setLayoutData("skip 2");
         enableFilter.setSelection(true);
+        
+        Button enableMethodFilter = new Button(composite, SWT.CHECK);
+        enableMethodFilter.setText(ClientStrings.ENABLE_METHOD_FILTER);
+        enableMethodFilter.setLayoutData("wrap");
+        enableMethodFilter.setSelection(false);
 
         textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
             | SWT.H_SCROLL | SWT.BORDER);
@@ -1379,6 +1387,27 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
                 autoScroll = !autoScroll;
               }
             });
+        
+        
+        enableMethodFilter
+        .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+        {
+          @Override
+          public void widgetSelected(SelectionEvent arg0)
+          {
+            filterThread.methodFilterRecordingEnabled = !filterThread.methodFilterRecordingEnabled;
+          }
+        });
+        
+        resetMethodFilterBtn
+        .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+        {
+          @Override
+          public void widgetSelected(SelectionEvent arg0)
+          {
+            filterThread.resetMethodFilter();
+          }
+        });
 
         networkOutput
             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
@@ -1956,6 +1985,10 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private boolean autoScroll = true;
   private boolean fixedConnection = false;
 
+  public void resetMethodFilteData() {
+	  
+  }
+  
   @Override
   public void setSocket(Socket socket)
   {
