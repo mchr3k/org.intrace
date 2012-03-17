@@ -78,28 +78,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   public void open()
   {
-//    new Thread()
-//    {
-//      public void run()
-//      {
-//        try
-//        {
-//          Thread.sleep(500);
-//        }
-//        catch (InterruptedException e)
-//        {
-//          // Ignore
-//        }
-//        sWindow.getDisplay().syncExec(new Runnable()
-//        {
-//          @Override
-//          public void run()
-//          {
-//            startProgramBar.show();
-//          }
-//        });
-//      };
-//    }.start();
     placeDialogInCenter(sWindow.getDisplay().getPrimaryMonitor().getBounds(),
         sWindow);
     sWindow.open();
@@ -127,6 +105,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   final private StartProgramBar startProgramBar;
   final private OutputTabs outputTabs;
 
+  private final ConfigDataInterface configInterface;
+
   public void setConnCallback(IConnectionStateCallback connCallback)
   {
     this.connCallback = connCallback;
@@ -153,12 +133,56 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
     public final Color colorTwo;
   }
 
-  public InTraceUI(Shell xiWindow, Composite xiRoot, UIMode xiMode, UIModeData xiModeData)
+  public static class ConfigDataInterface
+  {
+    public final String classIncludePattern;
+    public final String classExcludePattern;
+
+    public final List<String> outputIncludePattern;
+    public final List<String> outputExcludePattern;
+    public final Callback callback;
+
+    public ConfigDataInterface(String classIncludePattern,
+                               String classExcludePattern,
+                               List<String> outputIncludePattern,
+                               List<String> outputExcludePattern,
+                               Callback callback)
+    {
+      this.classIncludePattern = classIncludePattern;
+      this.classExcludePattern = classExcludePattern;
+      this.outputIncludePattern = outputIncludePattern;
+      this.outputExcludePattern = outputExcludePattern;
+      this.callback = callback;
+    }
+
+    public static interface Callback
+    {
+      public void setClassConfig(String classIncludePattern,
+                                 String classExcludePattern);
+      public void setOutputConfig(List<String> outputIncludePattern,
+                                  List<String> outputExcludePattern);
+    }
+  }
+
+  public InTraceUI(Shell xiWindow,
+                   Composite xiRoot,
+                   UIMode xiMode,
+                   UIModeData xiModeData,
+                   ConfigDataInterface xiConfigInterface)
   {
     sWindow = xiWindow;
     sRoot = xiRoot;
     mode = xiMode;
     modeData = xiModeData;
+    configInterface = xiConfigInterface;
+
+    if ((configInterface != null) &&
+        (configInterface.classIncludePattern != null) &&
+        (configInterface.classExcludePattern != null))
+    {
+      settingsData.classRegex = configInterface.classIncludePattern;
+      settingsData.classExcludeRegex = configInterface.classExcludePattern;
+    }
 
     rootLayout = new MigLayout("fill,hidemode 2", "[]", "0[]0[]0[]0[]0[grow]");
     xiRoot.setLayout(rootLayout);
@@ -188,6 +212,21 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
     outputTabs = new OutputTabs(xiRoot);
     outputTabs.composite.setLayoutData("grow,wmin 0,hmin 0");
+
+    if ((configInterface != null) &&
+        (configInterface.outputIncludePattern != null) &&
+        (configInterface.outputExcludePattern != null))
+    {
+      lastEnteredIncludeFilterPattern = configInterface.outputIncludePattern;
+      lastEnteredExcludeFilterPattern = configInterface.outputExcludePattern;
+      if (outputTabs.textOutputTab.enableFilter.getSelection())
+      {
+        outputTabs.textOutputTab.
+            applyPatterns(configInterface.outputIncludePattern,
+                          configInterface.outputExcludePattern, false,
+                          settingsTabs.localOutputSettingsTab.discardFiltered.getSelection());
+      }
+    }
 
     updateUIStateSameThread();
 
@@ -1418,6 +1457,12 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               }
               lastEnteredIncludeFilterPattern = includePattern;
               lastEnteredExcludeFilterPattern = excludePattern;
+
+              if (configInterface != null)
+              {
+                configInterface.callback.setOutputConfig(includePattern, excludePattern);
+              }
+
               if (enableFilter.getSelection())
               {
                 applyPatterns(includePattern, excludePattern, false,
@@ -1897,8 +1942,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private ControlConnectionThread controlThread;
 
   // Settings
-  private ParsedSettingsData settingsData = new ParsedSettingsData(
-      new HashMap<String, String>());
+  private ParsedSettingsData settingsData = new ParsedSettingsData(new HashMap<String, String>());
 
   private List<String> lastEnteredIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
   private List<String> activeIncludeFilterPattern = TraceFilterThread.MATCH_ALL;
@@ -1921,6 +1965,16 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       remoteAddress = socket.getInetAddress();
       controlThread = new ControlConnectionThread(socket, this);
       controlThread.start();
+
+      if ((configInterface != null) &&
+          (configInterface.classIncludePattern != null) &&
+          (configInterface.classExcludePattern != null))
+      {
+        controlThread.sendMessage(
+            AgentConfigConstants.CLASS_REGEX + configInterface.classIncludePattern
+            + AgentConfigConstants.EXCLUDE_CLASS_REGEX + configInterface.classExcludePattern);
+      }
+
       controlThread.sendMessage("getsettings");
       setConnectionState(ConnectState.CONNECTED);
 
@@ -2251,6 +2305,15 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           outputTabs.textOutputTab.filterThread
               .addSystemTraceLine("Latest Settings Received");
           settingsData = new ParsedSettingsData(settingsMap);
+
+          if ((configInterface != null) &&
+              (settingsData.classRegex != null) &&
+              (settingsData.classExcludeRegex != null))
+          {
+            configInterface.callback.setClassConfig(settingsData.classRegex,
+                                                    settingsData.classExcludeRegex);
+          }
+
           setConnectionState(ConnectState.CONNECTED);
           updateUIStateSameThread();
         }

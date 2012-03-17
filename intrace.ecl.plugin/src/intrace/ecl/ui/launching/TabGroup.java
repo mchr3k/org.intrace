@@ -1,7 +1,5 @@
 package intrace.ecl.ui.launching;
 
-import java.util.Arrays;
-
 import intrace.ecl.Util;
 
 import org.eclipse.core.runtime.CoreException;

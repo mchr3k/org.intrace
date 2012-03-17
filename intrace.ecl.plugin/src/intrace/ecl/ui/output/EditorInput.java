@@ -10,7 +10,7 @@ public class EditorInput implements IEditorInput
 {
   public final InTraceLaunch callback;
   public final InputType type;
-  
+
   public enum InputType
   {
     NEWCONNECTION,
