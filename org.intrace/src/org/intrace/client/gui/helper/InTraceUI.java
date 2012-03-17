@@ -74,7 +74,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
   private static final Pattern TRACE_LINE = Pattern.compile("^\\[[^\\]]+]:(\\[[^\\]]+\\]:([^:]+:[^:]+)):.*");
 
   public static final Pattern ALLOW_ALL = Pattern.compile(".*");
-  public static final Pattern ALLOW_CLASSES = Pattern.compile("^[0-9a-zA-Z\\.\\$]*|\\*$");
+  public static final Pattern ALLOW_CLASSES = Pattern.compile("^[0-9a-zA-Z\\.\\$_]*|\\*$");
 
   public void open()
   {
