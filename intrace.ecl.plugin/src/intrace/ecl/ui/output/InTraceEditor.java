@@ -52,9 +52,12 @@ public class InTraceEditor extends EditorPart
     ITheme theme = workBench.getThemeManager().getCurrentTheme();
     ColorRegistry colreg = theme.getColorRegistry();
 
-    Color c1 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_START);
-    Color c2 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_END);
-    UIModeData data = new UIModeData(c1, c2);
+    Color activec1 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_START);
+    Color activec2 = colreg.get(IWorkbenchThemeConstants.ACTIVE_TAB_BG_END);
+    Color inactivec1 = colreg.get(IWorkbenchThemeConstants.INACTIVE_TAB_BG_START);
+    Color inactivec2 = colreg.get(IWorkbenchThemeConstants.INACTIVE_TAB_BG_END);
+    UIModeData data = new UIModeData(activec1, activec2,
+                                     inactivec1, inactivec2);
     return data;
   }
 

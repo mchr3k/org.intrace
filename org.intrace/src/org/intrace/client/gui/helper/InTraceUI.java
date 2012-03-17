@@ -124,13 +124,20 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
   public static class UIModeData
   {
-    public UIModeData(Color colorOne, Color colorTwo)
+    public UIModeData(Color activeColorOne,
+                      Color activeColorTwo,
+                      Color inactiveColorOne,
+                      Color inactiveColorTwo)
     {
-      this.colorOne = colorOne;
-      this.colorTwo = colorTwo;
+      this.activeColorOne = activeColorOne;
+      this.activeColorTwo = activeColorTwo;
+      this.inactiveColorOne = inactiveColorOne;
+      this.inactiveColorTwo = inactiveColorTwo;
     }
-    public final Color colorOne;
-    public final Color colorTwo;
+    public final Color activeColorOne;
+    public final Color activeColorTwo;
+    public final Color inactiveColorOne;
+    public final Color inactiveColorTwo;
   }
 
   public static class ConfigDataInterface
@@ -716,8 +723,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         if (modeData != null)
         {
           mSettingsCTabs.setSelectionBackground(
-              new Color[]{modeData.colorOne,
-                          modeData.colorTwo},
+              new Color[]{modeData.inactiveColorOne,
+                          modeData.inactiveColorTwo},
                           new int[]{100}, true);
         }
 
@@ -1065,8 +1072,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         if (modeData != null)
         {
           mOutputCTabs.setSelectionBackground(
-                       new Color[]{modeData.colorOne,
-                                   modeData.colorTwo},
+                       new Color[]{modeData.activeColorOne,
+                                   modeData.activeColorTwo},
                                    new int[]{100}, true);
         }
 

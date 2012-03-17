@@ -115,8 +115,8 @@ public class IncludeExcludeWindow
       if (this.modedata != null)
       {
         ctabs.setSelectionBackground(
-            new Color[]{this.modedata.colorOne,
-                        this.modedata.colorTwo},
+            new Color[]{this.modedata.activeColorOne,
+                        this.modedata.activeColorTwo},
                         new int[]{100}, true);
       }
     }
