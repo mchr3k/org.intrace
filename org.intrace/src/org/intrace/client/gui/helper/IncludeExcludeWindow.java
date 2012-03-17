@@ -326,7 +326,8 @@ public class IncludeExcludeWindow
               String existingStr = newPattern.patternInput.getText();
               String newStr = existingStr + str;
 
-              if (newStr.contains("|"))
+              if (newStr.contains("|") &&
+                  !allowedStrings.matcher("|").matches())
               {
                 String[] parts = newStr.split("\\|");
                 boolean allowed = true;
@@ -391,7 +392,8 @@ public class IncludeExcludeWindow
         {
           boolean includeItem = newPattern.includeButton.getSelection();
 
-          if (newItem.contains("|"))
+          if (newItem.contains("|") &&
+              !allowedStrings.matcher("|").matches())
           {
             String[] parts = newItem.split("\\|");
 
