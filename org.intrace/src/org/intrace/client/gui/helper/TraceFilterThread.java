@@ -1,8 +1,10 @@
 package org.intrace.client.gui.helper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -295,6 +297,24 @@ public class TraceFilterThread implements Runnable
               boolean matchFilter = newTraceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
                                     (!matches(activeExcludePattern, newTraceLine) &&
                                      matches(activeIncludePattern, newTraceLine));
+
+             
+              
+              String[] splitParts = newTraceLine.split(":");
+
+              if ((repeatedMethods.size()>0) || methodFilterRecordingEnabled) {
+            	  if (splitParts.length >= 6) {
+            		  String methodName = splitParts[4] + ":" + splitParts[5];
+            		  if (repeatedMethods.contains(methodName)) {
+            			  matchFilter = false;
+            		  }
+            		  else {
+            			  if (methodFilterRecordingEnabled) repeatedMethods.add(methodName);
+            		  }
+            	  }
+              }
+              
+              
   
               if (!discardFilteredTrace || matchFilter)
               {
@@ -514,6 +534,7 @@ public class TraceFilterThread implements Runnable
     {
       String traceLine = traceLines.get(ii);
       newTraceLines.add(traceLine);
+      
       if (traceLine.startsWith(SYSTEM_TRACE_PREFIX) ||
           (!matches(excludePattern, traceLine) &&
             matches(includePattern, traceLine)))
@@ -579,5 +600,12 @@ public class TraceFilterThread implements Runnable
     {
       // Do nothing
     }
+  }
+  
+  public boolean methodFilterRecordingEnabled = false;
+  private Set<String> repeatedMethods = new HashSet<String>();
+  
+  public void resetMethodFilter() {
+	  repeatedMethods = new HashSet<String>();
   }
 }

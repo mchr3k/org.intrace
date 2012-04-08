@@ -35,9 +35,9 @@ public class IncludeExcludeWindow
 {
   public final Shell sWindow;
 
-  private final TabFolder tabs;  
+  private final TabFolder tabs;
   private final CTabFolder ctabs;
-  
+
   private final PatternInputCallback callback;
 
   private PatternInput patterns;
@@ -51,7 +51,7 @@ public class IncludeExcludeWindow
   public IncludeExcludeWindow(String windowTitle, String helpText,
       UIMode mode,
       UIModeData modedata,
-      PatternInputCallback callback, 
+      PatternInputCallback callback,
       java.util.List<String> initIncludePatterns,
       java.util.List<String> initExcludePatterns,
       Pattern allowedStrings)
@@ -68,7 +68,7 @@ public class IncludeExcludeWindow
 
     sWindow = new Shell(SWT.APPLICATION_MODAL | SWT.CLOSE | SWT.TITLE
                         | SWT.RESIZE);
-    
+
     try
     {
       Display display = sWindow.getDisplay();
@@ -79,12 +79,13 @@ public class IncludeExcludeWindow
     {
       // Ignore
     }
-    
+
     sWindow.setText(windowTitle);
     sWindow.setLayout(windowLayout);
     sWindow.setSize(new Point(400, 400));
     sWindow.setMinimumSize(new Point(400, 400));
     sWindow.addListener(SWT.Traverse, new Listener() {
+      @Override
       public void handleEvent(Event event) {
         switch (event.detail) {
         case SWT.TRAVERSE_ESCAPE:
@@ -98,56 +99,56 @@ public class IncludeExcludeWindow
 
     if (mode == UIMode.STANDALONE)
     {
-      ctabs = null;           
+      ctabs = null;
       tabs = new TabFolder(sWindow, SWT.NONE);
-      tabs.setLayoutData("grow,wrap,wmin 0,spanx 4");      
+      tabs.setLayoutData("grow,wrap,wmin 0,hmin 0,spanx 4");
       fillTabs(tabs, initIncludePatterns, initExcludePatterns, helpText);
     }
     else
     {
-      tabs = null;      
+      tabs = null;
       ctabs = new CTabFolder(sWindow, SWT.TOP | SWT.BORDER);
       ctabs.setSimple(false);
-      ctabs.setLayoutData("grow,wrap,wmin 0,spanx 4");
+      ctabs.setLayoutData("grow,wrap,wmin 0,hmin 0,spanx 4");
       fillCTabs(ctabs, initIncludePatterns, initExcludePatterns, helpText);
       ctabs.setSelection(0);
       if (this.modedata != null)
       {
         ctabs.setSelectionBackground(
-            new Color[]{this.modedata.colorOne, 
-                        this.modedata.colorTwo}, 
+            new Color[]{this.modedata.activeColorOne,
+                        this.modedata.activeColorTwo},
                         new int[]{100}, true);
       }
     }
 
     saveCancelButtons = new SaveCancelButtons(sWindow);
-    
+
     // Focus on text input
     patterns.newPattern.patternInput.setFocus();
-  }  
+  }
 
-  private void fillTabs(TabFolder tabFolder, 
-      java.util.List<String> initIncludePatterns, 
+  private void fillTabs(TabFolder tabFolder,
+      java.util.List<String> initIncludePatterns,
       java.util.List<String> initExcludePatterns, String helpText)
   {
     TabItem patternsTabItem = new TabItem(tabFolder, SWT.NONE);
     patternsTabItem.setText("Include/Exclude");
-    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);        
+    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);
     patternsTabItem.setControl(patterns.patternInputComp);
 
     TabItem helpTabItem = new TabItem(tabFolder, SWT.NONE);
     helpTabItem.setText("Help");
     HelpOutputTab helpOutputTab = new HelpOutputTab(tabFolder, helpText);
     helpTabItem.setControl(helpOutputTab.composite);
-  }  
+  }
 
-  private void fillCTabs(CTabFolder tabFolder, 
-      java.util.List<String> initIncludePatterns, 
+  private void fillCTabs(CTabFolder tabFolder,
+      java.util.List<String> initIncludePatterns,
       java.util.List<String> initExcludePatterns, String helpText)
   {
     CTabItem patternsTabItem = new CTabItem(tabFolder, SWT.NONE);
     patternsTabItem.setText("Include/Exclude");
-    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);        
+    patterns = new PatternInput(tabFolder, initIncludePatterns, initExcludePatterns);
     patternsTabItem.setControl(patterns.patternInputComp);
 
     CTabItem helpTabItem = new CTabItem(tabFolder, SWT.NONE);
@@ -155,7 +156,7 @@ public class IncludeExcludeWindow
     HelpOutputTab helpOutputTab = new HelpOutputTab(tabFolder, helpText);
     helpTabItem.setControl(helpOutputTab.composite);
   }
-  
+
   private class HelpOutputTab
   {
     final StyledText textOutput;
@@ -168,14 +169,14 @@ public class IncludeExcludeWindow
 
       composite = new Composite(parent, SWT.NONE);
       composite.setLayout(windowLayout);
-      
+
       textOutput = new StyledText(composite, SWT.MULTI | SWT.V_SCROLL
           | SWT.BORDER | SWT.WRAP);
       textOutput.setEditable(false);
       textOutput.setLayoutData("spanx,grow,wmin 0,hmin 0");
       textOutput.setBackground(Display.getCurrent().getSystemColor(
           SWT.COLOR_WHITE));
-      
+
       textOutput.setText(helpStr);
     }
   }
@@ -186,52 +187,52 @@ public class IncludeExcludeWindow
     private final PatternList patternList;
     private final Composite patternInputComp;
 
-    private IncludeExcludeHeaders model;    
-    
-    public PatternInput(Composite parent, 
-        java.util.List<String> initIncludePatterns, 
+    private IncludeExcludeHeaders model;
+
+    public PatternInput(Composite parent,
+        java.util.List<String> initIncludePatterns,
         java.util.List<String> initExcludePatterns)
     {
       patternInputComp = new Composite(parent, SWT.NONE);
       MigLayout inputLayout = new MigLayout("fill", "[grow]", "[25][grow]");
       patternInputComp.setLayout(inputLayout);
-      patternInputComp.setLayoutData("grow,wrap,spanx");
+      patternInputComp.setLayoutData("grow,wrap,spanx,hmin 0");
 
       newPattern = new NewPattern(patternInputComp);
       patternList = new PatternList(patternInputComp);
-      
+
       model = new IncludeExcludeHeaders(new IncludeExcludeHeaders.IncludeExcludeList()
-      {        
+      {
         @Override
         public void remove(int xiIndex)
         {
           patternList.patternSet.remove(xiIndex);
         }
-        
+
         @Override
         public String[] getItems()
         {
           return patternList.patternSet.getItems();
         }
-        
+
         @Override
         public void add(String xiItem, int xiIndex)
         {
           patternList.patternSet.add(xiItem, xiIndex);
         }
-        
+
         @Override
         public void add(String xiItem)
         {
           patternList.patternSet.add(xiItem);
         }
       });
-      
+
       parsePatternSet(true, initIncludePatterns);
       parsePatternSet(false, initExcludePatterns);
     }
-    
-    private void parsePatternSet(boolean xiInclude, 
+
+    private void parsePatternSet(boolean xiInclude,
                   java.util.List<String> initPattern)
     {
       for (String pattern : initPattern)
@@ -242,7 +243,7 @@ public class IncludeExcludeWindow
 
     private void parsePattern(boolean xiInclude, String pattern)
     {
-      if ((pattern != null) && 
+      if ((pattern != null) &&
           (pattern.length() > 0) &&
           (!pattern.equals(TraceFilterThread.MATCH_ALL)))
       {
@@ -267,11 +268,11 @@ public class IncludeExcludeWindow
         includeButton = new Button(newPatternGroup, SWT.RADIO);
         includeButton.setText("Include");
         includeButton.setSelection(true);
-        
+
         excludeButton = new Button(newPatternGroup, SWT.RADIO);
         excludeButton.setText("Exclude");
         excludeButton.setLayoutData("wrap");
-        
+
         patternInput = new Text(newPatternGroup, SWT.BORDER);
         patternInput.setLayoutData("grow,spanx 2");
 
@@ -313,9 +314,9 @@ public class IncludeExcludeWindow
                         saveCancelButtons.saveButton.setFocus();
                       }
                     });
-        
+
         patternInput.addVerifyListener(new VerifyListener()
-        {          
+        {
           @Override
           public void verifyText(VerifyEvent event)
           {
@@ -324,12 +325,28 @@ public class IncludeExcludeWindow
             {
               String existingStr = newPattern.patternInput.getText();
               String newStr = existingStr + str;
-              event.doit = allowedStrings.matcher(newStr).matches();
+
+              if (newStr.contains("|") &&
+                  !allowedStrings.matcher("|").matches())
+              {
+                String[] parts = newStr.split("\\|");
+                boolean allowed = true;
+                for (String part : parts)
+                {
+                  allowed = allowed && allowedStrings.matcher(part).matches();
+                }
+                event.doit = allowed;
+              }
+              else
+              {
+                event.doit = allowedStrings.matcher(newStr).matches();
+              }
             }
           }
         });
-        
+
         sWindow.addListener(SWT.Traverse, new Listener() {
+          @Override
           public void handleEvent(Event event) {
             switch (event.detail) {
             case SWT.TRAVERSE_ESCAPE:
@@ -350,13 +367,13 @@ public class IncludeExcludeWindow
       private PatternList(Composite parent)
       {
         Group patternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
-        patternGroup.setLayoutData("grow");
+        patternGroup.setLayoutData("grow,hmin 0");
         MigLayout patternLayout = new MigLayout("fill");
         patternGroup.setLayout(patternLayout);
         patternGroup.setText("Patterns (Double click to Edit)");
 
-        patternSet = new List(patternGroup, SWT.BORDER);
-        patternSet.setLayoutData("grow");
+        patternSet = new List(patternGroup, SWT.BORDER | SWT.V_SCROLL);
+        patternSet.setLayoutData("grow,hmin 0");
 
         patternSet.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
         {
@@ -374,10 +391,28 @@ public class IncludeExcludeWindow
         if (newItem.length() > 0)
         {
           boolean includeItem = newPattern.includeButton.getSelection();
-          model.addItem(includeItem, newItem);
-          newPattern.patternInput.setText("");
+
+          if (newItem.contains("|") &&
+              !allowedStrings.matcher("|").matches())
+          {
+            String[] parts = newItem.split("\\|");
+
+            for (String part : parts)
+            {
+              if (part.length() > 0)
+              {
+                model.addItem(includeItem, part);
+              }
+            }
+            newPattern.patternInput.setText("");
+          }
+          else
+          {
+            model.addItem(includeItem, newItem);
+            newPattern.patternInput.setText("");
+          }
         }
-      }      
+      }
 
       private void removeItem()
       {
@@ -401,7 +436,7 @@ public class IncludeExcludeWindow
         if (selectedItems.length == 1)
         {
           int selectedItem = selectedItems[0];
-          String item = patternSet.getItem(selectedItem).trim();                     
+          String item = patternSet.getItem(selectedItem).trim();
           if (model.removeIndex(selectedItem))
           {
             newPattern.patternInput.setText(item);
@@ -412,7 +447,7 @@ public class IncludeExcludeWindow
                                                                           .length());
           }
         }
-      }      
+      }
     }
 
     private java.util.List<String> getIncludePattern()
@@ -420,7 +455,7 @@ public class IncludeExcludeWindow
       java.util.List<String> includes = new ArrayList<String>();
 
       includes.addAll(model.getIncludePattern());
-      
+
       if (newPattern.includeButton.getSelection())
       {
         String newPatternStr = newPattern.patternInput.getText();
@@ -438,7 +473,7 @@ public class IncludeExcludeWindow
       java.util.List<String> excludes = new ArrayList<String>();
 
       excludes.addAll(model.getExcludePattern());
-      
+
       if (newPattern.excludeButton.getSelection())
       {
         String newPatternStr = newPattern.patternInput.getText();
@@ -474,9 +509,9 @@ public class IncludeExcludeWindow
                   @Override
                   public void widgetSelected(SelectionEvent arg0)
                   {
-                    callback.setIncludePattern(patterns.getIncludePattern());                    
+                    callback.setIncludePattern(patterns.getIncludePattern());
                     callback.setExcludePattern(patterns.getExcludePattern());
-                    
+
                     sWindow.close();
                   }
                 });
@@ -498,7 +533,7 @@ public class IncludeExcludeWindow
 
     public void setExcludePattern(java.util.List<String> newExcludePattern);
   }
-  
+
   /**
    * Class which managed the presence of include/exclude headers
    * within a list of items.
@@ -512,34 +547,34 @@ public class IncludeExcludeWindow
       public void remove(int xiIndex);
       public String[] getItems();
     }
-    
-    private static final String INCLUDE_TITLE = "Include:";      
-    private static final String EXCLUDE_TITLE = "Exclude:";     
-    
+
+    private static final String INCLUDE_TITLE = "Include:";
+    private static final String EXCLUDE_TITLE = "Exclude:";
+
     private int includeIndex = -1;
     private int excludeIndex = -1;
-    
+
     private final IncludeExcludeList list;
-    
+
     public IncludeExcludeHeaders(IncludeExcludeList view)
     {
       this.list = view;
     }
-    
+
     public void addItem(boolean xiInclude, String newItem)
     {
       boolean addItem = true;
-      
+
       // Add headers
       if (xiInclude && (includeIndex == -1))
-      {          
-        list.add(INCLUDE_TITLE, 0);          
+      {
+        list.add(INCLUDE_TITLE, 0);
         includeIndex = 0;
         if (excludeIndex > -1)
         {
           // Include header was already added
           excludeIndex++;
-          
+
           // Add spacer
           list.add("", 1);
           excludeIndex++;
@@ -550,11 +585,11 @@ public class IncludeExcludeWindow
         if (includeIndex > -1)
         {
           list.add("");
-        }          
+        }
         list.add(EXCLUDE_TITLE);
         excludeIndex = list.getItems().length - 1;
       }
-      
+
       String[] currentItems = list.getItems();
       int startItem, endItem;
       if (xiInclude)
@@ -574,7 +609,7 @@ public class IncludeExcludeWindow
         startItem = excludeIndex + 1;
         endItem = currentItems.length;
       }
-      
+
       for (int ii = startItem; ii < endItem; ii++)
       {
         String item = currentItems[ii].trim();
@@ -584,18 +619,18 @@ public class IncludeExcludeWindow
           break;
         }
       }
-      
+
       if (addItem)
       {
         list.add("   " + newItem, endItem);
-        
+
         if ((excludeIndex != -1) && (endItem < excludeIndex))
         {
           excludeIndex++;
         }
       }
     }
-    
+
     public boolean removeIndex(int index)
     {
       if ((index == includeIndex) ||
@@ -605,45 +640,45 @@ public class IncludeExcludeWindow
         // Ignore
         return false;
       }
-      
+
       // Remove item
       list.remove(index);
-      
+
       // Check if we removed an included item when we already
       // had an excluded item
-      int count = list.getItems().length;        
+      int count = list.getItems().length;
       if ((excludeIndex != -1) && (index < excludeIndex))
       {
         // Removed an item above the exclude header
         excludeIndex--;
       }
-      
-      if ((includeIndex != -1) && 
+
+      if ((includeIndex != -1) &&
           ((excludeIndex == 2) || (count == 1)))
       {
-        // We need to remove the include header 
+        // We need to remove the include header
         // as we have no include items left
         list.remove(includeIndex);
         includeIndex = -1;
-        
+
         if (excludeIndex > -1)
         {
           // We need to remove the spacer above
           // the exclude header
-          
+
           // Include element was removed
           excludeIndex--;
-          
+
           // Remove spacer element
           list.remove(0);
           excludeIndex--;
         }
       }
-      
-      if ((excludeIndex != -1) && 
+
+      if ((excludeIndex != -1) &&
           (excludeIndex == (count - 1)))
       {
-        // We need to remove the exclude header 
+        // We need to remove the exclude header
         // as we have no exclude items left
         if (includeIndex != -1)
         {
@@ -652,13 +687,13 @@ public class IncludeExcludeWindow
           list.remove(excludeIndex - 1);
           excludeIndex--;
         }
-        
+
         list.remove(excludeIndex);
         excludeIndex = -1;
       }
       return true;
     }
-    
+
     public java.util.List<String> getIncludePattern()
     {
       java.util.List<String> includes = new ArrayList<String>();
@@ -676,7 +711,7 @@ public class IncludeExcludeWindow
           String item = items[ii].trim();
           includes.add(item);
         }
-      }      
+      }
 
       return includes;
     }
@@ -694,7 +729,7 @@ public class IncludeExcludeWindow
           String item = items[ii].trim();
           excludes.add(item);
         }
-      }      
+      }
 
       return excludes;
     }

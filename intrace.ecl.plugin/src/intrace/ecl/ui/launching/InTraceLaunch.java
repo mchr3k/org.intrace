@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
@@ -20,27 +21,27 @@ import org.intrace.shared.AgentConfigConstants;
  * This class wraps the state associated with a single InTrace enabled launch.
  */
 public class InTraceLaunch implements Runnable
-{  
+{
   /**
    * Server socket used for callback connection from InTrace agent
    */
   private final ServerSocket callbackserver;
-  
+
   /**
    * Active connection established as part of InTrace callback
    */
   private Socket clientConnection = null;
-  
+
   /**
    * Server port which the InTrace agent is listening on
    */
   public String agentServerPort = null;
-  
+
   /**
    * Currently active InTrace editor
    */
   private InTraceEditor editor = null;
-  
+
   /**
    * Action which opens the InTrace editor
    */
@@ -49,19 +50,28 @@ public class InTraceLaunch implements Runnable
   /**
    * Main class being launched
    */
-  private final String mainClass;
+  public final String mainClass;
+
+  /**
+   * Associated launch configuration
+   */
+  public final ILaunchConfiguration configuration;
 
   /**
    * Construct an instance to listen on a provided ServerSocket
-   * @param xiMainClass 
+   * @param xiMainClass
    * @param xiServer
+   * @param xiConfiguration
    */
-  public InTraceLaunch(String xiMainClass, ServerSocket xiServer)
+  public InTraceLaunch(String xiMainClass,
+                       ServerSocket xiServer,
+                       ILaunchConfiguration xiConfiguration)
   {
     this.mainClass = xiMainClass;
-    this.callbackserver = xiServer;    
+    this.callbackserver = xiServer;
+    this.configuration = xiConfiguration;
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public void run()
@@ -70,13 +80,13 @@ public class InTraceLaunch implements Runnable
     {
       // Listen for incoming callback connection
       clientConnection = callbackserver.accept();
-      
-      // Connected! Time to discover the server port.      
+
+      // Connected! Time to discover the server port.
       ObjectOutputStream out = new ObjectOutputStream(clientConnection.getOutputStream());
       out.writeObject("getsettings");
       out.flush();
-            
-      // Read the returned settings, discard any instrumentation status messages     
+
+      // Read the returned settings, discard any instrumentation status messages
       ObjectInputStream in;
       while (agentServerPort == null)
       {
@@ -88,29 +98,17 @@ public class InTraceLaunch implements Runnable
           agentServerPort = settingsMap.get(AgentConfigConstants.SERVER_PORT);
         }
       }
-      
-      // Setup the main class for instrumenation
-      if (mainClass != null)
-      {
-        out = new ObjectOutputStream(clientConnection.getOutputStream());
-        out.writeObject(AgentConfigConstants.CLASS_REGEX + mainClass);
-        out.flush();
-        
-        // Read the response and ignore it
-        in = new ObjectInputStream(clientConnection.getInputStream());
-        in.readObject();
-      }
-      
+
       // Notify the UI that we have got a connection
       notifyClientConnection();
     }
     catch (Throwable th)
     {
-      Util.handleStatus(Util.createErrorStatus("Error during InTrace launch", th), 
+      Util.handleStatus(Util.createErrorStatus("Error during InTrace launch", th),
                         StatusManager.SHOW | StatusManager.LOG);
     }
   }
-  
+
   /**
    * Mark that a connection is ready
    */
@@ -142,7 +140,7 @@ public class InTraceLaunch implements Runnable
     }
     return clientConnection;
   }
-  
+
   public synchronized InTraceEditor getEditor()
   {
     return editor;
@@ -157,11 +155,11 @@ public class InTraceLaunch implements Runnable
   {
     this.openeditoraction = openeditoraction;
   }
-  
+
   public synchronized void destroy()
   {
     final IAction action = openeditoraction;
-    
+
     if (action != null)
     {
       // Disable action

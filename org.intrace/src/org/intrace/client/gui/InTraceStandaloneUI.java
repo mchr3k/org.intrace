@@ -17,31 +17,31 @@ public class InTraceStandaloneUI
    * @param args
    */
   public static void main(String[] args) throws IOException
-  {    
+  {
     // Prepare window
     Display.setAppName("InTrace");
     final Shell window = new Shell();
     window.setSize(new Point(800, 800));
-    window.setMinimumSize(new Point(800, 480));   
-     
+    window.setMinimumSize(new Point(800, 480));
+
     // Load icons
     Display display = window.getDisplay();
     Image[] icons = InTraceUI.getIcons(display);
     window.setImages(icons);
-    
+
     // Fill in UI
-    InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE, null);
-    
+    InTraceUI ui = new InTraceUI(window, window, UIMode.STANDALONE, null, null);
+
     // Register title callback
     ui.setConnCallback(new IConnectionStateCallback()
-    {      
+    {
       @Override
       public void setConnectionState(final ConnectState state)
       {
         if (!window.isDisposed())
         {
           window.getDisplay().syncExec(new Runnable()
-          {            
+          {
             @Override
             public void run()
             {
@@ -51,7 +51,7 @@ public class InTraceStandaloneUI
         }
       }
     });
-    
+
     // Open UI
     ui.open();
   }

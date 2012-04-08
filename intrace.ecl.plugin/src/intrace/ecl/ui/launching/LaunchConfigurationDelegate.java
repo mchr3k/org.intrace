@@ -45,12 +45,12 @@ public class LaunchConfigurationDelegate extends
    * Config key used to save the launch ID into an ILaunch object
    */
   public static final String INTRACE_LAUNCHKEY = "INTRACE_LAUNCHKEY";
-  
+
   /**
    * Map of active launches
    */
   public static final Map<Long, InTraceLaunch> intraceLaunches = new ConcurrentHashMap<Long, InTraceLaunch>();
-  
+
   /**
    * AtommicLong used to generate launch IDs
    */
@@ -68,6 +68,7 @@ public class LaunchConfigurationDelegate extends
 
   // IExecutableExtension interface:
 
+  @Override
   public void setInitializationData(IConfigurationElement config,
       String propertyName, Object data) throws CoreException
   {
@@ -99,24 +100,36 @@ public class LaunchConfigurationDelegate extends
     {
       // Create working copy launch config
       ILaunchConfigurationWorkingCopy wc = configuration.getWorkingCopy();
-      
+
       // Identify the main class
       String mainClass = wc.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "");
-      
+
+      // Make sure main class will be instrumented
+      String classIncludePattern = configuration.getAttribute(InTraceLaunchConfigTab.CLASS_INCL_ATTR, "");
+      if ("".equals(classIncludePattern))
+      {
+        classIncludePattern = mainClass;
+        ILaunchConfigurationWorkingCopy wc2 = configuration.getWorkingCopy();
+        wc2.setAttribute(InTraceLaunchConfigTab.CLASS_INCL_ATTR, classIncludePattern);
+        wc2.doSave();
+      }
+
       // Prepare InTraceLaunch object to handle callback connection
       ServerSocket callbackServer = new ServerSocket(0);
-      final InTraceLaunch intraceLaunch = new InTraceLaunch(mainClass, callbackServer);
+      final InTraceLaunch intraceLaunch = new InTraceLaunch(mainClass,
+                                                            callbackServer,
+                                                            configuration);
       intraceLaunch.start();
-      
+
       // Save off launch object for later access
       Long connId = intraceLaunchId.getAndIncrement();
       intraceLaunches.put(connId, intraceLaunch);
       launch.setAttribute(INTRACE_LAUNCHKEY, Long.toString(connId));
-      
+
       // Setup a launch listener to cleanup the intrace launch object
       ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
-      manager.addLaunchListener(new LaunchListener(launch, connId));      
-      
+      manager.addLaunchListener(new LaunchListener(launch, connId));
+
       // Add VM arguments
       String vmArgs = wc.getAttribute(
           IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "");
@@ -148,7 +161,7 @@ public class LaunchConfigurationDelegate extends
           }
           catch (PartInitException ex)
           {
-            Util.handleStatus(Util.createErrorStatus("Failed to open InTrace Output", ex), 
+            Util.handleStatus(Util.createErrorStatus("Failed to open InTrace Output", ex),
                               StatusManager.SHOW);
           }
         }
@@ -160,11 +173,11 @@ public class LaunchConfigurationDelegate extends
     }
     catch (IOException e1)
     {
-      Util.handleStatus(Util.createErrorStatus("InTrace launch failed", e1), 
+      Util.handleStatus(Util.createErrorStatus("InTrace launch failed", e1),
           StatusManager.SHOW);
     }
   }
-  
+
   /**
    * Launch listener which handles the cleanup of entries in the intraceLaunches map
    */
@@ -179,7 +192,7 @@ public class LaunchConfigurationDelegate extends
 
     private final ILaunch targetlaunch;
     private final Long intraceLaunchId;
-    
+
     @Override
     public void launchesRemoved(ILaunch[] launches)
     {
@@ -206,17 +219,17 @@ public class LaunchConfigurationDelegate extends
         if (launch == targetlaunch)
         {
           InTraceLaunch intraceLaunch = intraceLaunches.remove(intraceLaunchId);
-          
+
           if (intraceLaunch != null)
           {
             intraceLaunch.destroy();
           }
-          
+
           ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
           manager.removeLaunchListener(this);
         }
       }
     }
-    
+
   }
 }
