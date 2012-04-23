@@ -109,7 +109,7 @@ public class IncludeExcludeWindow
       tabs = null;
       ctabs = new CTabFolder(sWindow, SWT.TOP | SWT.BORDER);
       ctabs.setSimple(false);
-      ctabs.setLayoutData("grow,wrap,wmin 0,hmin 0,spanx 4");
+      ctabs.setLayoutData("grow,wrap,wmin 0,hmin 0,wmin 0,spanx 4");
       fillCTabs(ctabs, initIncludePatterns, initExcludePatterns, helpText);
       ctabs.setSelection(0);
       if (this.modedata != null)
@@ -196,7 +196,7 @@ public class IncludeExcludeWindow
       patternInputComp = new Composite(parent, SWT.NONE);
       MigLayout inputLayout = new MigLayout("fill", "[grow]", "[25][grow]");
       patternInputComp.setLayout(inputLayout);
-      patternInputComp.setLayoutData("grow,wrap,spanx,hmin 0");
+      patternInputComp.setLayoutData("grow,wrap,spanx,hmin 0,wmin 0");
 
       newPattern = new NewPattern(patternInputComp);
       patternList = new PatternList(patternInputComp);
@@ -261,7 +261,7 @@ public class IncludeExcludeWindow
       {
         Group newPatternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
         newPatternGroup.setLayoutData("grow,wrap");
-        MigLayout newPatternLayout = new MigLayout("fill", "[grow][grow][60][60]", "[][]");
+        MigLayout newPatternLayout = new MigLayout("fill", "[][grow][60][60]", "[][]");
         newPatternGroup.setLayout(newPatternLayout);
         newPatternGroup.setText("New Pattern");
 
@@ -367,13 +367,13 @@ public class IncludeExcludeWindow
       private PatternList(Composite parent)
       {
         Group patternGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
-        patternGroup.setLayoutData("grow,hmin 0");
+        patternGroup.setLayoutData("grow,hmin 0,wmin 0");
         MigLayout patternLayout = new MigLayout("fill");
         patternGroup.setLayout(patternLayout);
         patternGroup.setText("Patterns (Double click to Edit)");
 
-        patternSet = new List(patternGroup, SWT.BORDER | SWT.V_SCROLL);
-        patternSet.setLayoutData("grow,hmin 0");
+        patternSet = new List(patternGroup, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+        patternSet.setLayoutData("grow,hmin 0,wmin 0");
 
         patternSet.addMouseListener(new org.eclipse.swt.events.MouseAdapter()
         {

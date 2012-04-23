@@ -20,13 +20,13 @@ public class ClientStrings
   public static final String ENABLE_FILE_OUTPUT = "File";
   public static final String ENABLE_NETWORK_OUTPUT = "Collect Trace";
   public static final String ENABLE_FILTER = "Filter";
-  
-  public static final String ENABLE_METHOD_FILTER = "Ingore Repeated Methods";
+
+  public static final String ENABLE_METHOD_FILTER = "Ignore Repeated Methods";
   public static final String RESET_METHOD_FILTER = "Reset Repeated Methods";
 
   public static final String DISCARD_FILTERED = "Discard Filtered Trace";
   public static final String DISCARD_EXCESS = "Discard Excess Trace";
-  
+
   public static final String CONNECT = "Connect";
   public static final String CONNECTING = "Connect...";
   public static final String DISCONNECT = "Disconnect";
@@ -44,13 +44,13 @@ public class ClientStrings
   public static final String FILTER_TEXT = "Filter...";
   public static final String CANCEL_TEXT = "Cancel";
   public static final String SAVE_TEXT = "Save...";
-  
+
   public static final String CLASS_TITLE = "Classes to Instrument";
   public static final String CLASS_HELP_TEXT = "Enter complete or partial class names.\n\n "
   + "e.g.\n"
   + "\"mypack.mysubpack.MyClass\"\n"
   + "\"MyClass\"";
-  
+
   public static final String FILTER_HELP_TEXT = "Enter text to match against trace lines. " +
       "You can match any part of the line. " +
       "\n\nYou can also select some text and right click the " +
