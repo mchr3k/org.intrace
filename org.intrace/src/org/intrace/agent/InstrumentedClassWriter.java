@@ -30,10 +30,10 @@ public class InstrumentedClassWriter extends ClassWriter
 
   /**
    * cTor
-   * 
+   *
    * @param xiClassName
    * @param xiReader
-   * @param xiShouldInstrument 
+   * @param xiShouldInstrument
    * @param analysis
    */
   public InstrumentedClassWriter(String xiClassName, ClassReader xiReader,
@@ -100,7 +100,7 @@ public class InstrumentedClassWriter extends ClassWriter
 
     /**
      * cTor
-     * 
+     *
      * @param xiMethodVisitor
      * @param access
      * @param xiClassName
@@ -133,30 +133,30 @@ public class InstrumentedClassWriter extends ClassWriter
       Label l0 = new Label();
       mv.visitLabel(l0);
       mv.visitVarInsn(Opcodes.ALOAD, 1);
-      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK, 
+      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK,
                         "L" + HELPER_CLASS + "$CriticalBlock;");
       Label l1 = new Label();
       Label l2 = new Label();
       Label l3 = new Label();
-      mv.visitJumpInsn(Opcodes.IF_ACMPEQ, l3);      
+      mv.visitJumpInsn(Opcodes.IF_ACMPEQ, l3);
       mv.visitLabel(l2);
       mv.visitVarInsn(Opcodes.ALOAD, 0);
-      mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/Thread", "uncaughtExceptionHandler", 
+      mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/Thread", "uncaughtExceptionHandler",
                         "Ljava/lang/Thread$UncaughtExceptionHandler;");
-      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK, 
+      mv.visitFieldInsn(Opcodes.GETSTATIC, HELPER_CLASS, CRITICAL_BLOCK,
                         "L" + HELPER_CLASS + "$CriticalBlock;");
-      mv.visitJumpInsn(Opcodes.IF_ACMPNE, l1);      
+      mv.visitJumpInsn(Opcodes.IF_ACMPNE, l1);
       mv.visitLabel(l3);
       mv.visitVarInsn(Opcodes.ALOAD, 0);
       mv.visitVarInsn(Opcodes.ALOAD, 1);
-      mv.visitFieldInsn(Opcodes.PUTFIELD, "java/lang/Thread", "uncaughtExceptionHandler", 
+      mv.visitFieldInsn(Opcodes.PUTFIELD, "java/lang/Thread", "uncaughtExceptionHandler",
                         "Ljava/lang/Thread$UncaughtExceptionHandler;");
       threadLabel = new Label();
       mv.visitJumpInsn(Opcodes.GOTO, threadLabel);
       mv.visitLabel(l1);
-      mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);      
+      mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
     }
-    
+
     /**
      * Initial entry point - generate ENTRY call.
      */
@@ -167,7 +167,7 @@ public class InstrumentedClassWriter extends ClassWriter
       {
         addThreadSetUCEHPreamble();
       }
-      
+
       if (ctorEntryState != CTorEntryState.ISCTOR)
       {
         addEntryCalls();
@@ -180,7 +180,7 @@ public class InstrumentedClassWriter extends ClassWriter
     private void addEntryCalls()
     {
       if (!shouldInstrument) return;
-      
+
       generateCallToAgentHelper(InstrumentationType.ENTER,
                                 ((entryLine != null ? entryLine
                                                    : -1)));
@@ -244,12 +244,12 @@ public class InstrumentedClassWriter extends ClassWriter
 
         if ((argNames != null) && (argNames.size() > ii))
         {
-          mv.visitLdcInsn("Arg (" + argNames.get(ii) + ")"); 
+          mv.visitLdcInsn("Arg (" + argNames.get(ii) + ")");
         }
         else
         {
-          mv.visitLdcInsn("Arg"); 
-        }        
+          mv.visitLdcInsn("Arg");
+        }
         mv.visitLdcInsn(className);
         mv.visitLdcInsn(methodName);
         mv.visitVarInsn(opcode, varslot);
@@ -372,13 +372,14 @@ public class InstrumentedClassWriter extends ClassWriter
       {
         // Ensure that cTor entry call gets written even if the cTor is
         // implicit and therefore has only a single line number.
-        if (ctorEntryState == CTorEntryState.SEEN_SPECIAL)
+        if ((ctorEntryState == CTorEntryState.SEEN_SPECIAL) ||
+            ("java.lang.Object".equals(className) && (ctorEntryState == CTorEntryState.ISCTOR)))
         {
           addEntryCalls();
           ctorEntryState = CTorEntryState.ENTRY_WRITTEN;
         }
-        
-        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);        
+
+        generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
       else if ((xiOpCode == Opcodes.IRETURN) || (xiOpCode == Opcodes.FRETURN)
                || (xiOpCode == Opcodes.ARETURN))
@@ -473,16 +474,16 @@ public class InstrumentedClassWriter extends ClassWriter
         // Also write exit trace
         generateCallToAgentHelper(InstrumentationType.EXIT, lineNumber);
       }
-      
+
       if (xiOpCode == Opcodes.RETURN)
       {
         if (threadClass && methodName.equals("setUncaughtExceptionHandler"))
         {
           mv.visitLabel(threadLabel);
           mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-        }        
+        }
       }
-      
+
       super.visitInsn(xiOpCode);
     }
 
@@ -581,7 +582,7 @@ public class InstrumentedClassWriter extends ClassWriter
 
     /**
      * Generate an ENTER/BRANCH/EXIT instrumentation call.
-     * 
+     *
      * @param traceType
      * @param lineNumber
      */
