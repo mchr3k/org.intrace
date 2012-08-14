@@ -210,8 +210,11 @@
       args[key] = value;
       
       var newUrl = "downloads.jsp?";
-      for each (var item in ['mode','file','collapseversions'])
+      
+      var urlArgs = new Array('mode','file','collapseversions');
+      for(i=0; i<urlArgs.length; i++) 
       {
+        var item = urlArgs[i];
         if (args[item])
         {
           newUrl += item + "=" + args[item] + "&";
