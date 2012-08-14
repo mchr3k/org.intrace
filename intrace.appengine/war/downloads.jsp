@@ -38,7 +38,10 @@
     Type lType = Type.WEEK;
     
     // Check file
-    String lFileStr = request.getParameter("file");    
+    String lFileStr = request.getParameter("file");
+    
+    // Check whether to collapse versions
+    String lCollapseVersions = request.getParameter("collapseversions");    
   
     // Check type
     String lModeStr = request.getParameter("mode");
@@ -64,12 +67,13 @@
     List<Counter> lRecords = Counter.getAllByType(lFetchType);
     
     // Filename -> DateStr -> Count
-    Map<String,Map<String,Integer>> lPerFilePerDateStrDownloads = Counter.getPerFilePerDateMap(lRecords);
+    Map<String,Map<String,Integer>> lPerFilePerDateStrDownloads = Counter.getPerFilePerDateMap(lRecords,
+                                                                                               (lCollapseVersions != null));
     if (lType == Type.WEEK)
     {
       lPerFilePerDateStrDownloads = Counter.getFilePerWeekMap(lPerFilePerDateStrDownloads);
     }
-    
+
     // Filenames
     List<String> lFilenames = new ArrayList<String>(lPerFilePerDateStrDownloads.keySet());
     Collections.sort(lFilenames);
@@ -80,7 +84,10 @@
       lFileStr = Utils.dec(lFileStr);
       Map<String,Integer> lSingleValue = lPerFilePerDateStrDownloads.get(lFileStr);
       lPerFilePerDateStrDownloads.clear();
-      lPerFilePerDateStrDownloads.put(lFileStr, lSingleValue);
+      if (lSingleValue != null)
+      {
+        lPerFilePerDateStrDownloads.put(lFileStr, lSingleValue);
+      }
     }
     
     // Date strings
@@ -183,16 +190,8 @@
     }
     
     function setMode(mode)
-    {       
-      if (getUrlVars()['file'])
-      {
-        window.location.href = "downloads.jsp?file=" + getUrlVars()['file'] +  
-                               "&mode=" + mode;
-      }
-      else
-      {
-        window.location.href = "downloads.jsp?mode=" + mode;
-      } 
+    {   
+      loadWithUrlArg('mode', mode);
     }
     
     function selectFile()
@@ -201,16 +200,25 @@
       var file = picker.value;
       if (file)
       {
-        if (getUrlVars()['mode'])
+        loadWithUrlArg('file', file);
+      }
+    }
+    
+    function loadWithUrlArg(key, value)
+    {
+      var args = getUrlVars();
+      args[key] = value;
+      
+      var newUrl = "downloads.jsp?";
+      for each (var item in ['mode','file','collapseversions'])
+      {
+        if (args[item])
         {
-          window.location.href = "downloads.jsp?file=" + file + 
-                                 "&mode=" + getUrlVars()['mode'];
+          newUrl += item + "=" + args[item] + "&";
         }
-        else
-        {
-          window.location.href = "downloads.jsp?file=" + file;
-        }
-      } 
+      }
+      
+      window.location.href = newUrl;
     }
     
     // Read a page's GET URL variables and return them as an associative array.
@@ -226,6 +234,19 @@
         }
         return vars;
     }
+    
+    function setCollapse()
+    { 
+      var collapseEl = document.getElementById("collapseversions");
+      if (collapseEl.checked)
+      {
+        loadWithUrlArg('collapseversions', true);
+      }
+      else
+      {
+        loadWithUrlArg('collapseversions');
+      }
+    }
     </script>
     <select id="filePicker" onchange="selectFile()">
       <option selected value="">Choose File...</option>
@@ -237,7 +258,13 @@
     <input type="submit" value="Year" onclick="setMode('year')" />
     <input type="submit" value="Month" onclick="setMode('month')" />
     <input type="submit" value="Week" onclick="setMode('week')" />
-    <input type="submit" value="Day" onclick="setMode('day')" /><br>
+    <input type="submit" value="Day" onclick="setMode('day')" />
+    <input type="checkbox" 
+           id="collapseversions" 
+           value="collapseversions" 
+           onclick="setCollapse()" 
+           <% if (lCollapseVersions != null) { %>checked="checked" <% } %>/> Collapse Versions
+    <br>
     <div style="width: 100%;" id="visualization"></div>    
     <div id="normaltable">    
       <table>

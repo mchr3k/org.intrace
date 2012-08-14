@@ -18,25 +18,50 @@ public class CounterTest
   @Test
   public void testMapping()
   {
-    List<Counter> lTestData = new ArrayList<Counter>();
-    lTestData.add(new Counter(Type.DAY,
-                  Type.DAY.getPartialStr(2010, 1, 1),
-                  "test.wav"));
-    lTestData.add(new Counter(Type.DAY,
-                  Type.DAY.getPartialStr(2011, 2, 2),
-                  "test.wav"));
-    lTestData.add(new Counter(Type.DAY,
-                  Type.DAY.getPartialStr(2011, 2, 2),
-                  "foo.wav"));
+    {
+      List<Counter> lTestData = new ArrayList<Counter>();
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2010, 1, 1),
+                    "test.wav"));
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2011, 2, 2),
+                    "test.wav"));
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2011, 2, 2),
+                    "foo.wav"));
 
-    Map<String, Map<String, Integer>> map = Counter.getPerFilePerDateMap(lTestData);
-    assertEquals(2, map.keySet().size());
-    assertTrue(map.keySet().toString(), map.keySet().contains("test.wav"));
-    assertTrue(map.keySet().toString(), map.keySet().contains("foo.wav"));
-    Map<String, Integer> lData = map.get("test.wav");
-    assertEquals(2, lData.keySet().size());
-    assertTrue(lData.keySet().toString(), lData.keySet().contains("2010/01/01"));
-    assertTrue(lData.keySet().toString(), lData.keySet().contains("2011/02/02"));
+      Map<String, Map<String, Integer>> map = Counter.getPerFilePerDateMap(lTestData, false);
+      assertEquals(2, map.keySet().size());
+      assertTrue(map.keySet().toString(), map.keySet().contains("test.wav"));
+      assertTrue(map.keySet().toString(), map.keySet().contains("foo.wav"));
+      Map<String, Integer> lData = map.get("test.wav");
+      assertEquals(2, lData.keySet().size());
+      assertTrue(lData.keySet().toString(), lData.keySet().contains("2010/01/01"));
+      assertTrue(lData.keySet().toString(), lData.keySet().contains("2011/02/02"));
+    }
+
+    {
+      List<Counter> lTestData = new ArrayList<Counter>();
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2010, 1, 1),
+                    "test_1.0.1.wav"));
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2010, 1, 1),
+                    "test_1.0.2.wav"));
+      lTestData.add(new Counter(Type.DAY,
+                    Type.DAY.getPartialStr(2011, 2, 2),
+                    "test_1.0.3.wav"));
+
+      Map<String, Map<String, Integer>> map = Counter.getPerFilePerDateMap(lTestData, true);
+      assertEquals(1, map.keySet().size());
+      assertTrue(map.keySet().toString(), map.keySet().contains("test*.wav"));
+      Map<String, Integer> lData = map.get("test*.wav");
+      assertEquals(2, lData.keySet().size());
+      assertTrue(lData.keySet().toString(), lData.keySet().contains("2010/01/01"));
+      assertEquals((Integer)2, lData.get("2010/01/01"));
+      assertTrue(lData.keySet().toString(), lData.keySet().contains("2011/02/02"));
+      assertEquals((Integer)1, lData.get("2011/02/02"));
+    }
   }
 
   @Test

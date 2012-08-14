@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
@@ -136,7 +138,10 @@ public class Counter
     return detachedList;
   }
 
-  public static Map<String,Map<String,Integer>> getPerFilePerDateMap(List<Counter> xiList)
+  private static final Pattern sVerPattern = Pattern.compile("(.+)_([0-9]+(\\.[0-9]+)*)(\\..+)");
+
+  public static Map<String,Map<String,Integer>> getPerFilePerDateMap(List<Counter> xiList,
+                                                                     boolean xiCollapseVers)
   {
     Map<String,Map<String,Integer>> lFileMap = new HashMap<String, Map<String,Integer>>();
 
@@ -146,6 +151,15 @@ public class Counter
       String lDateStr = lCounter.mDate;
       Integer lCount = lCounter.mCount;
 
+      if (xiCollapseVers)
+      {
+        Matcher matcher = sVerPattern.matcher(lFile);
+        if (matcher.matches())
+        {
+          lFile = matcher.group(1) + "*" + matcher.group(4);
+        }
+      }
+
       Map<String, Integer> lDateMap = lFileMap.get(lFile);
       if (lDateMap == null)
       {
@@ -153,7 +167,20 @@ public class Counter
         lFileMap.put(lFile, lDateMap);
       }
 
-      lDateMap.put(lDateStr, lCount);
+      if (xiCollapseVers)
+      {
+        Integer lAllVersCount = lDateMap.get(lDateStr);
+        if (lAllVersCount == null)
+        {
+          lAllVersCount = 0;
+        }
+        lAllVersCount += lCount;
+        lDateMap.put(lDateStr, lAllVersCount);
+      }
+      else
+      {
+        lDateMap.put(lDateStr, lCount);
+      }
     }
 
     return lFileMap;
