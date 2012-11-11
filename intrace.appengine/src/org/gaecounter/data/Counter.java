@@ -247,57 +247,56 @@ public class Counter
      Map<String, Integer> perDateData = fileEntry.getValue();
      List<String> dateStrs = new ArrayList<String>(perDateData.keySet());
      Collections.sort(dateStrs);
-     Collections.reverse(dateStrs);
 
-     DateMidnight lastDate = null;
+     DateMidnight nextPeriod = null;
      int weekCount = 0;
      boolean unrecordedItem = false;
 
+     // Iterate through the dates from oldest to newest
      for (String datestr : dateStrs)
      {
        DateMidnight date = new DateMidnight(datestr.replace("/", "-"));
-       if (unrecordedItem && (lastDate != null))
+
+       if (nextPeriod != null)
        {
-         Days d = Days.daysBetween(date, lastDate);
-         if (d.getDays() >= 7)
+         // We know when the next period starts so check whether this date
+         // is after the start of the next period
+         if (date.isEqual(nextPeriod) || date.isAfter(nextPeriod))
          {
-           DateMidnight foundMonday = lastDate;
-           while (foundMonday.getDayOfWeek() != DateTimeConstants.MONDAY)
-           {
-             foundMonday = foundMonday.minus(Days.ONE);
-           }
-           perWeekData.put(Type.DAY.getPartialStr(foundMonday.getYear(),
-                                                  foundMonday.getMonthOfYear(),
-                                                  foundMonday.getDayOfMonth()),
+           DateMidnight prevPeriod = nextPeriod.minusDays(7);
+           perWeekData.put(Type.DAY.getPartialStr(prevPeriod.getYear(),
+                                                  prevPeriod.getMonthOfYear(),
+                                                  prevPeriod.getDayOfMonth()),
                            weekCount);
            weekCount = 0;
            unrecordedItem = false;
          }
        }
 
-       lastDate = date;
+       // Add the count to the current period
        Integer count = perDateData.get(datestr);
        weekCount += count;
-       unrecordedItem = true;
 
-       if (date.getDayOfWeek() == DateTimeConstants.MONDAY)
+       if (!unrecordedItem)
        {
-         perWeekData.put(datestr, weekCount);
-         weekCount = 0;
-         unrecordedItem = false;
+         // If this is the first item in the new period - work out when the period ends
+         nextPeriod = date.plusDays(1);
+         while (nextPeriod.getDayOfWeek() != DateTimeConstants.MONDAY)
+         {
+           nextPeriod = nextPeriod.plusDays(1);
+         }
        }
+
+       unrecordedItem = true;
      }
 
      if (unrecordedItem)
      {
-       DateMidnight foundMonday = lastDate;
-       while (foundMonday.getDayOfWeek() != DateTimeConstants.MONDAY)
-       {
-         foundMonday = foundMonday.minus(Days.ONE);
-       }
-       perWeekData.put(Type.DAY.getPartialStr(foundMonday.getYear(),
-                                              foundMonday.getMonthOfYear(),
-                                              foundMonday.getDayOfMonth()),
+       // Store the details of the final period
+       DateMidnight prevPeriod = nextPeriod.minusDays(7);
+       perWeekData.put(Type.DAY.getPartialStr(prevPeriod.getYear(),
+                                              prevPeriod.getMonthOfYear(),
+                                              prevPeriod.getDayOfMonth()),
                        weekCount);
      }
    }

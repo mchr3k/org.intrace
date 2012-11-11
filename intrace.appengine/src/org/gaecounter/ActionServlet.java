@@ -51,24 +51,16 @@ public class ActionServlet extends HttpServlet
     }
     else if ("testdata".equals(lAction))
     {
-      CountDownloadsFilter.countDownload("test_0.1.jar", 2010, 1, 1);
-      CountDownloadsFilter.countDownload("test_0.1.jar", 2010, 1, 1);
-      CountDownloadsFilter.countDownload("test_0.1.jar", 2010, 1, 2);
-      CountDownloadsFilter.countDownload("test_0.1.jar", 2010, 2, 2);
-      CountDownloadsFilter.countDownload("test_0.1.jar", 2010, 3, 2);
-      CountDownloadsFilter.countDownload("test_0.2.jar", 2010, 4, 2);
-      CountDownloadsFilter.countDownload("test_0.2.jar", 2010, 5, 2);
-      CountDownloadsFilter.countDownload("test_0.2.jar", 2010, 5, 2);
-      CountDownloadsFilter.countDownload("test_0.2.jar", 2010, 6, 2);
-      CountDownloadsFilter.countDownload("test_0.3.jar", 2011, 1, 1);
-      CountDownloadsFilter.countDownload("test_0.3.jar", 2011, 1, 1);
-      CountDownloadsFilter.countDownload("test_0.3.jar", 2011, 1, 2);
-      CountDownloadsFilter.countDownload("test_0.3.jar", 2011, 2, 2);
-      CountDownloadsFilter.countDownload("test_0.3.jar", 2011, 3, 2);
-      CountDownloadsFilter.countDownload("test_0.4.jar", 2011, 4, 2);
-      CountDownloadsFilter.countDownload("test_0.4.jar", 2011, 5, 2);
-      CountDownloadsFilter.countDownload("test_0.4.jar", 2011, 5, 2);
-      CountDownloadsFilter.countDownload("test_0.4.jar", 2011, 6, 2);
+      for (int ii = 13; ii <= 25; ii++)
+        CountDownloadsFilter.countDownload("test_0.1.jar", 2012, 2, ii);
+      for (int ii = 28; ii <= 29; ii++)
+        CountDownloadsFilter.countDownload("test_0.1.jar", 2012, 2, ii);
+      for (int ii = 1; ii <= 2; ii++)
+        CountDownloadsFilter.countDownload("test_0.1.jar", 2012, 3, ii);
+      for (int ii = 5; ii <= 10; ii++)
+        CountDownloadsFilter.countDownload("test_0.1.jar", 2012, 3, ii);
+      for (int ii = 12; ii <= 15; ii++)
+        CountDownloadsFilter.countDownload("test_0.1.jar", 2012, 3, ii);
     }
 
     xiResp.sendRedirect(lRedir);
