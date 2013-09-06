@@ -1,6 +1,7 @@
 package org.gaecounter;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jdo.JDOCanRetryException;
 import javax.jdo.JDOObjectNotFoundException;
@@ -12,6 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.gaecounter.data.Counter;
 import org.gaecounter.data.Counter.Type;
@@ -33,7 +36,26 @@ public class CountDownloadsFilter implements Filter
                        throws IOException,
                               ServletException
   {
-    if (xiReq instanceof HttpServletRequest)
+    final AtomicInteger error = new AtomicInteger(-1);
+    if (xiResp instanceof HttpServletResponse)
+    {
+      xiResp = new HttpServletResponseWrapper((HttpServletResponse)xiResp) {
+        @Override
+        public void sendError(int sc) throws IOException {
+          error.set(sc);
+          super.sendError(sc);
+        }
+        @Override
+        public void sendError(int sc, String msg) throws IOException {
+          error.set(sc);
+          super.sendError(sc, msg);
+        }
+      };
+    }
+
+    xiChain.doFilter(xiReq, xiResp);
+
+    if (error.get() == -1 && xiReq instanceof HttpServletRequest)
     {
       HttpServletRequest lHttpReq = (HttpServletRequest)xiReq;
       String lReqURI = lHttpReq.getRequestURI();
@@ -44,7 +66,6 @@ public class CountDownloadsFilter implements Filter
         xiResp.setContentType("application/octet-stream");
       }
     }
-    xiChain.doFilter(xiReq, xiResp);
   }
 
   public static void countDownload(String xiReqURI, int y, int m, int d)
