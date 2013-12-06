@@ -16,6 +16,7 @@ public class ParsedSettingsData
 
   public boolean entryExitEnabled;
   public boolean branchEnabled;
+  public boolean gzipEnabled = false;
   public boolean truncArraysEnabled;
   public boolean argsEnabled;
   public boolean stdOutEnabled;
@@ -35,6 +36,15 @@ public class ParsedSettingsData
   {
     this.settingsMap = settingsMap;
 
+    if ("true".equals(settingsMap.get(AgentConfigConstants.GZIP)))
+    {
+      gzipEnabled = true;
+    }
+    else
+    {
+      gzipEnabled = false;
+    }
+    
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
     classExcludeRegex = settingsMap
                                    .get(AgentConfigConstants.EXCLUDE_CLASS_REGEX);
@@ -85,6 +95,7 @@ public class ParsedSettingsData
     {
       branchEnabled = false;
     }
+
 
     if ("true".equals(settingsMap.get(TraceConfigConstants.ARG)))
     {

@@ -109,9 +109,28 @@ public class AgentTest extends TestCase
     assertEquals(helpResponse, expectedHelpResponse);
   }
 
+  /**
+		Intentionally, testSetting(AgentConfigConstants.GZIP, "true") does not work.
+		For simplicity's sake, this setting can only be configured as an intrace agent command line parameter -- [gzip-true
+		Note that there is no GUI checkbox to enabled Gzip.
+	    To instead enable the client to change this, just change how ClassTransformer#getResponse() deals with a new gzip parameter.
+		The following simply confirms that
+		<ul> 
+			<li> getsettings works for gzip parm </li>
+			<li> b) by default, GZIP is turned off. </li>
+		</ul>
+   * 
+   * @throws Exception
+   */
+  public void testRetrievalOfGzipSetting() throws Exception {
+	    testGetSetting(AgentConfigConstants.GZIP, "false");
+  }
   public void testSettings() throws Exception
   {
     // Boolean settings
+	  
+	  
+    
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
@@ -124,8 +143,12 @@ public class AgentTest extends TestCase
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "true");
     testSetting(AgentConfigConstants.CLASS_REGEX, ".*");
+    
+    //Need to learn more about why these don't work here. --ETO 12/1/2013
+    //testSetting(TraceConfigConstants.BRANCH, "true");
+    //testSetting(TraceConfigConstants.BRANCH, "false");
   }
-
+  
   public void testBranchPatterns() throws Throwable
   {
     // Create and init the mock
@@ -205,6 +228,7 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
+    testSetting(AgentConfigConstants.GZIP, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, "BranchPatterns");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
@@ -320,6 +344,7 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
+    testSetting(AgentConfigConstants.GZIP, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, "ArgumentTypes");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
@@ -544,6 +569,18 @@ public class AgentTest extends TestCase
     assertTrue(okResponse instanceof String);
     assertEquals(okResponse, "OK");
 
+    // Get settings
+    sender.sendMessage("getsettings");
+    Object settingsResponse = receiver.incomingMessages.take();
+    assertNotNull(settingsResponse);
+    assertTrue(settingsResponse instanceof Map<?, ?>);
+    Map<String, String> settingsResponseMap = (Map<String, String>) settingsResponse;
+    assertEquals(configValue, settingsResponseMap.get(configConstant));
+  }
+  @SuppressWarnings("unchecked")
+  private void testGetSetting(String configConstant, String configValue)
+      throws Exception
+  {
     // Get settings
     sender.sendMessage("getsettings");
     Object settingsResponse = receiver.incomingMessages.take();
