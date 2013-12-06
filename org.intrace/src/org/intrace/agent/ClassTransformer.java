@@ -27,6 +27,7 @@ import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
 import org.intrace.output.InstruRunnable;
 import org.intrace.output.trace.TraceHandler;
+import org.intrace.output.trace.TraceSettings;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
 
@@ -482,6 +483,9 @@ public class ClassTransformer implements ClassFileTransformer
                     Integer.toString(modifiedClasses.size()));
     return settingsMap;
   }
+  public boolean isGzipEnabled() {
+	  return settings.isGzipEnabled();
+  }
 
   /**
    * Handle a message and return a response.
@@ -507,6 +511,12 @@ public class ClassTransformer implements ClassFileTransformer
 //      System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
+    else if (oldSettings.isGzipEnabled() != settings.isGzipEnabled())
+	{
+    	//For coding simplicity and user clarity, the gzip parameter can only be set on agent side
+    	//So, return to the old setting, which originated with the intrace agent command line parameter -- [gzip-true
+    	settings.setGzipEnabled(oldSettings.isGzipEnabled());
+	}
     else if (!Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
     {
 //      System.out.println("## Settings Changed");

@@ -2026,6 +2026,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           {
             return settingsData.netOutEnabled;
           }
+          @Override
+          public boolean isGzipEnabled()
+          {
+            return settingsData.gzipEnabled;
+          }
         };
         networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
             networkTracePort, config, outputTabs.textOutputTab.filterThread);
