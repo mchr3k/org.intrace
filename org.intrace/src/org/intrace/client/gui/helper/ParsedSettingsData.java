@@ -19,6 +19,8 @@ public class ParsedSettingsData
   public boolean gzipEnabled = false;
   public boolean truncArraysEnabled;
   public boolean argsEnabled;
+  public boolean exitStackTrace = false;
+  
   public boolean stdOutEnabled;
   public boolean fileOutEnabled;
   public boolean netOutEnabled;
@@ -45,6 +47,15 @@ public class ParsedSettingsData
       gzipEnabled = false;
     }
     
+    if ("true".equals(settingsMap.get(AgentConfigConstants.EXIT_STACK_TRACE)))
+    {
+      exitStackTrace = true;
+    }
+    else
+    {
+        exitStackTrace = false;
+    }
+
     classRegex = settingsMap.get(AgentConfigConstants.CLASS_REGEX);
     classExcludeRegex = settingsMap
                                    .get(AgentConfigConstants.EXCLUDE_CLASS_REGEX);

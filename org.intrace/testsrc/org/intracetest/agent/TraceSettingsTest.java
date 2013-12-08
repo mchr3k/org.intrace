@@ -22,17 +22,21 @@ public class TraceSettingsTest extends TestCase
                                              + "true"
                                              + TraceConfigConstants.BRANCH
                                              + "true"
+                                             + TraceConfigConstants.EXIT_STACK_TRACE
+                                             + "true"
                                              );
     
     assertTrue(ts.isArgTraceEnabled());
     assertTrue(ts.isEntryExitTraceEnabled());
     assertTrue(ts.isBranchTraceEnabled());
+    assertTrue(ts.isExitStackTraceEnabled());
     assertTrue(ts.isTruncateArraysEnabled());
 
     ts = new TraceSettings(ts);
     assertTrue(ts.isArgTraceEnabled());
     assertTrue(ts.isEntryExitTraceEnabled());
     assertTrue(ts.isBranchTraceEnabled());
+    assertTrue(ts.isExitStackTraceEnabled());
     assertTrue(ts.isTruncateArraysEnabled());
 
     String toString = ts.toString();
@@ -42,6 +46,7 @@ public class TraceSettingsTest extends TestCase
     assertEquals(settingsMap.get(TraceConfigConstants.ARG), "true");
     assertEquals(settingsMap.get(TraceConfigConstants.ARRAYS), "true");
     assertEquals(settingsMap.get(TraceConfigConstants.BRANCH), "true");
+    assertEquals(settingsMap.get(TraceConfigConstants.EXIT_STACK_TRACE),"true");
     assertEquals(settingsMap.get(TraceConfigConstants.ENTRY_EXIT), "true");
   }
 

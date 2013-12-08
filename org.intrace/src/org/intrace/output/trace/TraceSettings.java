@@ -17,6 +17,16 @@ public class TraceSettings
   private boolean branchTraceEnabled = false;
   private boolean argTraceEnabled = true;
   private boolean truncateArraysEnabled = true;
+  
+  /**
+   * If true, append the 'current' stack trace to the text of the exit trace event.
+   * This is helpful for discovering who is invoking a particular line of code.
+   * Here is an example of the trace output:
+   * <PRE>
+   * [07:53:15.509]:[1]:example.FirstTraceExample:intArrayMethod: }:70~java.lang.Thread.getStackTrace(Thread.java:1567),example.FirstTraceExample.intArrayMethod(FirstTraceExample.java:70),example.FirstTraceExample.workMethod(FirstTraceExample.java:38),example.FirstTraceExample.otherMain(FirstTraceExample.java:29),example.FirstTraceExample.main(FirstTraceExample.java:16)
+   * </PRE>
+   */
+  private boolean exitStackTrace = false;
 
   public TraceSettings(TraceSettings oldSettings)
   {
@@ -24,6 +34,7 @@ public class TraceSettings
     branchTraceEnabled = oldSettings.branchTraceEnabled;
     argTraceEnabled = oldSettings.argTraceEnabled; 
     truncateArraysEnabled = oldSettings.truncateArraysEnabled;
+    exitStackTrace = oldSettings.exitStackTrace;
   }
 
   public TraceSettings(String args)
@@ -74,6 +85,14 @@ public class TraceSettings
     {
       truncateArraysEnabled = false;
     }
+    else if (arg.equals(TraceConfigConstants.EXIT_STACK_TRACE + "false"))
+    {
+      exitStackTrace = false;
+    }
+    else if (arg.equals(TraceConfigConstants.EXIT_STACK_TRACE + "true"))
+    {
+      exitStackTrace = true;
+    }
   }
 
   public boolean isEntryExitTraceEnabled()
@@ -95,6 +114,9 @@ public class TraceSettings
   {
     return truncateArraysEnabled;
   }
+  public boolean isExitStackTraceEnabled() {
+	  return exitStackTrace;
+  }
 
   public Map<String, String> getSettingsMap()
   {
@@ -107,6 +129,9 @@ public class TraceSettings
                .put(TraceConfigConstants.ARG, Boolean.toString(argTraceEnabled));
     settingsMap
     .put(TraceConfigConstants.ARRAYS, Boolean.toString(truncateArraysEnabled));
+    
+    settingsMap.put(TraceConfigConstants.EXIT_STACK_TRACE,
+            Boolean.toString(exitStackTrace));
     return settingsMap;
   }
 }

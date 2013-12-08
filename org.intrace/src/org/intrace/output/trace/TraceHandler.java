@@ -4,8 +4,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.intrace.output.AgentHelper;
@@ -16,6 +18,12 @@ import org.intrace.output.IInstrumentationHandler;
  */
 public class TraceHandler implements IInstrumentationHandler
 {
+	/**
+	 * Including the period at the end enables code in "org.intracetest" to be included in the trace
+	 */
+  private static final String INTRACE_PACKAGE = "org.intrace.";
+  private static final String THREAD = "java.lang.Thread";
+  private static final String GET_STACK_TRACE = "getStackTrace";
   public static final TraceHandler INSTANCE = new TraceHandler();
   private TraceHandler()
   {
@@ -26,7 +34,8 @@ public class TraceHandler implements IInstrumentationHandler
   private boolean branchTrace = false;
   private boolean argTrace = true;
   private boolean truncateArrays = true;
-
+  private boolean exitStackTrace = false;
+  
   private static final TraceSettings traceSettings = new TraceSettings("");
 
   public String getResponse(String args)
@@ -50,7 +59,8 @@ public class TraceHandler implements IInstrumentationHandler
     branchTrace = traceSettings.isBranchTraceEnabled();
     argTrace = traceSettings.isArgTraceEnabled();
     truncateArrays = traceSettings.isTruncateArraysEnabled();
-
+    exitStackTrace = traceSettings.isExitStackTraceEnabled();
+    
     return null;
   }
 
@@ -251,6 +261,15 @@ public class TraceHandler implements IInstrumentationHandler
   }
 
   private static final char ESCAPE_REPLACEMENT = '\u25A1';
+  /**
+   * If user has requested to see a stack trace for each 'exit' event (with the parameter [exit-stack-trace-true) , then
+   * this delimiter will follow the regular event text, which will be followed by the text of the stack trace.
+   */
+private static final String STACK_TRACE_DELIM = "~";
+/**
+ * Just like Arrays.toString(Object), place a comma between each element of the stack trace
+ */
+private static final Object STACK_ELE_DELIM = ",";
   
   private String replaceChars(String xiArg)
   {
@@ -384,13 +403,38 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
+  /**
+   * Remove all "org.intrace" elements from the current stack trace and return it as string.
+   * @return
+   */
+  public String getStackTrace() {
+	  
+	  StringBuilder sb = new StringBuilder();
+	  int counter = 0;
+	  for(StackTraceElement ste : Thread.currentThread().getStackTrace() ) {
+		  if ( ste.getClassName().indexOf(INTRACE_PACKAGE) <0 
+				  && (ste.getClassName().indexOf(THREAD) < 0) && ste.getMethodName().indexOf(GET_STACK_TRACE)<0) {
+			  if (counter++>0) sb.append(STACK_ELE_DELIM);  //Just like Arrays.toString(), place a comma between each stack trace ele. 
+			  sb.append(ste.toString());
+		  }
+	  }
+	  
+	  return sb.toString();
+  }
   @Override
   public void exit(String className, String methodName, int lineNo)
   {
     if (entryExitTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": }" + 
-                       (lineNo >= 0 ? ":" + lineNo : ""));
+    	
+        if (exitStackTrace) {
+        	writeTraceOutput(className + ":" + methodName + ": }" + 
+                    (lineNo >= 0 ? ":" + lineNo : "") + 
+                    STACK_TRACE_DELIM + getStackTrace() );
+        } else {
+        	writeTraceOutput(className + ":" + methodName + ": }" + 
+                    (lineNo >= 0 ? ":" + lineNo : "") );
+        }
     }
   }
 
