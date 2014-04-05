@@ -4,10 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import org.intrace.output.AgentHelper;
@@ -29,15 +27,16 @@ public class TraceHandler implements IInstrumentationHandler
   {
     // Private constructor
   }
-  
+
   private boolean entryExitTrace = true;
   private boolean branchTrace = false;
   private boolean argTrace = true;
   private boolean truncateArrays = true;
   private boolean exitStackTrace = false;
-  
+
   private static final TraceSettings traceSettings = new TraceSettings("");
 
+  @Override
   public String getResponse(String args)
   {
 //    TraceSettings oldSettings = new TraceSettings(traceSettings);
@@ -60,10 +59,11 @@ public class TraceHandler implements IInstrumentationHandler
     argTrace = traceSettings.isArgTraceEnabled();
     truncateArrays = traceSettings.isTruncateArraysEnabled();
     exitStackTrace = traceSettings.isExitStackTraceEnabled();
-    
+
     return null;
   }
 
+  @Override
   public Map<String, String> getSettingsMap()
   {
     return traceSettings.getSettingsMap();
@@ -78,7 +78,7 @@ public class TraceHandler implements IInstrumentationHandler
     }
     return lRet;
   }
-  
+
   private String arrayStr(String xiArrStr)
   {
     String ret = xiArrStr;
@@ -89,7 +89,7 @@ public class TraceHandler implements IInstrumentationHandler
     }
     return ret;
   }
-  
+
   @Override
   public void val(String desc, String className, String methodName, byte byteArg)
   {
@@ -100,6 +100,7 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
+  @Override
   public void val(String desc, String className, String methodName,
                   byte[] byteArrayArg)
   {
@@ -121,6 +122,7 @@ public class TraceHandler implements IInstrumentationHandler
     }
   }
 
+  @Override
   public void val(String desc, String className, String methodName,
                   short[] shortArrayArg)
   {
@@ -270,7 +272,7 @@ private static final String STACK_TRACE_DELIM = "~";
  * Just like Arrays.toString(Object), place a comma between each element of the stack trace
  */
 private static final Object STACK_ELE_DELIM = ",";
-  
+
   private String replaceChars(String xiArg)
   {
     String ret = xiArg;
@@ -278,21 +280,21 @@ private static final Object STACK_ELE_DELIM = ",";
     for (int ii = 0; ii < xiArg.length(); ii++)
     {
       char c = xiArg.charAt(ii);
-      
+
       // Detect special char
-      if ((0x00 <= c) && 
+      if ((0x00 <= c) &&
           (c <= 0x20) &&
           (c != '\r') &&
           (c != '\n'))
       {
         // Replace char
         c = ESCAPE_REPLACEMENT;
-        
+
         // Setup stringbuilder
         if (str == null)
         {
           str = new StringBuilder();
-          
+
           // Append any previous non special chars
           if (ii > 0)
           {
@@ -300,23 +302,23 @@ private static final Object STACK_ELE_DELIM = ",";
           }
         }
       }
-      
-      // If we are storing chars we better write 
+
+      // If we are storing chars we better write
       // this one now
       if (str != null)
       {
         str.append(c);
       }
     }
-    
+
     if (str != null)
     {
       ret = str.toString();
     }
-    
+
     return ret;
   }
-  
+
   @Override
   public void val(String desc, String className, String methodName,
                   Object objArg)
@@ -337,12 +339,13 @@ private static final Object STACK_ELE_DELIM = ",";
       else
       {
         objStr = (objArg != null ? objArg.toString() : "null");
-      }      
+      }
       writeTraceOutput(className + ":" + methodName + ": " + desc + ": "
                        + objStr);
     }
   }
 
+  @Override
   public void val(String desc, String className, String methodName,
                   Object[] objArrayArg)
   {
@@ -361,11 +364,12 @@ private static final Object STACK_ELE_DELIM = ",";
   {
     if (branchTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": /" + 
+      writeTraceOutput(className + ":" + methodName + ": /" +
                        (lineNo >= 0 ? ":" + lineNo : ""));
     }
   }
 
+  @Override
   public void val(String desc, String className, String methodName, int lineNo,
                   Throwable throwable)
   {
@@ -398,7 +402,7 @@ private static final Object STACK_ELE_DELIM = ",";
   {
     if (entryExitTrace)
     {
-      writeTraceOutput(className + ":" + methodName + ": {" + 
+      writeTraceOutput(className + ":" + methodName + ": {" +
                        (lineNo >= 0 ? ":" + lineNo : ""));
     }
   }
@@ -408,17 +412,17 @@ private static final Object STACK_ELE_DELIM = ",";
    * @return
    */
   public String getStackTrace() {
-	  
+
 	  StringBuilder sb = new StringBuilder();
 	  int counter = 0;
 	  for(StackTraceElement ste : Thread.currentThread().getStackTrace() ) {
-		  if ( ste.getClassName().indexOf(INTRACE_PACKAGE) <0 
+		  if ( ste.getClassName().indexOf(INTRACE_PACKAGE) <0
 				  && (ste.getClassName().indexOf(THREAD) < 0) && ste.getMethodName().indexOf(GET_STACK_TRACE)<0) {
-			  if (counter++>0) sb.append(STACK_ELE_DELIM);  //Just like Arrays.toString(), place a comma between each stack trace ele. 
+			  if (counter++>0) sb.append(STACK_ELE_DELIM);  //Just like Arrays.toString(), place a comma between each stack trace ele.
 			  sb.append(ste.toString());
 		  }
 	  }
-	  
+
 	  return sb.toString();
   }
   @Override
@@ -426,13 +430,13 @@ private static final Object STACK_ELE_DELIM = ",";
   {
     if (entryExitTrace)
     {
-    	
+
         if (exitStackTrace) {
-        	writeTraceOutput(className + ":" + methodName + ": }" + 
-                    (lineNo >= 0 ? ":" + lineNo : "") + 
+        	writeTraceOutput(className + ":" + methodName + ": }" +
+                    (lineNo >= 0 ? ":" + lineNo : "") +
                     STACK_TRACE_DELIM + getStackTrace() );
         } else {
-        	writeTraceOutput(className + ":" + methodName + ": }" + 
+        	writeTraceOutput(className + ":" + methodName + ": }" +
                     (lineNo >= 0 ? ":" + lineNo : "") );
         }
     }
@@ -445,7 +449,7 @@ private static final Object STACK_ELE_DELIM = ",";
    * <li>FileOut
    * <li>NetworkOut
    * </ul>
-   * 
+   *
    * @param xiOutput
    */
   public void writeTraceOutput(String xiOutput)

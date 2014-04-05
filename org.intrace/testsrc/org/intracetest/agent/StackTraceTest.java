@@ -1,18 +1,11 @@
 package org.intracetest.agent;
 
-import java.util.Map;
-
 import junit.framework.TestCase;
 
-import org.intrace.agent.AgentSettings;
 import org.intrace.output.trace.TraceHandler;
-import org.intrace.output.trace.TraceSettings;
-import org.intrace.shared.AgentConfigConstants;
-import org.intrace.shared.TraceConfigConstants;
 
 public class StackTraceTest extends TestCase
 {
-  private static final String MY_PACKAGE_AND_CLASS = "org.intracetest.agent.StackTraceTest";
   private String m_stackTrace;
   /** Here is the raw stack trace that we want to validate:
    * <PRE>
@@ -23,7 +16,7 @@ org.intracetest.agent.StackTraceTest.c(StackTraceTest.java:57),org.intracetest.a
    * 	<li>java.lang.Thread.getStackTrace</li>
    * 	<li>all org.intrace. activity</li>
    * </ul>
-   *  
+   *
    */
 public void testStackTrace()
   {
@@ -41,14 +34,14 @@ public void testStackTrace()
   }
 	private void validateStackTraceElement(String expectedPackageAndClassAndMethod, String actual) {
 		String[] partsOfStackTraceElement = actual.split("[\\(:\\)]");
-		assertEquals("The package and class and method name were not found in the right place", 
-				expectedPackageAndClassAndMethod, 
+		assertEquals("The package and class and method name were not found in the right place",
+				expectedPackageAndClassAndMethod,
 				partsOfStackTraceElement[0]);
-		
-		assertEquals("source file not found in the right place", 
-				"StackTraceTest.java", 
+
+		assertEquals("source file not found in the right place",
+				"StackTraceTest.java",
 				partsOfStackTraceElement[1]);
-		
+
 	}
 private void a() {
 	  b();

@@ -45,7 +45,7 @@
     <mkdir dir="./build/classes" />
 
     <javac destdir="./build/classes" debug="true" source="1.6" target="1.6"
-           includeantruntime="false">
+           includeantruntime="false"> 
       <src path="./src"/>
       <classpath>
         <fileset dir="./lib" includes="*.jar" />
@@ -101,8 +101,8 @@
 
     <!-- UI (Cross platform SWT Jar (Windows/Linux)) -->
     <swtjar jarfile="./build/jars/intrace-ui.jar"
-	        targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
-			swtversion="3.6.2">
+            targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
+            swtversion="4.3">
       <manifest>
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
@@ -116,17 +116,18 @@
       <fileset dir="./src" includes="**/icons/**/*.*" />
 	  
       <!-- Required Jars -->
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-core-4.2.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-swt-4.2.jar"/>
 	  
       <!-- SWT Jars (Windows/Linux) -->
-      <fileset dir="./lib" includes="swt-win*-3.6.2.jar" />
-	  <fileset dir="./lib" includes="swt-lin*-3.6.2.jar" />
+      <fileset dir="./lib" includes="swt-win*-4.3.jar" />
+      <fileset dir="./lib" includes="swt-lin*-4.3.jar" />
     </swtjar>
 	
     <!-- UI (OSX SWT Jar) -->
     <swtjar jarfile="./build/tmp/intrace-ui-osx.jar"
-	        targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
-			swtversion="3.6.2">
+            targetmainclass="org.intrace.client.gui.InTraceStandaloneUI"
+            swtversion="4.3">
       <manifest>
         <attribute name="Git-Revision" value="${git.revision}" />
         <attribute name="Implementation-Version" value="${git.tag}" />
@@ -140,10 +141,11 @@
       <fileset dir="./src" includes="**/icons/**/*.*" />
 	  
       <!-- Required Jars -->
-      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-3.7.3.1-swt.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-core-4.2.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="lib/miglayout-swt-4.2.jar"/>
 	  
       <!-- SWT Jars (OSX) -->
-      <fileset dir="./lib" includes="swt-osx*-3.6.2.jar" />
+      <fileset dir="./lib" includes="swt-osx*-4.3.jar" />
     </swtjar>
 	
     <!-- UI (OSX application) -->

@@ -4,9 +4,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.intrace.agent.AgentSettings;
 import org.intrace.output.trace.TraceSettings;
-import org.intrace.shared.AgentConfigConstants;
 import org.intrace.shared.TraceConfigConstants;
 
 public class TraceSettingsTest extends TestCase
@@ -25,7 +23,7 @@ public class TraceSettingsTest extends TestCase
                                              + TraceConfigConstants.EXIT_STACK_TRACE
                                              + "true"
                                              );
-    
+
     assertTrue(ts.isArgTraceEnabled());
     assertTrue(ts.isEntryExitTraceEnabled());
     assertTrue(ts.isBranchTraceEnabled());

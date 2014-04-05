@@ -39,5 +39,10 @@
       <Method name="generateCallToAgentHelper" />
       <Bug code="SF" />
   </Match>
+  ` ` 
+  // Ignore all problems in Base64 which is an external class
+  <Match>
+      <Class name="org.intrace.shared.Base64" />
+  </Match>
 
 </FindBugsFilter>

@@ -793,7 +793,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
       private TraceTab(Composite parent)
       {
-        MigLayout windowLayout = new MigLayout("fill", "[80][80][250][100][grow]");
+        MigLayout windowLayout = new MigLayout("fill", "[80][80][250][140][grow]");
 
         composite = new Composite(parent, SWT.NONE);
         composite.setLayout(windowLayout);
@@ -818,7 +818,6 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         exitStackTrace.setText(ClientStrings.ENABLE_EXIT_STACK_TRACE);
         exitStackTrace.setAlignment(SWT.CENTER);
 
-        
         entryExitTrace
             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
             {

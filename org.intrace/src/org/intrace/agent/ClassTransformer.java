@@ -27,7 +27,6 @@ import org.intrace.agent.server.AgentServer;
 import org.intrace.output.AgentHelper;
 import org.intrace.output.InstruRunnable;
 import org.intrace.output.trace.TraceHandler;
-import org.intrace.output.trace.TraceSettings;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
 
