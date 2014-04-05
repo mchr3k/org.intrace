@@ -1,4 +1,4 @@
----
+ï»¿---
 layout: default
 title: UI
 ---
@@ -12,7 +12,7 @@ title: UI
 <p>Press this button to open the connection bar - see below.
 
 <h3>Classes... Button</h3>
-<p>Launches a window which allows the entry of class inclusion and exclusion strings. Only classes which match an inclusion strings and don’t match any exclusion strings are instrumented.</p>
+<p>Launches a window which allows the entry of class inclusion and exclusion strings. Only classes which match an inclusion strings and don't match any exclusion strings are instrumented.</p>
 
 <h3>Settings Button</h3>
 <p>Press this button to open the settings bar - see below.
@@ -98,7 +98,7 @@ title: UI
 
 <h3>List Instrumented Classes Button</h3>
 <p>Outputs a list of instrumented classes to the <strong>Output</strong> text area.</p>
-<p>This string can be added to the command line arguments of your program to restore the current settings. For example.<br></p><pre>java –javaagent:./traceagent.jar=[out-stdout-true[trace-ee-false[instrujars-false[instru-true[out-file-false[exclude-regex-^$[verbose-false[regex-.*[saveinstru-false[trace-args-false[out-network-false[trace-branch-false my.program.Class</pre>
+<p>This string can be added to the command line arguments of your program to restore the current settings. For example.<br></p><pre>java -javaagent:./traceagent.jar=[out-stdout-true[trace-ee-false[instrujars-false[instru-true[out-file-false[exclude-regex-^$[verbose-false[regex-.*[saveinstru-false[trace-args-false[out-network-false[trace-branch-false my.program.Class</pre>
 
 <h1>Start Program Bar</h1>
 <p>If the InTrace agent which you connect to was started with the argument [startwait then the UI will change to look like the following screenshot when you first connect.</p>
@@ -117,7 +117,7 @@ title: UI
 <h3>Collect Trace</h3>
 <p>Toggles whether trace should be collected over the network.</p>
 
-<h3>Filter… Button</h3>
+<h3>Filter Button</h3>
 <p>Launches a dialog which allows text include and exclude filters to be specified. These get applied to all lines of text already collected along with all new lines received from the InTrace agent.</p>
 
 <h3>Enable Filter</h3>
