@@ -25,7 +25,11 @@ public class AgentClientConnection extends InstruRunnable
 {
   private final Socket connectedClient;
   private final ClassTransformer transformer;
-  private boolean traceConnEstablished = false;
+  public ClassTransformer getTransformer() {
+	return transformer;
+}
+
+private boolean traceConnEstablished = false;
   private final Object traceConnLock = new Object();
   
   /**

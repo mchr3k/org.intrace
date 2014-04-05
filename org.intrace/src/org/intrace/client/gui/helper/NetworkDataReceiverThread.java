@@ -6,11 +6,15 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import org.intrace.shared.Base64;
+
+
 public class NetworkDataReceiverThread implements Runnable
 {
   public static interface INetworkOutputConfig
   {
     public boolean isNetOutputEnabled();
+    public boolean isGzipEnabled();
   }
   
   private final Socket traceSocket;
@@ -53,6 +57,10 @@ public class NetworkDataReceiverThread implements Runnable
           {
             if (outputConfig.isNetOutputEnabled())
             {
+              if (outputConfig.isGzipEnabled()) {
+            	  byte[] tmp = Base64.decode(traceLine);
+            	  traceLine = new String(tmp);
+              }
               traceThread.addTraceLine(traceLine);
             }
           }

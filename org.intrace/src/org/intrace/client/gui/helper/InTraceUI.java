@@ -787,6 +787,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
       final Button branchTrace;
       final Button argsTrace;
       final Button arrayTrace;
+      final Button exitStackTrace;
 
       final Composite composite;
 
@@ -813,6 +814,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         arrayTrace.setText(ClientStrings.ENABLE_ARRAY_TRACE);
         arrayTrace.setAlignment(SWT.CENTER);
 
+        exitStackTrace = new Button(composite, SWT.CHECK);
+        exitStackTrace.setText(ClientStrings.ENABLE_EXIT_STACK_TRACE);
+        exitStackTrace.setAlignment(SWT.CENTER);
+
+        
         entryExitTrace
             .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
             {
@@ -855,6 +861,17 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
             toggleSetting(settingsData.truncArraysEnabled, TraceConfigConstants.ARRAYS + "true",
                 TraceConfigConstants.ARRAYS + "false");
             settingsData.truncArraysEnabled = !settingsData.truncArraysEnabled;
+          }
+        });
+        exitStackTrace
+        .addSelectionListener(new org.eclipse.swt.events.SelectionAdapter()
+        {
+          @Override
+          public void widgetSelected(SelectionEvent arg0)
+          {
+            toggleSetting(settingsData.exitStackTrace, "[exit-stack-trace-true",
+                "[exit-stack-trace-false");
+            settingsData.exitStackTrace = !settingsData.exitStackTrace;
           }
         });
       }
@@ -2026,6 +2043,11 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
           {
             return settingsData.netOutEnabled;
           }
+          @Override
+          public boolean isGzipEnabled()
+          {
+            return settingsData.gzipEnabled;
+          }
         };
         networkTraceThread = new NetworkDataReceiverThread(remoteAddress,
             networkTracePort, config, outputTabs.textOutputTab.filterThread);
@@ -2204,6 +2226,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
         settingsTabs.traceTab.argsTrace.setEnabled(true);
         settingsTabs.traceTab.branchTrace.setEnabled(true);
+        settingsTabs.traceTab.exitStackTrace.setEnabled(true);
         settingsTabs.traceTab.entryExitTrace.setEnabled(true);
         settingsTabs.traceTab.arrayTrace.setEnabled(true);
         settingsTabs.agentOutputSettingsTab.fileOutput.setEnabled(true);
@@ -2218,6 +2241,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         // Update the button pressed/unpressed state
         settingsTabs.traceTab.argsTrace.setSelection(settingsData.argsEnabled);
         settingsTabs.traceTab.branchTrace.setSelection(settingsData.branchEnabled);
+        settingsTabs.traceTab.exitStackTrace.setSelection(settingsData.exitStackTrace);
         settingsTabs.traceTab.entryExitTrace.setSelection(settingsData.entryExitEnabled);
         settingsTabs.traceTab.arrayTrace.setSelection(settingsData.truncArraysEnabled);
         settingsTabs.agentOutputSettingsTab.fileOutput.setSelection(settingsData.fileOutEnabled);
@@ -2256,6 +2280,7 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
 
         settingsTabs.traceTab.argsTrace.setEnabled(false);
         settingsTabs.traceTab.branchTrace.setEnabled(false);
+        settingsTabs.traceTab.exitStackTrace.setEnabled(false);
         settingsTabs.traceTab.entryExitTrace.setEnabled(false);
         settingsTabs.traceTab.arrayTrace.setEnabled(false);
         settingsTabs.agentOutputSettingsTab.fileOutput.setEnabled(false);

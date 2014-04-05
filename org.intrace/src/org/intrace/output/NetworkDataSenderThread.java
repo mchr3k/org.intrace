@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.intrace.agent.server.AgentClientConnection;
+import org.intrace.shared.Base64;
 
 public class NetworkDataSenderThread extends InstruRunnable
 {
@@ -100,6 +101,10 @@ public class NetworkDataSenderThread extends InstruRunnable
         Object traceLine = outgoingData.poll(5, TimeUnit.SECONDS);
         if (traceLine != null)
         {
+          if (traceLine instanceof String && connection.getTransformer().isGzipEnabled()) {
+        	  String tmp = (String)traceLine;
+        	  traceLine = Base64.encodeBytes(tmp.getBytes(), Base64.GZIP);
+          }
           traceWriter.writeObject(traceLine);
         }
         else

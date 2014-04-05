@@ -12,6 +12,7 @@ public class ClientStrings
   public static final String ENABLE_BRANCH_TRACE = "Branch";
   public static final String ENABLE_ARGS_TRACE = "Method Args, Return Values, Exceptions";
   public static final String ENABLE_ARRAY_TRACE = "Truncate Array Args";
+  public static final String ENABLE_EXIT_STACK_TRACE = "Add Stacktrace to Exit";
 
   public static final String BEGIN_CAPTURE_CALLERS = "New Callers Capture...";
   public static final String END_CAPTURE_CALLERS = "End Callers Capture";
