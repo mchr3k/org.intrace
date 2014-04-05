@@ -20,4 +20,6 @@
     <page name="Downloads" url="/downloads.jsp" />
   </admin-console>
 	
+	<threadsafe>true</threadsafe>
+	
 </appengine-web-app>
