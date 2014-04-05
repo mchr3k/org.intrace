@@ -5,40 +5,38 @@ title: Building InTrace
 <h1>Building InTrace</h1>
 
 <h2>Release Process</h2>
-<p>All this is run within the “org.intrace” folder.</p>
+<p>All this is run within the "org.intrace" folder.</p>
 <ul>
-<li>“ant clean release1” – Build InTrace agent and standalone UI</li>
+<li>"ant clean release1" - Build InTrace agent and standalone UI</li>
 
-	<li>Within Eclipse (RCP SDK installed), open site.xml within the “intrace.ecl.site” project and run “Build All”</li>
-	<li>“ant clean release2” – Prepare the zipped Eclipse update site and copy the Eclipse files into the App Engine project</li>
-	<li>Within Eclipse (App Engine Plugin installed), select “intrace.appengine” and run “Deploy App Engine Project”</li>
+	<li>Within Eclipse (RCP SDK installed), open site.xml within the "intrace.ecl.site" project and run "Build All"</li>
+	<li>"ant clean release2" - Prepare the zipped Eclipse update site and copy the Eclipse files into the App Engine project</li>
+	<li>Within Eclipse (App Engine Plugin installed), select "intrace.appengine" and run "Deploy App Engine Project"</li>
 </ul><h2>Main Ant Targets</h2>
 <ul>
+  <li>"ant clean validate" - Run complete clean build of classes and jars and run junit tests with eclemma coverage and findbugs analysis.</li>
+  <li>"ant validate" - As above without clean.</li>
+  <li>"ant example" -  Build classes and jars then run an example class which the GUI can then connect to.</li>
+  <li>"ant clean jar" - Build clean copies of the jars.</li>
+</ul>
 
-<li>“ant clean validate” – Run complete clean build of classes and jars and run junit tests with eclemma coverage and findbugs analysis.</li>
-	<li>“ant validate” – As above without clean.</li>
-	<li>“ant example” –  Build classes and jars then run an example class which the GUI can then connect to.</li>
-	<li>“ant clean jar” – Build clean copies of the jars.</li>
-</ul><h2>All Ant Targets</h2>
-<p>Each of these targets depends on the one preceding it (apart from clean). This means you can do a full clean build by running “ant clean jar”.</p>
+<h2>All Ant Targets</h2>
+<p>Each of these targets depends on the one preceding it (apart from clean). This means you can do a full clean build by running ï¿½ant clean jarï¿½.</p>
 
 <ul>
-<li>clean – Delete all build folders</li>
-	<li>build – Compile main program classes</li>
-	<li>jar – Create jars</li>
-	<li>example – Run example class (see above)</li>
-	<li>test
-	<ul>
-<li>Compile test classes</li>
-
-		<li>
-EMMA instrument main program classes</li>
-		<li>Run junit tests</li>
-		<li>Produce junit test report</li>
-		<li>Produce EMMA code coverage report</li>
-
-	</ul>
-</li>
-	<li>findbugs – Run findbugs analysis of agent jar</li>
-	<li>release – do all of the above (except run example)</li>
+  <li>clean - Delete all build folders</li>
+  <li>build - Compile main program classes</li>
+  <li>jar - Create jars</li>
+  <li>example - Run example class (see above)</li>
+  <li>test
+    <ul>
+     <li>Compile test classes</li>
+     <li>EMMA instrument main program classes</li>
+     <li>Run junit tests</li>
+     <li>Produce junit test report</li>
+     <li>Produce EMMA code coverage report</li>
+    </ul>
+  </li>
+  <li>findbugs - Run findbugs analysis of agent jar</li>
+  <li>release - do all of the above (except run example)</li>
 </ul>
