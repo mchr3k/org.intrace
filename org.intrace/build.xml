@@ -332,6 +332,7 @@
     <copy todir="../binaries/jars/latest_development" overwrite="true">
       <fileset file="./build/jars/intrace-agent.jar" />
       <fileset file="./build/jars/intrace-ui.jar" />
+      <fileset file="./build/jars/InTrace.app.tar" />
     </copy>
     <delete>
       <fileset dir="../intrace.appengine/war/features/" includes="*.jar"/>
@@ -352,6 +353,7 @@
     <copy todir="../binaries/jars/latest_development" overwrite="true">
       <fileset file="./build/jars/intrace-agent.jar" />
       <fileset file="./build/jars/intrace-ui.jar" />
+      <fileset file="./build/jars/InTrace.app.tar" />
     </copy>
     <delete>
       <fileset dir="../intrace.appengine/war/features/" includes="*.jar"/>
@@ -376,6 +378,12 @@
          basedir="../intrace.ecl.site/"
          excludes=".project"
     />
+    
+    <copy todir="../intrace.appengine/war/files" overwrite="true">
+      <fileset file="../binaries/jars/latest_development/intrace-agent.jar" />
+      <fileset file="../binaries/jars/latest_development/intrace-ui.jar" />
+      <fileset file="../binaries/jars/latest_development/InTrace.app.tar" />
+    </copy>
   </target>
 
   <target name="update_eclipse_jars" depends="jar" >
