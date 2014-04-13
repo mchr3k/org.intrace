@@ -29,6 +29,8 @@ import org.intrace.output.InstruRunnable;
 import org.intrace.output.trace.TraceHandler;
 import org.intrace.shared.AgentConfigConstants;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.EmptyVisitor;
 
 /**
  * Uses ASM2 to transform class files to add Trace instrumentation.
@@ -139,13 +141,15 @@ public class ClassTransformer implements ClassFileTransformer
    * @param klass
    * @param className
    * @param protectionDomain
+   * @param originalClassfile
    * @return True if the Class with name className should be instrumented.
    */
   private boolean isToBeConsideredForInstrumentation(
                                                      Class<?> klass,
                                                      ClassLoader klassloader,
                                                      String className,
-                                                     ProtectionDomain protectionDomain)
+                                                     ProtectionDomain protectionDomain,
+                                                     byte[] originalClassfile)
   {
     ComparableClassName compklass = new ComparableClassName(className,
                                                             klassloader);
@@ -195,16 +199,57 @@ public class ClassTransformer implements ClassFileTransformer
     if ((settings.getClassRegex() == null)
         || !matches(settings.getClassRegex(), className))
     {
-      if (settings.isVerboseMode())
+      // Actually we should modify if any of the interfaces match the regex
+      boolean matchedInterface = false;
+      for(String klassInterface : getInterfaces(className, originalClassfile))
       {
-        TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class not matching the active include regex: "
-                           + className);
+        if ((settings.getClassRegex() != null)
+            && matches(settings.getClassRegex(), klassInterface))
+        {
+          matchedInterface |= true;
+        }
       }
-      return false;
+
+      if(!matchedInterface)
+      {
+        if (settings.isVerboseMode())
+        {
+          TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class not matching the active include regex: "
+                             + className);
+        }
+        return false;
+      }
     }
 
     // All checks passed - class can be instrumented
     return true;
+  }
+
+  private String[] getInterfaces(String className, byte[] originalClassfile)
+  {
+    try
+    {
+      final String[][] interfaceNames = new String[1][];
+      ClassReader cr = new ClassReader(originalClassfile);
+      ClassVisitor cv = new EmptyVisitor() {
+        @Override
+        public void visit(int version, int access, String name,
+            String signature, String superName, String[] interfaces)
+        {
+          interfaceNames[0] = interfaces;
+          super.visit(version, access, name, signature, superName, interfaces);
+        }
+      };
+      cr.accept(cv, 0);
+      return interfaceNames[0];
+    }
+    catch (Throwable th)
+    {
+      System.err.println("Caught Throwable when trying to instrument: "
+                         + className);
+      th.printStackTrace();
+      return new String[0];
+    }
   }
 
   private boolean matches(String[] strs, String target)
@@ -259,8 +304,9 @@ public class ClassTransformer implements ClassFileTransformer
       int allClassesSize = allClasses.size();
 
       boolean shouldInstrument = isToBeConsideredForInstrumentation(classBeingRedefined, loader,
-                                                                    className, protectionDomain);
-      if (shouldInstrument || "java.lang.Thread".equals(className))
+                                                                    className, protectionDomain,
+                                                                    originalClassfile);
+      if (shouldInstrument && !"java.lang.Thread".equals(className))
       {
 //        System.out.println("!! Instrumenting class: " + compclass);
 
@@ -585,8 +631,6 @@ public class ClassTransformer implements ClassFileTransformer
    * <li>Class is an annotation
    * <li>Class is synthetic
    * <li>Class is not modifiable
-   * <li>Class is rejected by
-   * {@link ClassTransformer#isToBeConsideredForInstrumentation(String, ProtectionDomain)}
    * </ul>
    */
   public Set<ComparableClass> getLoadedClassesForModification()
@@ -620,12 +664,7 @@ public class ClassTransformer implements ClassFileTransformer
                              + loadedClass.getCanonicalName());
         }
       }
-      else if (isToBeConsideredForInstrumentation(
-                                                  loadedClass,
-                                                  loadedClass.getClassLoader(),
-                                                  loadedClass.getName(),
-                                                  loadedClass
-                                                             .getProtectionDomain()))
+      else
       {
         ComparableClass loadedKlass = new ComparableClass(loadedClass);
         unmodifiedKlasses.add(loadedKlass);

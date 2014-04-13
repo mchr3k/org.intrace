@@ -6,13 +6,13 @@ import java.util.Map;
 
 public class TraceExample
 {
-  
+
   private static Map<String,String> map = new HashMap<String, String>();
   static
   {
     map.put("foo", "bar");
   }
-  
+
   /**
    * @param args
    * @throws Exception
@@ -23,7 +23,7 @@ public class TraceExample
     try
     {
       otherMain(args[0]);
-    } 
+    }
     catch (Throwable ex)
     {
       ex.printStackTrace();
@@ -38,6 +38,7 @@ public class TraceExample
       InnerTestClass.foo();
       workMethod("foobar");
       new InnerTestClass().boolMethod(true);
+      new ImplWithTerribleName().shoutOut();
     }
   }
 
@@ -72,7 +73,7 @@ public class TraceExample
     }
     catch (Exception ex)
     {
-      return "seen exception";      
+      return "seen exception";
     }
     return "no exception";
   }
@@ -89,12 +90,12 @@ public class TraceExample
     {
       System.setProperty("a", "foobar");
     }
-    
+
     private void boolMethod(boolean xiArg)
     {
       System.out.println(Boolean.toString(xiArg));
     }
-    
+
     private static void foo()
     {
       System.setProperty("a", "bar");
