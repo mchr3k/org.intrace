@@ -23,7 +23,6 @@ public class AgentSettings
   private int actualServerPort = -1;
   
   // Dynamic settings
-  private boolean gzipEnabled = false;
   private String[] classRegex = new String[0];
   private String[] excludeClassRegex = new String[0];
   private boolean instruEnabled = true;
@@ -39,7 +38,6 @@ public class AgentSettings
   {
     // Copy all static state and dynamic settings
     actualServerPort = oldInstance.getActualServerPort();
-    gzipEnabled = oldInstance.isGzipEnabled();
     classRegex = oldInstance.getClassRegex();
     excludeClassRegex = oldInstance.getExcludeClassRegex();
     instruEnabled = oldInstance.isInstrumentationEnabled();
@@ -47,12 +45,6 @@ public class AgentSettings
     verboseMode = oldInstance.isVerboseMode();
   }
 
-  public boolean isGzipEnabled() {
-	  return gzipEnabled;
-  }
-  public void setGzipEnabled(boolean val) {
-	  gzipEnabled = val;
-  }
 
 public void parseArgs(String args)
   {
@@ -116,14 +108,6 @@ public void parseArgs(String args)
     {
       waitStart = false;
     }
-    else if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.GZIP + "true"))
-	{
-		gzipEnabled = true;
-	}
-	else if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.GZIP + "false"))
-	{
-		gzipEnabled = false;
-	}
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
@@ -194,7 +178,6 @@ public void parseArgs(String args)
   {
     // Output key settings
     String currentSettings = "";
-    currentSettings += "GZip Enabled                : " + gzipEnabled + "\n";
     currentSettings += "Class Regex                : " + Arrays.toString(classRegex) + "\n";
     currentSettings += "Exclude Class Regex        : " + Arrays.toString(excludeClassRegex) + "\n";
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
@@ -208,8 +191,6 @@ public void parseArgs(String args)
     Map<String, String> settingsMap = new HashMap<String, String>();
     settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,
                     Boolean.toString(instruEnabled));
-    settingsMap.put(AgentConfigConstants.GZIP,
-            Boolean.toString(gzipEnabled));
     settingsMap.put(AgentConfigConstants.CLASS_REGEX, 
                     getPatternString(classRegex));
     settingsMap.put(AgentConfigConstants.EXCLUDE_CLASS_REGEX,

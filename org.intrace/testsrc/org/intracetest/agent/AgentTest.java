@@ -21,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import junit.framework.TestCase;
 
 import org.easymock.IAnswer;
-import org.easymock.classextension.EasyMock;
+import org.easymock.EasyMock;
 import org.intrace.output.AgentHelper;
 import org.intrace.output.IInstrumentationHandler;
 import org.intrace.shared.AgentConfigConstants;
@@ -109,22 +109,6 @@ public class AgentTest extends TestCase
     assertEquals(helpResponse, expectedHelpResponse);
   }
 
-  /**
-		Intentionally, testSetting(AgentConfigConstants.GZIP, "true") does not work.
-		For simplicity's sake, this setting can only be configured as an intrace agent command line parameter -- [gzip-true
-		Note that there is no GUI checkbox to enabled Gzip.
-	    To instead enable the client to change this, just change how ClassTransformer#getResponse() deals with a new gzip parameter.
-		The following simply confirms that
-		<ul> 
-			<li> getsettings works for gzip parm </li>
-			<li> b) by default, GZIP is turned off. </li>
-		</ul>
-   * 
-   * @throws Exception
-   */
-  public void testRetrievalOfGzipSetting() throws Exception {
-	    testGetSetting(AgentConfigConstants.GZIP, "false");
-  }
   public void testSettings() throws Exception
   {
     // Boolean settings
@@ -149,6 +133,7 @@ public class AgentTest extends TestCase
     //testSetting(TraceConfigConstants.BRANCH, "false");
   }
   
+	private BlockingQueue<String> capturedTrace = null;
   public void testBranchPatterns() throws Throwable
   {
     // Create and init the mock
@@ -160,7 +145,8 @@ public class AgentTest extends TestCase
             .andReturn(new HashMap<String, String>()).anyTimes();
 
     // Capture objects
-    final BlockingQueue<String> capturedTrace = new LinkedBlockingQueue<String>();
+    //final BlockingQueue<String> capturedTrace = new LinkedBlockingQueue<String>();
+    capturedTrace = new LinkedBlockingQueue<String>();
     IAnswer<Object> entryTraceWriter = new IAnswer<Object>()
     {
       @Override
@@ -228,7 +214,6 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.GZIP, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, "BranchPatterns");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
@@ -344,7 +329,6 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.GZIP, "false");
     testSetting(AgentConfigConstants.CLASS_REGEX, "ArgumentTypes");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");

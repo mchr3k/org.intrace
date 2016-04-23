@@ -16,7 +16,6 @@ public class ParsedSettingsData
 
   public boolean entryExitEnabled;
   public boolean branchEnabled;
-  public boolean gzipEnabled = false;
   public boolean truncArraysEnabled;
   public boolean argsEnabled;
   public boolean exitStackTrace = false;
@@ -37,15 +36,6 @@ public class ParsedSettingsData
   public ParsedSettingsData(Map<String, String> settingsMap)
   {
     this.settingsMap = settingsMap;
-
-    if ("true".equals(settingsMap.get(AgentConfigConstants.GZIP)))
-    {
-      gzipEnabled = true;
-    }
-    else
-    {
-      gzipEnabled = false;
-    }
     
     if ("true".equals(settingsMap.get(AgentConfigConstants.EXIT_STACK_TRACE)))
     {
