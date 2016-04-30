@@ -491,7 +491,8 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
               },
               getListFromString(settingsData.classRegex),
               getListFromString(settingsData.classExcludeRegex),
-              ALLOW_CLASSES);
+              ALLOW_ALL);
+              //ALLOW_CLASSES);
           placeDialogInCenter(sWindow.getBounds(), regexInput.sWindow);
         }
       });
@@ -2118,10 +2119,13 @@ public class InTraceUI implements ISocketCallback, IControlConnectionListener
         @Override
         public void run()
         {
-          settingsData.classRegex = includePattern;
-          settingsData.classExcludeRegex = excludePattern;
-          controlThread.sendMessage(AgentConfigConstants.CLASS_REGEX + includePattern
-              + AgentConfigConstants.EXCLUDE_CLASS_REGEX + excludePattern);
+        	String tmpInclude = includePattern.replace('[', '{');
+        	String tmpExclude = excludePattern.replace('[', '{');
+        	
+          settingsData.classRegex = tmpInclude;
+          settingsData.classExcludeRegex = tmpExclude;
+          controlThread.sendMessage(AgentConfigConstants.CLASS_REGEX + tmpInclude
+              + AgentConfigConstants.EXCLUDE_CLASS_REGEX + tmpExclude);
           controlThread.sendMessage("getsettings");
         }
       });

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.intrace.output.AgentHelper;
+import org.intrace.output.trace.TraceHandler;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
@@ -27,6 +28,7 @@ public class InstrumentedClassWriter extends ClassWriter
   private final ClassAnalysis analysis;
   private final boolean threadClass;
   private final boolean shouldInstrument;
+  private AgentSettings settings = null;
 
   /**
    * cTor
@@ -37,13 +39,14 @@ public class InstrumentedClassWriter extends ClassWriter
    * @param analysis
    */
   public InstrumentedClassWriter(String xiClassName, ClassReader xiReader,
-      ClassAnalysis xiAnalysis, boolean xiShouldInstrument)
+      ClassAnalysis xiAnalysis, boolean xiShouldInstrument, AgentSettings settings)
   {
     super(xiReader, COMPUTE_MAXS);
     className = xiClassName;
     analysis = xiAnalysis;
     shouldInstrument = xiShouldInstrument;
     threadClass = xiClassName.equals("java.lang.Thread");
+    this.settings = settings;
   }
 
   /**
@@ -53,18 +56,52 @@ public class InstrumentedClassWriter extends ClassWriter
   public MethodVisitor visitMethod(int access, String name, String desc,
                                    String signature, String[] exceptions)
   {
+
+	    if (settings.isVerboseMode())
+	    {
+	    	
+	    	/**		The following code provides invaluable debug for conjuring right syntax for method parameters.
+	    	 * 		http://hsqldb.org/doc/src/org/hsqldb/jdbc/JDBCConnection.html#isWrapperFor(java.lang.Class)
+					[14:44:45.065]:[19]:access:1
+					[14:44:45.065]:[19]:name:isWrapperFor
+					[14:44:45.065]:[19]:desc:(Ljava/lang/Class;)Z   <<<<<==== complicate syntax for method specification
+					[14:44:45.065]:[19]:signature:(Ljava/lang/Class<*>;)Z
+					
+					http://hsqldb.org/doc/src/org/hsqldb/jdbc/JDBCConnection.html#prepareStatement(java.lang.String, java.lang.String[])
+					[14:44:45.068]:[19]:access:33
+					[14:44:45.068]:[19]:name:prepareStatement
+					[14:44:45.069]:[19]:desc:(Ljava/lang/String;[Ljava/lang/String;)Ljava/sql/PreparedStatement;   <<<<<==== complicated syntax for method specification
+					[14:44:45.069]:[19]:signature:null
+					
+	    	 */
+	  	  StringBuilder sb = new StringBuilder();
+	  	  sb.append(this.className);
+	  	  sb.append(InstrCriteria.CLASS_METHOD_DELIMITER);
+	  	  sb.append(name);
+	  	  sb.append(desc);
+	      TraceHandler.INSTANCE.writeTraceOutput("DEBUG: method signature: " + sb.toString());
+	    }	  
     MethodVisitor mv = super.visitMethod(access, name, desc, signature,
                                          exceptions);
 
-    // Extract analysis results for this method
-    Set<Integer> branchTraceLines = analysis.methodReverseGOTOLines.get(name
-                                                                        + desc);
-    Integer entryLine = analysis.methodEntryLines.get(name + desc);
+    // If this class/method is not excluded, but then consider including it.
+    // If all methods are allowed (by not specifying any methods) or this specific method is defined, then instrument it.
 
-    if (!threadClass || !name.equals("getUncaughtExceptionHandler"))
-    {
-      mv = new InstrumentedMethodWriter(mv, access, name, desc,
-                                             branchTraceLines, entryLine);
+    if (this.settings.getClassesToExclude()==null
+    		||!this.settings.getClassesToExclude().thisMethodSpecified(this.className, name, desc)) {
+    	if (this.settings.getClassesToInclude().thisMethodSpecified(this.className, name, desc)  ) {
+            // Extract analysis results for this method
+            Set<Integer> branchTraceLines = analysis.methodReverseGOTOLines.get(name
+                                                                                + desc);
+            Integer entryLine = analysis.methodEntryLines.get(name + desc);
+
+            if (!threadClass || !name.equals("getUncaughtExceptionHandler"))
+            {
+            	//System.out.println("Instrumenting class [" + this.className + "] method [" + name + "] args [" + desc + "]");
+              mv = new InstrumentedMethodWriter(mv, access, name, desc,
+                                                     branchTraceLines, entryLine);
+            }
+    	}
     }
     // Transform the method
     return mv;

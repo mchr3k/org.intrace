@@ -175,7 +175,7 @@
   </target>
 
   <target name="test" description="Run Tests" depends="build" >
-    <property name="emma.enabled" value="true" />
+    <property name="emma.enabled" value="false" />
 
     <mkdir dir="./reports" />
     <mkdir dir="./reports/junit" />
@@ -239,7 +239,7 @@
 
       <batchtest fork="yes" todir="./reports/junit/raw">
         <fileset dir="./testsrc">
-          <include name="**/agent/*Test.java"/>
+          <include name="**/agent/*Test.java"/> 
         </fileset>
       </batchtest>
     </junit>
@@ -395,7 +395,7 @@
 
   <target name="example_build">
     <mkdir dir="./build/test" />
-    <javac destdir="./build/test" debug="true" source="1.6" target="1.6"
+    <javac destdir="./build/test" debug="true" source="1.7" target="1.7"
            includeantruntime="false">
       <src path="./testsrc"/>
       <classpath>
@@ -414,6 +414,16 @@
       <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
     </java>
   </target>
+
+  <target name="example2" depends="jar,example_build">
+    <java classname="org.intracetest.agent.ArgumentTypes" fork="true">
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
+    </java>
+  </target>
+
 
   <target name="waitexample" depends="jar,example_build">
     <java classname="example.TraceExample" fork="true">

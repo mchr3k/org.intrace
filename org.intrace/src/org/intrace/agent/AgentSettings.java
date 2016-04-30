@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.intrace.output.trace.TraceHandler;
 import org.intrace.shared.AgentConfigConstants;
 
 /**
@@ -12,9 +13,11 @@ import org.intrace.shared.AgentConfigConstants;
  * 
  * where argx is of the form value-parameter
  */
-public class AgentSettings
+public class AgentSettings implements VerboseLogger
 {
-  // Static settings which control agent startup
+
+
+// Static settings which control agent startup
   private int serverPort = 9123;
   private int callbackPort = -1;
   private boolean waitStart = false;
@@ -24,27 +27,39 @@ public class AgentSettings
   
   // Dynamic settings
   private boolean gzipEnabled = false;
-  private String[] classRegex = new String[0];
-  private String[] excludeClassRegex = new String[0];
+  private InstrCriteria classesToInclude = null;
+  public InstrCriteria getClassesToInclude() {
+	return classesToInclude;
+}
+
+
+public InstrCriteria getClassesToExclude() {
+	return classesToExclude;
+}
+
+private InstrCriteria classesToExclude = null;
   private boolean instruEnabled = true;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;  
 
-  public AgentSettings(String args)
-  {
-    parseArgs(args);
-  }
+  
 
   public AgentSettings(AgentSettings oldInstance)
   {
     // Copy all static state and dynamic settings
     actualServerPort = oldInstance.getActualServerPort();
     gzipEnabled = oldInstance.isGzipEnabled();
-    classRegex = oldInstance.getClassRegex();
-    excludeClassRegex = oldInstance.getExcludeClassRegex();
+    this.classesToInclude = oldInstance.classesToInclude;
+    this.classesToExclude = oldInstance.classesToExclude;
+    
+    
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
+  }
+  public AgentSettings(String args)
+  {
+    parseArgs(args);
   }
 
   public boolean isGzipEnabled() {
@@ -127,7 +142,8 @@ public void parseArgs(String args)
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
-      classRegex = classRegexStr.split("\\|");
+      this.classesToInclude = new InstrCriteria(classRegexStr);
+      this.classesToInclude.verboseLogger = this;
     }
     else if (arg.startsWith(AgentConfigConstants.EXCLUDE_CLASS_REGEX))
     {
@@ -135,7 +151,8 @@ public void parseArgs(String args)
                                        .replace(
                                                 AgentConfigConstants.EXCLUDE_CLASS_REGEX,
                                                 "");
-      excludeClassRegex = classExcludeRegexStr.split("\\|");
+      this.classesToExclude = new InstrCriteria(classExcludeRegexStr);
+      this.classesToExclude.verboseLogger = this;
     }
   }
 
@@ -166,12 +183,18 @@ public void parseArgs(String args)
 
   public String[] getClassRegex()
   {
-    return classRegex;
+	  String[] rc = {};
+	  if (this.classesToInclude!=null)
+		  rc = this.classesToInclude.getClassRegex(); 
+    return rc;
   }
 
   public String[] getExcludeClassRegex()
   {
-    return excludeClassRegex;
+	  String[] rc = {};
+	  if (this.classesToExclude!=null)
+		  rc = this.classesToInclude.getClassRegex(); 
+    return rc;
   }
 
   public boolean isInstrumentationEnabled()
@@ -195,8 +218,17 @@ public void parseArgs(String args)
     // Output key settings
     String currentSettings = "";
     currentSettings += "GZip Enabled                : " + gzipEnabled + "\n";
-    currentSettings += "Class Regex                : " + Arrays.toString(classRegex) + "\n";
-    currentSettings += "Exclude Class Regex        : " + Arrays.toString(excludeClassRegex) + "\n";
+    
+    String includeString = "";
+    if (this.classesToInclude != null)
+    	includeString = this.classesToInclude.toString();
+    currentSettings += "Include Class Regex                : " + includeString + "\n";
+    
+    String excludeString = "";
+    if (this.classesToExclude != null)
+    	excludeString = this.classesToExclude.toString();
+    currentSettings += "Exclude Class Regex                : " + excludeString + "\n";
+    
     currentSettings += "Tracing Enabled            : " + instruEnabled + "\n";
     currentSettings += "Save Traced Class Files    : " + saveTracedClassfiles
                        + "\n";
@@ -210,10 +242,20 @@ public void parseArgs(String args)
                     Boolean.toString(instruEnabled));
     settingsMap.put(AgentConfigConstants.GZIP,
             Boolean.toString(gzipEnabled));
+    
+    String includeSettings = "";
+    if (this.classesToInclude!=null) {
+    	includeSettings = this.classesToInclude.toString();
+    }
     settingsMap.put(AgentConfigConstants.CLASS_REGEX, 
-                    getPatternString(classRegex));
+                    includeSettings);
+    
+    String excludeSettings = "";
+    if (this.classesToExclude!=null) {
+    	includeSettings = this.classesToExclude.toString();
+    }
     settingsMap.put(AgentConfigConstants.EXCLUDE_CLASS_REGEX,
-                    getPatternString(excludeClassRegex));
+                    excludeSettings);
     settingsMap.put(AgentConfigConstants.VERBOSE_MODE,
                     Boolean.toString(verboseMode));
     settingsMap.put(AgentConfigConstants.SAVE_TRACED_CLASSFILES,
@@ -222,18 +264,13 @@ public void parseArgs(String args)
     settingsMap.put(AgentConfigConstants.START_WAIT, Boolean.toString(waitStart));
     return settingsMap;
   }
+
+
+	public void logVerbose(String v) {
+	    if (isVerboseMode())
+	    {
+	      TraceHandler.INSTANCE.writeTraceOutput("DEBUG: " + v);
+	    }
+	}
   
-  private String getPatternString(String[] parts)
-  {
-    StringBuilder strBuilder = new StringBuilder();
-    for (int ii = 0; ii < parts.length; ii++)
-    {
-      strBuilder.append(parts[ii]);
-      if (ii < (parts.length - 1))
-      {
-        strBuilder.append("|");
-      }
-    }
-    return strBuilder.toString();
-  }
 }
