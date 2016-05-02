@@ -112,7 +112,8 @@ public class ClassTransformer implements ClassFileTransformer
 
       InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
                                                                    cr, analysis,
-                                                                   shouldInstrument);
+                                                                   shouldInstrument,
+                                                                   settings);
       cr.accept(writer, 0);
 
       return writer.toByteArray();
@@ -163,7 +164,7 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
-    // Don't sensitive classes
+    // Don't instrument sensitive classes
     if (isSensitiveClass(className))
     {
       if (settings.isVerboseMode())
@@ -183,10 +184,9 @@ public class ClassTransformer implements ClassFileTransformer
       return false;
     }
 
-    // Don't modify classes which match the exclude regex
-    if ((settings.getExcludeClassRegex() == null)
-        || matches(settings.getExcludeClassRegex(), className))
-    {
+    
+    if (this.settings.getClassesToExclude() != null && 
+    		this.settings.getClassesToExclude().allMethodsSpecified(className)) {
       if (settings.isVerboseMode())
       {
         TraceHandler.INSTANCE.writeTraceOutput("DEBUG: Ignoring class matching the active exclude regex: "
@@ -706,7 +706,7 @@ public class ClassTransformer implements ClassFileTransformer
         catch (Throwable e)
         {
           // Write exception to stdout
-//          System.out.println(klass.klass.getName());
+          System.err.println("Exception [" + e.getMessage() + "] instrumenting [" + klass.klass.getName() + "]");
           e.printStackTrace();
         }
       }
