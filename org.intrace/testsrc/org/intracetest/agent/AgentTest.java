@@ -214,8 +214,8 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.CLASS_REGEX, "BranchPatterns");
-    testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
+    testSetting(AgentConfigConstants.CLASS_REGEX, "org.intracetest.agent.BranchPatterns");
+    testSetting(AgentConfigConstants.VERBOSE_MODE, "true");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
 
@@ -240,6 +240,8 @@ public class AgentTest extends TestCase
       parseLine(parsedTraceData, traceLine);
       traceLine = capturedTrace.poll();
     }
+
+	assertEquals(12,parsedTraceData.size());
 
     // Verify the trace
     assertNotNull(parsedTraceData.get("switchblock"));
@@ -320,6 +322,7 @@ public class AgentTest extends TestCase
     }
   }
 
+
   public void testArgumentTypes() throws Throwable
   {
     // Create and init the mock
@@ -329,7 +332,7 @@ public class AgentTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.CLASS_REGEX, "ArgumentTypes");
+    testSetting(AgentConfigConstants.CLASS_REGEX, "org.intracetest.agent.ArgumentTypes");
     testSetting(AgentConfigConstants.VERBOSE_MODE, "false");
     testSetting(AgentConfigConstants.SAVE_TRACED_CLASSFILES, "true");
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "true");
@@ -494,7 +497,9 @@ public class AgentTest extends TestCase
   private void parseLine(Map<String, TraceData> parsedTraceData,
                          String traceLine)
   {
-    System.out.println("Parse: " + traceLine);
+    //System.out.println("Parse: " + traceLine);
+	if (traceLine.contains("DEBUG"))
+		return;
     String[] traceParts = traceLine.split(":##:");
     String traceType = traceParts[0];
     String traceLineData = traceParts[1];
