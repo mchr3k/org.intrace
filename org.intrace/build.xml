@@ -23,7 +23,7 @@
            classpath="./lib/jarbundler-2.2.0.jar"/>
 
   <property name="findbugs.home" value="./lib/findbugs" />
-
+  <property name="asm.jar.file" value="./lib/asm-debug-all-3.3.jar" />
 
   <target name="help">
     <java classname="org.apache.tools.ant.Main">
@@ -44,7 +44,7 @@
     <mkdir dir="./build" />
     <mkdir dir="./build/classes" />
 
-    <javac destdir="./build/classes" debug="true" source="1.6" target="1.6"
+    <javac destdir="./build/classes" debug="true" source="1.7" target="1.7"
            includeantruntime="false"> 
       <src path="./src"/>
       <classpath>
@@ -94,7 +94,7 @@
       <fileset dir="./build/classes" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes" includes="**/output/**/*.class" />
       <fileset dir="./build/classes" includes="**/shared/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="./lib/asm-debug-all-3.3.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="${asm.jar.file}"/>
       <rule pattern="org.objectweb.asm.**" result="org.intrace.internal.objectweb.asm.@1"/>
     </jarjar>
     <copy file="./build/jars/intrace-agent.jar" todir="./lib/" />
@@ -186,7 +186,7 @@
     <mkdir dir="./build/test" />
     <mkdir dir="./build/classes_instr" />
 
-    <javac destdir="./build/test" debug="true" source="1.6" target="1.6"
+    <javac destdir="./build/test" debug="true" source="1.7" target="1.7"
            includeantruntime="false">
       <src path="./testsrc"/>
       <classpath>
@@ -220,7 +220,7 @@
       <fileset dir="./build/classes_instr" includes="**/agent/**/*.class" />
       <fileset dir="./build/classes_instr" includes="**/output/**/*.class" />
       <fileset dir="./build/classes_instr" includes="**/shared/*.class" />
-      <zipfileset excludes="META-INF/*.MF" src="./lib/asm-debug-all-3.3.jar"/>
+      <zipfileset excludes="META-INF/*.MF" src="${asm.jar.file}"/>
     </jar>
 
     <junit printsummary="yes" failureproperty="test.failure">
@@ -233,7 +233,7 @@
       <jvmarg value="-Demma.coverage.out.merge=true" />
       <jvmarg value="-javaagent:./build/tmp/intrace-agent-instr.jar"/>
       <jvmarg value="-Xbootclasspath/a:./lib/emma.jar" />
-
+      <jvmarg value="-noverify" />
       <formatter type="xml"/>
       <formatter type="plain"/>
 

@@ -136,7 +136,6 @@ public class TracingThreeMethodsTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.GZIP, "false");
 
     String myCriteria = M1 + "|" + M2 + "|" + M3;
     //let's trace just these 3 methods

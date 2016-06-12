@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import org.intrace.shared.Base64;
+import org.intrace.shared.SerializationHelper;
 
 
 public class NetworkDataReceiverThread implements Runnable
@@ -14,7 +14,6 @@ public class NetworkDataReceiverThread implements Runnable
   public static interface INetworkOutputConfig
   {
     public boolean isNetOutputEnabled();
-    public boolean isGzipEnabled();
   }
   
   private final Socket traceSocket;
@@ -57,13 +56,13 @@ public class NetworkDataReceiverThread implements Runnable
           {
             if (outputConfig.isNetOutputEnabled())
             {
-              if (outputConfig.isGzipEnabled()) {
-            	  byte[] tmp = Base64.decode(traceLine);
-            	  traceLine = new String(tmp);
-              }
               traceThread.addTraceLine(traceLine);
             }
           }
+        } else if ( data instanceof byte[]) {
+        	String[] myObj1 = SerializationHelper.fromWire( (byte[])data);
+        	for(String s : myObj1)
+        		traceThread.addTraceLine(s);
         }
       }
     }

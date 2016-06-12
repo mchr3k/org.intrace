@@ -26,11 +26,10 @@ public class AgentSettings implements VerboseLogger
   private int actualServerPort = -1;
   
   // Dynamic settings
-  private boolean gzipEnabled = false;
   private InstrCriteria classesToInclude = null;
   public InstrCriteria getClassesToInclude() {
 	return classesToInclude;
-}
+  }
 
 
 public InstrCriteria getClassesToExclude() {
@@ -48,7 +47,6 @@ private InstrCriteria classesToExclude = null;
   {
     // Copy all static state and dynamic settings
     actualServerPort = oldInstance.getActualServerPort();
-    gzipEnabled = oldInstance.isGzipEnabled();
     this.classesToInclude = oldInstance.classesToInclude;
     this.classesToExclude = oldInstance.classesToExclude;
     
@@ -62,12 +60,6 @@ private InstrCriteria classesToExclude = null;
     parseArgs(args);
   }
 
-  public boolean isGzipEnabled() {
-	  return gzipEnabled;
-  }
-  public void setGzipEnabled(boolean val) {
-	  gzipEnabled = val;
-  }
 
 public void parseArgs(String args)
   {
@@ -131,14 +123,6 @@ public void parseArgs(String args)
     {
       waitStart = false;
     }
-    else if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.GZIP + "true"))
-	{
-		gzipEnabled = true;
-	}
-	else if (arg.toLowerCase(Locale.ROOT).equals(AgentConfigConstants.GZIP + "false"))
-	{
-		gzipEnabled = false;
-	}
     else if (arg.startsWith(AgentConfigConstants.CLASS_REGEX))
     {
       String classRegexStr = arg.replace(AgentConfigConstants.CLASS_REGEX, "");
@@ -217,7 +201,6 @@ public void parseArgs(String args)
   {
     // Output key settings
     String currentSettings = "";
-    currentSettings += "GZip Enabled                : " + gzipEnabled + "\n";
     
     String includeString = "";
     if (this.classesToInclude != null)
@@ -240,8 +223,6 @@ public void parseArgs(String args)
     Map<String, String> settingsMap = new HashMap<String, String>();
     settingsMap.put(AgentConfigConstants.INSTRU_ENABLED,
                     Boolean.toString(instruEnabled));
-    settingsMap.put(AgentConfigConstants.GZIP,
-            Boolean.toString(gzipEnabled));
     
     String includeSettings = "";
     if (this.classesToInclude!=null) {

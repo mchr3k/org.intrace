@@ -136,7 +136,6 @@ public class TracingSingleMethodTest extends TestCase
 
     // Setup agent
     testSetting(AgentConfigConstants.INSTRU_ENABLED, "false");
-    testSetting(AgentConfigConstants.GZIP, "false");
     
     //The intArg() method takes a single int parameter...let's trace just this one method.
     testSetting(AgentConfigConstants.CLASS_REGEX, "org.intracetest.agent.ArgumentTypes#intArg(I)V");

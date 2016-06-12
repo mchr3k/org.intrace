@@ -416,13 +416,25 @@ private static final Object STACK_ELE_DELIM = ",";
 	  StringBuilder sb = new StringBuilder();
 	  int counter = 0;
 	  for(StackTraceElement ste : Thread.currentThread().getStackTrace() ) {
-		  if ( ste.getClassName().indexOf(INTRACE_PACKAGE) <0
-				  && (ste.getClassName().indexOf(THREAD) < 0) && ste.getMethodName().indexOf(GET_STACK_TRACE)<0) {
+		  boolean disqualify = false;
+		  if (ste != null) {
+			  
+			  if ( (ste.getClassName() !=null) &&
+					(  (ste.getClassName().indexOf(INTRACE_PACKAGE) >= 0) 
+					  || (ste.getClassName().indexOf(THREAD) >= 0) ) 
+				)
+				  disqualify = true;
+				  
+			  if (ste.getMethodName()!=null 
+					  && ste.getMethodName().indexOf(GET_STACK_TRACE) >=0)
+					  disqualify = true;
+		  }
+				   
+		  if ( !disqualify) {
 			  if (counter++>0) sb.append(STACK_ELE_DELIM);  //Just like Arrays.toString(), place a comma between each stack trace ele.
 			  sb.append(ste.toString());
 		  }
 	  }
-
 	  return sb.toString();
   }
   @Override

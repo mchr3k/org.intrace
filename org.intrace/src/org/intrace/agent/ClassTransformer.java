@@ -308,8 +308,9 @@ public class ClassTransformer implements ClassFileTransformer
                                                                     originalClassfile);
       if (shouldInstrument && !"java.lang.Thread".equals(className))
       {
-//        System.out.println("!! Instrumenting class: " + compclass);
-
+          if (settings.isVerboseMode())
+            TraceHandler.INSTANCE.writeTraceOutput("DEBUG: !! Instrumenting class: " + compclass);
+    	  
         if (settings.saveTracedClassfiles())
         {
           writeClassBytes(originalClassfile, internalClassName + "_src.class");
@@ -528,9 +529,6 @@ public class ClassTransformer implements ClassFileTransformer
                     Integer.toString(modifiedClasses.size()));
     return settingsMap;
   }
-  public boolean isGzipEnabled() {
-	  return settings.isGzipEnabled();
-  }
 
   /**
    * Handle a message and return a response.
@@ -556,12 +554,6 @@ public class ClassTransformer implements ClassFileTransformer
 //      System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
-    else if (oldSettings.isGzipEnabled() != settings.isGzipEnabled())
-	{
-    	//For coding simplicity and user clarity, the gzip parameter can only be set on agent side
-    	//So, return to the old setting, which originated with the intrace agent command line parameter -- [gzip-true
-    	settings.setGzipEnabled(oldSettings.isGzipEnabled());
-	}
     else if (!Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
     {
 //      System.out.println("## Settings Changed");
@@ -693,20 +685,24 @@ public class ClassTransformer implements ClassFileTransformer
       broadcastProgress(countNumClasses, totalNumClasses);
       for (ComparableClass klass : klasses)
       {
+          if (settings.isVerboseMode())
+              TraceHandler.INSTANCE.writeTraceOutput("DEBUG: !! ClassTransformer#instrumentKlasses [" + klass.klass.getName() + "]");
         try
         {
           inst.retransformClasses(klass.klass);
 
           countNumClasses++;
-          if ((countNumClasses % 10) == 0)
+          if ((countNumClasses % 100) == 0)
           {
             broadcastProgress(countNumClasses, totalNumClasses);
           }
         }
         catch (Throwable e)
         {
-          // Write exception to stdout
-          System.err.println("Exception [" + e.getMessage() + "] instrumenting [" + klass.klass.getName() + "]");
+        	String error = "Exception [" + e.getMessage() + "] instrumenting [" + klass.klass.getName() + "]";
+            if (settings.isVerboseMode())
+                TraceHandler.INSTANCE.writeTraceOutput("DEBUG: !! " + error);
+          System.err.println(error);
           e.printStackTrace();
         }
       }

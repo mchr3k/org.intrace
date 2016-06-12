@@ -16,7 +16,6 @@ public class AgentConfigConstants
   
   public static final String SERVER_PORT = "SERVER_PORT";
 
-  public static final String GZIP = "[gzip-";	//Default is not enabled (false).
   public static final String CLASS_REGEX = "[regex-";
   public static final String EXCLUDE_CLASS_REGEX = "[exclude-regex-";
   public static final String INSTRU_ENABLED = "[instru-";
@@ -39,7 +38,6 @@ public class AgentConfigConstants
     COMMANDS.add(VERBOSE_MODE + "<true/false>");
     COMMANDS.add(OPT_SERVER_PORT + "<int>");
     COMMANDS.add(CALLBACK_PORT + "<int>");
-    COMMANDS.add(GZIP + "<true/false>");
     COMMANDS.add(EXIT_STACK_TRACE + "<true/false>");
   }
 }
