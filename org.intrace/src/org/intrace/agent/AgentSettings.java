@@ -40,6 +40,7 @@ private InstrCriteria classesToExclude = null;
   private boolean instruEnabled = true;
   private boolean saveTracedClassfiles = false;
   private boolean verboseMode = false;  
+  private boolean _instrumentImplementors = false;
 
   
 
@@ -54,6 +55,7 @@ private InstrCriteria classesToExclude = null;
     instruEnabled = oldInstance.isInstrumentationEnabled();
     saveTracedClassfiles = oldInstance.saveTracedClassfiles();
     verboseMode = oldInstance.isVerboseMode();
+    _instrumentImplementors = oldInstance.instrumentImplementors();
   }
   public AgentSettings(String args)
   {
@@ -138,8 +140,17 @@ public void parseArgs(String args)
       this.classesToExclude = new InstrCriteria(classExcludeRegexStr);
       this.classesToExclude.verboseLogger = this;
     }
+    else if (arg.toLowerCase(Locale.ROOT).equals(
+                                      AgentConfigConstants.INSTRUMENT_IMPLEMENTORS
+                                          + "true"))
+    {
+        this._instrumentImplementors = true;
+    }
   }
 
+  public boolean instrumentImplementors() {
+    return _instrumentImplementors;
+  }
   public boolean isWaitStart()
   {
     return waitStart;

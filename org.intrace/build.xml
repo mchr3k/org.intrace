@@ -423,6 +423,14 @@
       <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
     </java>
   </target>
+  <target name="example3" depends="jar,example_build">
+    <java classname="example.InstrumentMeLaunch" fork="true">
+      <classpath>
+        <pathelement path="./build/test" />
+      </classpath>
+      <jvmarg value="-javaagent:build/jars/intrace-agent.jar=[instru-true" />
+    </java>
+  </target>
 
 
   <target name="waitexample" depends="jar,example_build">
