@@ -472,7 +472,7 @@ private static final Object STACK_ELE_DELIM = ",";
                          + "]:" + xiOutput;
 //    if (AgentHelper.getOutputSettings().isStdoutOutputEnabled())
 //    {
-////      System.out.println(traceString);
+//      System.out.println(traceString);
 //    }
 
     if (AgentHelper.getOutputSettings().isFileOutputEnabled())

@@ -64,6 +64,25 @@ public class AgentSettingsTest extends TestCase
     assertEquals(settingsMap.get(AgentConfigConstants.VERBOSE_MODE), "true");
   }
 
+  public void testInstrumentImplementorsSetting() {
+    AgentSettings as1 = new AgentSettings(
+                                             AgentConfigConstants.INSTRUMENT_IMPLEMENTORS
+                                             + "true"
+                                             );
+    assertTrue( "unable to recognize parameter that instruments implementors of interfaces", as1.instrumentImplementors() );
+
+   AgentSettings as2 = new AgentSettings(
+                                             AgentConfigConstants.INSTRUMENT_IMPLEMENTORS
+                                             + "false"
+                                             );
+    assertFalse( "unable to recognize parameter that instruments implementors of interfaces",as2.instrumentImplementors() );
+
+  AgentSettings as3 = new AgentSettings("");
+    assertFalse( "unable to recognize parameter that instruments implementors of interfaces", as3.instrumentImplementors() );
+
+
+  }
+
   public void testInstrCriteria() {
 	InstrCriteria ic = new InstrCriteria("foo|bar");
 

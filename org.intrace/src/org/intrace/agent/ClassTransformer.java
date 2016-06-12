@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.intrace.agent.server.AgentClientConnection;
 import org.intrace.agent.server.AgentServer;
@@ -51,11 +52,21 @@ public class ClassTransformer implements ClassFileTransformer
    * Set of modified class names
    */
   private final Set<ComparableClassName> modifiedClasses = new ConcurrentSkipListSet<ComparableClassName>();
+  /**
+   * Javadoc and stacktraces show that ConcurrentSkipListSet.size() takes up large amount of time.
+   * This variable will be used to store count.
+   */
+  private final AtomicInteger modifiedClassesCount = new AtomicInteger(); 
 
   /**
    * Map of all seen class names
    */
   private final Set<ComparableClassName> allClasses = new ConcurrentSkipListSet<ComparableClassName>();
+  /**
+   * Javadoc and stacktraces show that ConcurrentSkipListSet.size() takes up large amount of time.
+   * This variable will be used to store count.
+   */
+  private final AtomicInteger allClassesCount = new AtomicInteger();
 
   /**
    * Instrumentation interface.
@@ -90,6 +101,8 @@ public class ClassTransformer implements ClassFileTransformer
     {
       TraceHandler.INSTANCE.writeTraceOutput("DEBUG: " + settings.toString());
     }
+    this.allClassesCount.set(0);
+    this.modifiedClassesCount.set(0);
   }
 
   /**
@@ -110,6 +123,7 @@ public class ClassTransformer implements ClassFileTransformer
       ClassAnalysis analysis = new ClassAnalysis();
       cr.accept(analysis, 0);
 
+	//System.out.println("getInstrumentedClassBytes [" + xiClassName + "]");
       InstrumentedClassWriter writer = new InstrumentedClassWriter(xiClassName,
                                                                    cr, analysis,
                                                                    shouldInstrument,
@@ -152,11 +166,13 @@ public class ClassTransformer implements ClassFileTransformer
                                                      ProtectionDomain protectionDomain,
                                                      byte[] originalClassfile)
   {
+//	System.out.println("itbcfi [" + className + "] klass [" + klass.getName() + "] protectionDomain [" + protectionDomain + "]");
     ComparableClassName compklass = new ComparableClassName(className,
                                                             klassloader);
 
     // Record all class names which get this far
     allClasses.add(compklass);
+    allClassesCount.incrementAndGet();
 
     // Don't modify anything if tracing is disabled
     if (!settings.isInstrumentationEnabled())
@@ -201,13 +217,15 @@ public class ClassTransformer implements ClassFileTransformer
     {
       // Actually we should modify if any of the interfaces match the regex
       boolean matchedInterface = false;
-      for(String klassInterface : getInterfaces(className, originalClassfile))
-      {
-        if ((settings.getClassRegex() != null)
-            && matches(settings.getClassRegex(), klassInterface))
-        {
-          matchedInterface |= true;
-        }
+      if (originalClassfile !=null && settings.instrumentImplementors() ) {
+          for(String klassInterface : getInterfaces(className, originalClassfile))
+          {
+            if ((settings.getClassRegex() != null)
+                && matches(settings.getClassRegex(), klassInterface))
+            {
+              matchedInterface |= true;
+           }
+          }
       }
 
       if(!matchedInterface)
@@ -300,8 +318,8 @@ public class ClassTransformer implements ClassFileTransformer
     {
       String className = internalClassName.replace('/', '.');
       ComparableClassName compclass = new ComparableClassName(className, loader);
-      int modifiedSize = modifiedClasses.size();
-      int allClassesSize = allClasses.size();
+      int modifiedSize = modifiedClassesCount.get();
+      int allClassesSize = allClassesCount.get();
 
       boolean shouldInstrument = isToBeConsideredForInstrumentation(classBeingRedefined, loader,
                                                                     className, protectionDomain,
@@ -342,6 +360,7 @@ public class ClassTransformer implements ClassFileTransformer
         }
 
         modifiedClasses.add(compclass);
+        modifiedClassesCount.getAndIncrement();
 
         sendStatusUpdate(modifiedSize, allClassesSize);
 
@@ -350,6 +369,7 @@ public class ClassTransformer implements ClassFileTransformer
       else
       {
         modifiedClasses.remove(compclass);
+        modifiedClassesCount.decrementAndGet();
 
         sendStatusUpdate(modifiedSize, allClassesSize);
         return null;
@@ -409,13 +429,13 @@ public class ClassTransformer implements ClassFileTransformer
         try
         {
           StatusUpdate update = statusHolder.getStatus();
-          int newModifiedSize = modifiedClasses.size();
-          int newAllClassesSize = allClasses.size();
+          int newModifiedSize = modifiedClassesCount.get();
+          int newAllClassesSize = allClassesCount.get();
           if (!bulkUpdateActive.get() &&
               ((newModifiedSize != update.modifiedSize) ||
                (newAllClassesSize != update.allClassesSize)))
           {
-            broadcastStatus(modifiedClasses.size(), allClasses.size());
+            broadcastStatus(modifiedClassesCount.get(), allClassesCount.get());
           }
         }
         catch (InterruptedException e)
@@ -524,9 +544,9 @@ public class ClassTransformer implements ClassFileTransformer
   {
     Map<String, String> settingsMap = settings.getSettingsMap();
     settingsMap.put(AgentConfigConstants.STCLS,
-                    Integer.toString(allClasses.size()));
+                    Integer.toString(allClassesCount.get()));
     settingsMap.put(AgentConfigConstants.STINST,
-                    Integer.toString(modifiedClasses.size()));
+                    Integer.toString(modifiedClassesCount.get()));
     return settingsMap;
   }
 
@@ -551,12 +571,12 @@ public class ClassTransformer implements ClassFileTransformer
     else if (oldSettings.isInstrumentationEnabled() != settings
                                                                .isInstrumentationEnabled())
     {
-//      System.out.println("## Settings Changed");
+      //System.out.println("## Settings Changed");
       setInstrumentationEnabled(settings.isInstrumentationEnabled());
     }
     else if (!Arrays.equals(oldSettings.getClassRegex(), settings.getClassRegex()))
     {
-//      System.out.println("## Settings Changed");
+      //System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -564,7 +584,7 @@ public class ClassTransformer implements ClassFileTransformer
     }
     else if (!Arrays.equals(oldSettings.getExcludeClassRegex(), settings.getExcludeClassRegex()))
     {
-//      System.out.println("## Settings Changed");
+      //System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = new HashSet<ComparableClass>(getModifiedClasses());
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -573,7 +593,7 @@ public class ClassTransformer implements ClassFileTransformer
     else if (oldSettings.saveTracedClassfiles() != settings
                                                            .saveTracedClassfiles())
     {
-//      System.out.println("## Settings Changed");
+      //System.out.println("## Settings Changed");
       Set<ComparableClass> klasses = getModifiedClasses();
       modifiedClasses.clear();
       klasses.addAll(getLoadedClassesForModification());
@@ -656,7 +676,12 @@ public class ClassTransformer implements ClassFileTransformer
                              + loadedClass.getCanonicalName());
         }
       }
-      else
+      else  if (settings.instrumentImplementors() || isToBeConsideredForInstrumentation(
+                                                  loadedClass,
+                                                  loadedClass.getClassLoader(),
+                                                  loadedClass.getName(),
+                                                  loadedClass.getProtectionDomain(),
+						  null ))
       {
         ComparableClass loadedKlass = new ComparableClass(loadedClass);
         unmodifiedKlasses.add(loadedKlass);
@@ -665,6 +690,18 @@ public class ClassTransformer implements ClassFileTransformer
     return unmodifiedKlasses;
   }
 
+/*
+The catch block in this method should have caught the following, but it did not.
+Need to figure out why.
+<pre>
+     [java] java.lang.VerifyError
+     [java]     at sun.instrument.InstrumentationImpl.retransformClasses0(Native Method)
+     [java]     at sun.instrument.InstrumentationImpl.retransformClasses(InstrumentationImpl.java:144)
+     [java]     at org.intrace.agent.ClassTransformer.instrumentKlasses(ClassTransformer.java:719)
+     [java]     at org.intrace.agent.ClassTransformer.getResponse(ClassTransformer.java:584)
+     [java]     at org.intrace.agent.server.AgentClientConnection.runMethod(AgentClientConnection.java:118)
+</pre>
+*/
   public void instrumentKlasses(Set<ComparableClass> klasses)
   {
     if (!inst.isRetransformClassesSupported())
@@ -692,10 +729,10 @@ public class ClassTransformer implements ClassFileTransformer
           inst.retransformClasses(klass.klass);
 
           countNumClasses++;
-          if ((countNumClasses % 100) == 0)
-          {
+//          if ((countNumClasses % 100) == 0)
+//          {
             broadcastProgress(countNumClasses, totalNumClasses);
-          }
+//          }
         }
         catch (Throwable e)
         {
@@ -711,7 +748,7 @@ public class ClassTransformer implements ClassFileTransformer
     finally
     {
       bulkUpdateActive.set(false);
-      broadcastStatus(modifiedClasses.size(), allClasses.size());
+      broadcastStatus(modifiedClasses.size(), allClassesCount.get());
     }
   }
 

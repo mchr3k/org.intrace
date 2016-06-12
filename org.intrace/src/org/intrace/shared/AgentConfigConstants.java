@@ -24,6 +24,7 @@ public class AgentConfigConstants
   public static final String OPT_SERVER_PORT = "[serverport-";
   public static final String CALLBACK_PORT = "[callbackport-";
   public static final String EXIT_STACK_TRACE = "[exit-stack-trace-";
+  public static final String INSTRUMENT_IMPLEMENTORS = "[instrument-implementors";
   
   public static final String START_WAIT = "[startwait";
   public static final String START_ACTIVATE = "[startactivate";
@@ -39,5 +40,6 @@ public class AgentConfigConstants
     COMMANDS.add(OPT_SERVER_PORT + "<int>");
     COMMANDS.add(CALLBACK_PORT + "<int>");
     COMMANDS.add(EXIT_STACK_TRACE + "<true/false>");
+    COMMANDS.add(INSTRUMENT_IMPLEMENTORS + "<true/false>");
   }
 }

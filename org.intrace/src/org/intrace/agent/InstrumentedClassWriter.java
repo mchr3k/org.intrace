@@ -79,6 +79,7 @@ public class InstrumentedClassWriter extends ClassWriter
 	  	  sb.append(InstrCriteria.CLASS_METHOD_DELIMITER);
 	  	  sb.append(name);
 	  	  sb.append(desc);
+		//System.out.println("@#%:" + sb.toString() );
 	      TraceHandler.INSTANCE.writeTraceOutput("DEBUG: method signature: " + sb.toString());
 	    }	  
     MethodVisitor mv = super.visitMethod(access, name, desc, signature,
